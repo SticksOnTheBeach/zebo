@@ -1,13 +1,13 @@
 import SwiftUI
 
-/// Le personnage, dessiné en formes SwiftUI.
+/// Le personnage : un petit nuage, dessiné en formes SwiftUI.
 /// Il s'adapte à la taille qu'on lui donne (tout est calculé sur une grille de 100 × 100).
 struct ZeboCharacter: View {
     /// Direction du regard, de -1 à 1 sur chaque axe (0,0 = regarde droit devant).
     var look: CGPoint = .zero
     /// 1 = yeux grands ouverts, 0 = fermés.
     var eyeOpenness: CGFloat = 1
-    /// Inclinaison de la tête (pivote autour du menton).
+    /// Inclinaison de la tête (pivote autour de la base du nuage).
     var headTilt: Angle = .zero
 
     private static let skinTop = Color(red: 0.56, green: 0.95, blue: 0.79)
@@ -20,43 +20,28 @@ struct ZeboCharacter: View {
             let u = min(geo.size.width, geo.size.height) / 100
 
             ZStack {
-                // Les oreilles partent un peu à l'opposé du regard (effet de profondeur).
-                Group {
-                    ear(u).offset(x: -30 * u, y: -38 * u)
-                    ear(u).offset(x: 30 * u, y: -38 * u)
-                }
-                .offset(x: -look.x * 2 * u)
-
-                RoundedRectangle(cornerRadius: 40 * u, style: .continuous)
+                CloudShape()
                     .fill(LinearGradient(colors: [Self.skinTop, Self.skinBottom],
                                          startPoint: .top, endPoint: .bottom))
-                    .frame(width: 96 * u, height: 84 * u)
-                    .offset(y: 6 * u)
 
-                // Le visage glisse vers le regard : la tête a l'air de tourner.
+                // Le visage glisse vers le regard : le nuage a l'air de tourner.
                 ZStack {
-                    cheek(u).offset(x: -31 * u, y: 21 * u)
-                    cheek(u).offset(x: 31 * u, y: 21 * u)
+                    cheek(u).offset(x: -29 * u, y: 24 * u)
+                    cheek(u).offset(x: 29 * u, y: 24 * u)
 
-                    eye(u).offset(x: -19 * u)
-                    eye(u).offset(x: 19 * u)
+                    eye(u).offset(x: -17 * u, y: 8 * u)
+                    eye(u).offset(x: 17 * u, y: 8 * u)
 
                     Smile()
                         .stroke(Self.ink, style: StrokeStyle(lineWidth: 3 * u, lineCap: .round))
-                        .frame(width: 12 * u, height: 5 * u)
-                        .offset(y: 27 * u)
+                        .frame(width: 11 * u, height: 4.5 * u)
+                        .offset(y: 30 * u)
                 }
                 .offset(x: look.x * 4 * u, y: look.y * 3 * u)
             }
             .frame(width: geo.size.width, height: geo.size.height)
             .rotationEffect(headTilt, anchor: .bottom)
         }
-    }
-
-    private func ear(_ u: CGFloat) -> some View {
-        Circle()
-            .fill(Self.skinBottom)
-            .frame(width: 22 * u, height: 22 * u)
     }
 
     private func cheek(_ u: CGFloat) -> some View {
@@ -100,6 +85,32 @@ struct ZeboCharacter: View {
         }
         // La pupille ne sort jamais du blanc de l'œil.
         .clipShape(Ellipse())
+    }
+}
+
+/// Silhouette de nuage : un socle arrondi surmonté de bosses, fusionnés en une seule forme.
+private struct CloudShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        // Mêmes coordonnées que le personnage : grille 100 × 100 centrée.
+        let u = min(rect.width, rect.height) / 100
+        let center = CGPoint(x: rect.midX, y: rect.midY)
+
+        func circle(_ x: CGFloat, _ y: CGFloat, _ r: CGFloat) -> CGRect {
+            CGRect(x: center.x + (x - r) * u, y: center.y + (y - r) * u,
+                   width: 2 * r * u, height: 2 * r * u)
+        }
+
+        var p = Path()
+        // Socle
+        p.addRoundedRect(in: CGRect(x: center.x - 46 * u, y: center.y - 4 * u,
+                                    width: 92 * u, height: 46 * u),
+                         cornerSize: CGSize(width: 23 * u, height: 23 * u),
+                         style: .continuous)
+        // Bosses (de gauche à droite)
+        p.addEllipse(in: circle(-30, 2, 19))
+        p.addEllipse(in: circle(-4, -14, 29))
+        p.addEllipse(in: circle(27, -2, 21))
+        return p
     }
 }
 
