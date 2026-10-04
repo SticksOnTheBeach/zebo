@@ -70,9 +70,9 @@ final class ZeboBehavior {
             // …vole à travers l'écran…
             try? await Task.sleep(for: .seconds(duration))
             land()
-            // …et revient un peu plus tard.
+            // …et revient tout seul un peu plus tard.
             try? await Task.sleep(for: .seconds(3))
-            state = .normal
+            comeBack()
         }
     }
 
@@ -105,6 +105,13 @@ final class ZeboBehavior {
         state = .gone
         flight = nil
         onFlightChange?(false)
+    }
+
+    private func comeBack() {
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.55)) {
+            state = .normal
+        }
+        speech.say("Me revoilà ! 😤")
     }
 }
 
