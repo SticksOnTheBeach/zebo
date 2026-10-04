@@ -20,8 +20,12 @@ struct ZeboCharacter: View {
             let u = min(geo.size.width, geo.size.height) / 100
 
             ZStack {
-                ear(u).offset(x: -30 * u, y: -38 * u)
-                ear(u).offset(x: 30 * u, y: -38 * u)
+                // Les oreilles partent un peu à l'opposé du regard (effet de profondeur).
+                Group {
+                    ear(u).offset(x: -30 * u, y: -38 * u)
+                    ear(u).offset(x: 30 * u, y: -38 * u)
+                }
+                .offset(x: -look.x * 2 * u)
 
                 RoundedRectangle(cornerRadius: 40 * u, style: .continuous)
                     .fill(LinearGradient(colors: [Self.skinTop, Self.skinBottom],
