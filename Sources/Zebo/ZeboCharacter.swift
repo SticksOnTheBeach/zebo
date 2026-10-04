@@ -29,16 +29,20 @@ struct ZeboCharacter: View {
                     .frame(width: 96 * u, height: 84 * u)
                     .offset(y: 6 * u)
 
-                cheek(u).offset(x: -31 * u, y: 21 * u)
-                cheek(u).offset(x: 31 * u, y: 21 * u)
+                // Le visage glisse vers le regard : la tête a l'air de tourner.
+                ZStack {
+                    cheek(u).offset(x: -31 * u, y: 21 * u)
+                    cheek(u).offset(x: 31 * u, y: 21 * u)
 
-                eye(u).offset(x: -19 * u)
-                eye(u).offset(x: 19 * u)
+                    eye(u).offset(x: -19 * u)
+                    eye(u).offset(x: 19 * u)
 
-                Smile()
-                    .stroke(Self.ink, style: StrokeStyle(lineWidth: 3 * u, lineCap: .round))
-                    .frame(width: 12 * u, height: 5 * u)
-                    .offset(y: 27 * u)
+                    Smile()
+                        .stroke(Self.ink, style: StrokeStyle(lineWidth: 3 * u, lineCap: .round))
+                        .frame(width: 12 * u, height: 5 * u)
+                        .offset(y: 27 * u)
+                }
+                .offset(x: look.x * 4 * u, y: look.y * 3 * u)
             }
             .frame(width: geo.size.width, height: geo.size.height)
             .rotationEffect(headTilt, anchor: .bottom)
