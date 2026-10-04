@@ -28,12 +28,16 @@ final class ZeboBehavior {
     var isHome: Bool { state == .normal || state == .dizzy }
 
     @ObservationIgnored private var recentClicks: [Date] = []
+    /// Moment où un clic a fait parler Zebo pour la dernière fois (pour le cooldown).
+    @ObservationIgnored private var lastMessageDate: Date?
     @ObservationIgnored private let model: NotchModel
     @ObservationIgnored private let speech: ZeboSpeech
 
     /// Clics rapprochés qui le font tomber dans les pommes.
     private static let clicksToFaint = 5
     private static let clickWindow: TimeInterval = 3
+    /// Après un message, un clic ne peut en lancer un nouveau qu'au bout de ce délai.
+    private static let messageCooldown: TimeInterval = 4
 
     init(model: NotchModel, speech: ZeboSpeech) {
         self.model = model
@@ -46,16 +50,18 @@ final class ZeboBehavior {
         let now = Date()
         recentClicks = recentClicks.filter { now.timeIntervalSince($0) < Self.clickWindow } + [now]
 
-        switch recentClicks.count {
-        case Self.clicksToFaint...:
+        // Les clics comptent toujours pour l'évanouissement, même pendant le cooldown.
+        if recentClicks.count >= Self.clicksToFaint {
             faint()
-        case Self.clicksToFaint - 1:
-            speech.say("Arrête… j'ai la tête qui tourne 😵‍💫")
-        case Self.clicksToFaint - 2:
-            speech.say("Hé, doucement !")
-        default:
-            speech.sayRandom()
+            return
         }
+
+        // Cooldown : pas de nouveau message tant que le précédent est trop récent.
+        if let last = lastMessageDate, now.timeIntervalSince(last) < Self.messageCooldown {
+            return
+        }
+        lastMessageDate = now
+        speech.sayRandom()
     }
 
     private func faint() {
@@ -112,6 +118,8 @@ final class ZeboBehavior {
             state = .normal
         }
         speech.say("Me revoilà ! 😤")
+        // « Me revoilà » compte comme un message : pas de spam juste après son retour.
+        lastMessageDate = Date()
     }
 }
 
