@@ -2,18 +2,52 @@ import AppKit
 import SwiftUI
 
 struct NotchView: View {
+    let model: NotchModel
+
+    private var size: CGSize { model.isOpen ? model.openSize : model.closedSize }
+    private var bottomRadius: CGFloat { model.isOpen ? 28 : 12 }
+
     var body: some View {
-        NotchShape()
+        NotchShape(bottomRadius: bottomRadius)
             .fill(.black)
-            .overlay(alignment: .leading) {
-                // Emplacement provisoire : Zebo viendra se loger ici.
-                Text("👀")
-                    .font(.system(size: 13))
-                    .padding(.leading, NotchShape.topRadius + 8)
+            .frame(width: size.width, height: size.height)
+            .overlay {
+                if model.isOpen {
+                    openContent
+                        .transition(.opacity.combined(with: .scale(scale: 0.85, anchor: .top)))
+                } else {
+                    closedContent
+                        .transition(.opacity)
+                }
             }
+            .clipShape(NotchShape(bottomRadius: bottomRadius))
             .contextMenu {
                 Button("Quitter Zebo") { NSApp.terminate(nil) }
             }
+            // La fenêtre est plus grande que la notch : on colle le dessin en haut.
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+
+    /// Notch fermée : juste un petit indice dans l'aile gauche.
+    private var closedContent: some View {
+        Text("👀")
+            .font(.system(size: 13))
+            .padding(.leading, NotchShape.topRadius + 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Notch ouverte : provisoire, le personnage et le chat viendront ici.
+    private var openContent: some View {
+        VStack(spacing: 8) {
+            Text("👀")
+                .font(.system(size: 48))
+            Text("Salut, moi c'est Zebo !")
+                .font(.headline)
+                .foregroundStyle(.white)
+        }
+        // Le haut est caché par l'encoche physique : on démarre en dessous.
+        .padding(.top, model.closedSize.height)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -21,6 +55,12 @@ struct NotchView: View {
 struct NotchShape: Shape {
     static let topRadius: CGFloat = 6
     var bottomRadius: CGFloat = 12
+
+    // Permet à SwiftUI d'animer l'arrondi pendant l'ouverture.
+    var animatableData: CGFloat {
+        get { bottomRadius }
+        set { bottomRadius = newValue }
+    }
 
     func path(in rect: CGRect) -> Path {
         let top = Self.topRadius
