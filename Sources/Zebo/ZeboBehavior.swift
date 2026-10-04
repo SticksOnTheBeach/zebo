@@ -90,7 +90,7 @@ final class ZeboBehavior {
             start: Date(),
             origin: origin,
             // Catapulté vers le haut et sur le côté.
-            velocity: CGVector(dx: direction * .random(in: 180...320), dy: -520),
+            velocity: CGVector(dx: direction * .random(in: 180...320), dy: -640),
             size: model.zeboFrame.width,
             spinSpeed: Double(direction) * .random(in: 380...620),
             floorY: screen.height
