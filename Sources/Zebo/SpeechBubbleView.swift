@@ -6,7 +6,7 @@ struct SpeechBubbleView: View {
     let model: NotchModel
     let speech: ZeboSpeech
 
-    static let windowSize = CGSize(width: 640, height: 360)
+    static let windowSize = CGSize(width: 640, height: 420)
 
     /// Espace entre le bas de la notch et le haut de la bulle, occupé par les points.
     private let gap: CGFloat = 50
