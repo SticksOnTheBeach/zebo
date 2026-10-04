@@ -60,7 +60,7 @@ struct NotchView: View {
             Text("Salut, moi c'est Zebo !")
                 .font(.headline)
                 .foregroundStyle(.white)
-            Text("Bientôt on pourra discuter 👋")
+            Text("Bientôt on pourra discuter le boss")
                 .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.6))
         }
