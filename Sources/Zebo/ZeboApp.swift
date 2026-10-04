@@ -2,15 +2,10 @@ import SwiftUI
 
 @main
 struct ZeboApp: App {
+    // AppKit gère la fenêtre de la notch, SwiftUI ne crée aucune fenêtre classique.
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+
     var body: some Scene {
-        WindowGroup {
-            VStack(spacing: 12) {
-                Text("👀")
-                    .font(.system(size: 64))
-                Text("Salut, moi c'est Zebo !")
-                    .font(.title2)
-            }
-            .frame(width: 320, height: 200)
-        }
+        Settings { EmptyView() }
     }
 }
