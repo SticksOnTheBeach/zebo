@@ -68,7 +68,7 @@ struct SpeechBubbleView: View {
                 .multilineTextAlignment(.leading)
         }
             .padding(.horizontal, 22)
-            .padding(.vertical, 16)
+            .padding(.vertical, 20)
             .background {
                 CloudBubbleShape(time: t)
                     .fill(.white)
@@ -118,9 +118,11 @@ struct CloudBubbleShape: Shape {
 
     func path(in rect: CGRect) -> Path {
         let w = rect.width
-        let h = rect.height
+        // Taille des bosses : jamais trop petite, pour qu'une bulle d'une ligne reste bien ronde.
+        let s = max(rect.height, w * 0.3)
         var p = Path()
-        p.addRoundedRect(in: rect, cornerSize: CGSize(width: h / 2, height: h / 2), style: .continuous)
+        p.addRoundedRect(in: rect, cornerSize: CGSize(width: rect.height / 2, height: rect.height / 2),
+                         style: .continuous)
 
         // Tailles variées pour que ça ne fasse pas une rangée de perles.
         let sizes: [CGFloat] = [1, 0.8, 0.95, 0.75, 0.9]
@@ -133,20 +135,20 @@ struct CloudBubbleShape: Shape {
         }
 
         // Grosses bosses sur le dessus
-        let top = max(2, Int(w / 75))
+        let top = max(3, Int(w / 75))
         for i in 0..<top {
             let t = CGFloat(i) / CGFloat(top - 1)
-            puff(rect.minX + w * (0.2 + 0.6 * t), rect.minY + h * 0.18, h * 0.45 * sizes[i % sizes.count])
+            puff(rect.minX + w * (0.2 + 0.6 * t), rect.minY + s * 0.2, s * 0.42 * sizes[i % sizes.count])
         }
         // Petites bosses en dessous
         let bottom = max(2, Int(w / 90))
         for i in 0..<bottom {
             let t = CGFloat(i) / CGFloat(bottom - 1)
-            puff(rect.minX + w * (0.28 + 0.44 * t), rect.maxY - h * 0.12, h * 0.34 * sizes[(i + 2) % sizes.count])
+            puff(rect.minX + w * (0.28 + 0.44 * t), rect.maxY - s * 0.12, s * 0.32 * sizes[(i + 2) % sizes.count])
         }
         // Une bosse de chaque côté
-        puff(rect.minX + h * 0.22, rect.midY + h * 0.05, h * 0.42)
-        puff(rect.maxX - h * 0.22, rect.midY - h * 0.02, h * 0.46)
+        puff(rect.minX + s * 0.2, rect.midY + s * 0.04, s * 0.4)
+        puff(rect.maxX - s * 0.2, rect.midY - s * 0.02, s * 0.43)
         return p
     }
 }
