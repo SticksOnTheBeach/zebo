@@ -38,6 +38,11 @@ struct AnimatedZebo: View {
         while !Task.isCancelled {
             try? await Task.sleep(for: .seconds(.random(in: 2.5...6)))
             await blink()
+            // De temps en temps, un double clignement.
+            if Double.random(in: 0...1) < 0.2 {
+                try? await Task.sleep(for: .milliseconds(140))
+                await blink()
+            }
         }
     }
 
