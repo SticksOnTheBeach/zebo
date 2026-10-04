@@ -13,7 +13,6 @@ struct ZeboCharacter: View {
     private static let cloudTop = Color(red: 1.00, green: 0.91, blue: 0.95)
     private static let cloudBottom = Color(red: 0.99, green: 0.78, blue: 0.87)
     private static let cloudShade = Color(red: 0.93, green: 0.62, blue: 0.75)
-    private static let blush = Color(red: 0.96, green: 0.42, blue: 0.60)
     private static let ink = Color(red: 0.24, green: 0.13, blue: 0.20)
 
     var body: some View {
@@ -34,9 +33,6 @@ struct ZeboCharacter: View {
 
                 // Le visage glisse vers le regard : le nuage a l'air de tourner.
                 ZStack {
-                    cheek(u).offset(x: -29 * u, y: 24 * u)
-                    cheek(u).offset(x: 29 * u, y: 24 * u)
-
                     // Pas de pupilles : ce sont les yeux entiers qui suivent le regard.
                     Group {
                         eye(u).offset(x: -13 * u, y: 10 * u)
@@ -54,12 +50,6 @@ struct ZeboCharacter: View {
             .frame(width: geo.size.width, height: geo.size.height)
             .rotationEffect(headTilt, anchor: .bottom)
         }
-    }
-
-    private func cheek(_ u: CGFloat) -> some View {
-        Ellipse()
-            .fill(Self.blush.opacity(0.45))
-            .frame(width: 13 * u, height: 7 * u)
     }
 
     /// Petit œil ovale noir ; en clignant, il s'aplatit jusqu'à devenir un trait.
