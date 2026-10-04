@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Bulle de dialogue en forme de nuage, sous la notch, reliée à Zebo par des points (comme en BD).
+/// Bulle de dialogue en forme de nuage qui flotte sous la notch, reliée à Zebo par des points (comme en BD).
 /// Elle vit dans sa propre fenêtre transparente, centrée sur la notch et collée en haut de l'écran.
 struct SpeechBubbleView: View {
     let model: NotchModel
@@ -16,10 +16,14 @@ struct SpeechBubbleView: View {
     var body: some View {
         ZStack(alignment: .topLeading) {
             if let line = speech.line {
-                ZStack(alignment: .topLeading) {
-                    dots
-                    bubble(line)
-                        .offset(x: bubbleOrigin.x, y: bubbleOrigin.y)
+                // Animé à chaque image, mais seulement tant que Zebo parle.
+                TimelineView(.animation) { timeline in
+                    let t = timeline.date.timeIntervalSinceReferenceDate
+                    ZStack(alignment: .topLeading) {
+                        dots(time: t)
+                        bubble(line, time: t)
+                            .offset(x: bubbleOrigin.x, y: bubbleOrigin.y + bob(t))
+                    }
                 }
                 // La bulle « sort » de Zebo.
                 .transition(
@@ -47,9 +51,16 @@ struct SpeechBubbleView: View {
         CGPoint(x: zeboCenter.x + 4, y: model.notchSize.height + gap)
     }
 
+    // MARK: - Flottement
+
+    /// Le nuage monte et descend doucement (±3 pt).
+    private func bob(_ t: Double) -> CGFloat {
+        3 * sin(t * 1.6)
+    }
+
     // MARK: - Dessin
 
-    private func bubble(_ line: String) -> some View {
+    private func bubble(_ line: String, time t: Double) -> some View {
         Text(typed(line))
             .font(.system(size: 13, weight: .medium, design: .rounded))
             .foregroundStyle(ink)
@@ -66,9 +77,9 @@ struct SpeechBubbleView: View {
     }
 
     /// Trois points de plus en plus gros, de Zebo vers le nuage.
-    private var dots: some View {
+    private func dots(time t: Double) -> some View {
         let start = CGPoint(x: zeboCenter.x, y: model.notchSize.height + 7)
-        let end = CGPoint(x: bubbleOrigin.x + 18, y: bubbleOrigin.y - 6)
+        let end = CGPoint(x: bubbleOrigin.x + 18, y: bubbleOrigin.y - 6 + bob(t))
         let steps: [(t: CGFloat, size: CGFloat)] = [(0.0, 6), (0.4, 9), (0.78, 12)]
 
         return ZStack(alignment: .topLeading) {
