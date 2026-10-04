@@ -44,9 +44,10 @@ struct NotchView: View {
             Text("Salut, moi c'est Zebo !")
                 .font(.headline)
                 .foregroundStyle(.white)
-            Text("Bientôt on pourra discuter le boss")
-                .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.6))
+            Text("SOON... In progress…")
+                .fontWidth(Font.Width.expanded)
+                .fontWeight(Font.Weight.bold)
+                .foregroundStyle(.white.opacity(1.5))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         // Le haut est caché par l'encoche physique : on démarre en dessous.
