@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Bulle de dialogue en forme de nuage, sous la notch.
+/// Bulle de dialogue en forme de nuage, sous la notch, reliée à Zebo par des points (comme en BD).
 /// Elle vit dans sa propre fenêtre transparente, centrée sur la notch et collée en haut de l'écran.
 struct SpeechBubbleView: View {
     let model: NotchModel
@@ -8,7 +8,7 @@ struct SpeechBubbleView: View {
 
     static let windowSize = CGSize(width: 640, height: 360)
 
-    /// Espace entre le bas de la notch et le haut de la bulle.
+    /// Espace entre le bas de la notch et le haut de la bulle, occupé par les points.
     private let gap: CGFloat = 42
     private let maxTextWidth: CGFloat = 240
     private let ink = Color(red: 0.24, green: 0.13, blue: 0.20)
@@ -16,14 +16,17 @@ struct SpeechBubbleView: View {
     var body: some View {
         ZStack(alignment: .topLeading) {
             if let line = speech.line {
-                bubble(line)
-                    .offset(x: bubbleOrigin.x, y: bubbleOrigin.y)
-                    // La bulle « sort » de Zebo.
-                    .transition(
-                        .scale(scale: 0.3, anchor: UnitPoint(x: zeboCenter.x / Self.windowSize.width,
-                                                             y: zeboCenter.y / Self.windowSize.height))
-                        .combined(with: .opacity)
-                    )
+                ZStack(alignment: .topLeading) {
+                    dots
+                    bubble(line)
+                        .offset(x: bubbleOrigin.x, y: bubbleOrigin.y)
+                }
+                // La bulle « sort » de Zebo.
+                .transition(
+                    .scale(scale: 0.3, anchor: UnitPoint(x: zeboCenter.x / Self.windowSize.width,
+                                                         y: zeboCenter.y / Self.windowSize.height))
+                    .combined(with: .opacity)
+                )
             }
         }
         .frame(width: Self.windowSize.width, height: Self.windowSize.height, alignment: .topLeading)
@@ -59,6 +62,25 @@ struct SpeechBubbleView: View {
                     .fill(.white)
                     .shadow(color: .black.opacity(0.25), radius: 8, y: 3)
             }
+    }
+
+    /// Trois points de plus en plus gros, de Zebo vers la bulle.
+    private var dots: some View {
+        let start = CGPoint(x: zeboCenter.x, y: model.notchSize.height + 7)
+        let end = CGPoint(x: bubbleOrigin.x + 26, y: bubbleOrigin.y + 6)
+        let steps: [(t: CGFloat, size: CGFloat)] = [(0.0, 6), (0.38, 9), (0.74, 12)]
+
+        return ZStack(alignment: .topLeading) {
+            ForEach(steps.indices, id: \.self) { i in
+                let step = steps[i]
+                Circle()
+                    .fill(.white)
+                    .shadow(color: .black.opacity(0.25), radius: 3, y: 1)
+                    .frame(width: step.size, height: step.size)
+                    .offset(x: start.x + (end.x - start.x) * step.t - step.size / 2,
+                            y: start.y + (end.y - start.y) * step.t - step.size / 2)
+            }
+        }
     }
 
     /// Toute la phrase est mise en page dès le début (la bulle ne change pas de taille),
