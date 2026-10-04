@@ -5,11 +5,11 @@ import SwiftUI
 @MainActor
 final class NotchController: NSObject {
     private let model = NotchModel()
-    private let panel: NotchPanel
+    private let panel: OverlayPanel
     private var mouseMonitors: [Any] = []
 
     override init() {
-        panel = NotchPanel(model: model)
+        panel = OverlayPanel(rootView: NotchView(model: model))
         super.init()
 
         reposition()
@@ -28,7 +28,7 @@ final class NotchController: NSObject {
     @objc private func reposition() {
         guard let screen = NSScreen.notchScreen else { return }
         let notch = screen.notchSize
-        model.closedSize = CGSize(width: notch.width + NotchPanel.wingWidth * 2, height: notch.height)
+        model.closedSize = CGSize(width: notch.width + NotchModel.wingWidth * 2, height: notch.height)
 
         let size = model.openSize
         let origin = CGPoint(x: screen.frame.midX - size.width / 2,

@@ -5,6 +5,9 @@ import Observation
 @MainActor
 @Observable
 final class NotchModel {
+    /// Largeur ajoutée de chaque côté de l'encoche pour que la notch de Zebo dépasse un peu.
+    static let wingWidth: CGFloat = 36
+
     var isOpen = false
     /// Taille de la notch fermée : l'encoche physique + les ailes.
     var closedSize: CGSize = .zero
