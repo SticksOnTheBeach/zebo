@@ -1,15 +1,18 @@
 import SwiftUI
 
-/// Zebo vivant : suit la souris du regard et penche la tête.
+/// Zebo vivant : suit la souris du regard, penche la tête et cligne des yeux.
 struct AnimatedZebo: View {
     /// Position de la souris et centre de Zebo, en coordonnées écran (origine en bas à gauche).
     var mouse: CGPoint
     var center: CGPoint
 
+    @State private var eyeOpenness: CGFloat = 1
+
     var body: some View {
-        ZeboCharacter(look: look, headTilt: headTilt)
+        ZeboCharacter(look: look, eyeOpenness: eyeOpenness, headTilt: headTilt)
             // Le regard rattrape la souris avec un petit ressort.
             .animation(.spring(response: 0.3, dampingFraction: 0.65), value: look)
+            .task { await blinkForever() }
     }
 
     /// Écart souris − Zebo ; dy > 0 quand la souris est en dessous.
@@ -29,5 +32,18 @@ struct AnimatedZebo: View {
     /// La tête penche vers le côté où se trouve la souris (10° max).
     private var headTilt: Angle {
         .degrees(max(-1, min(1, delta.dx / 500)) * 10)
+    }
+
+    private func blinkForever() async {
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .seconds(.random(in: 2.5...6)))
+            await blink()
+        }
+    }
+
+    private func blink() async {
+        withAnimation(.easeIn(duration: 0.07)) { eyeOpenness = 0 }
+        try? await Task.sleep(for: .milliseconds(110))
+        withAnimation(.easeOut(duration: 0.12)) { eyeOpenness = 1 }
     }
 }
