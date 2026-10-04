@@ -19,7 +19,7 @@ struct NotchView: View {
                     }
 
                     // Un seul Zebo : il glisse et grandit de l'aile gauche jusqu'à sa place.
-                    AnimatedZebo(mouse: model.mouseLocation, center: zeboScreenCenter)
+                    AnimatedZebo(mouse: model.mouseLocation, center: zeboScreenCenter, isAwake: model.isOpen)
                         .frame(width: zeboFrame.width, height: zeboFrame.height)
                         .offset(x: zeboFrame.minX, y: zeboFrame.minY)
                 }

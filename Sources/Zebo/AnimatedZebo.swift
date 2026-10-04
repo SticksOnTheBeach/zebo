@@ -5,20 +5,25 @@ struct AnimatedZebo: View {
     /// Position de la souris et centre de Zebo, en coordonnées écran (origine en bas à gauche).
     var mouse: CGPoint
     var center: CGPoint
+    /// Notch ouverte : Zebo se balance. Fermée, il reste immobile pour économiser le CPU.
+    var isAwake: Bool
 
     @State private var eyeOpenness: CGFloat = 1
-    @State private var swayRight = false
 
     var body: some View {
-        ZeboCharacter(look: look, eyeOpenness: eyeOpenness, headTilt: headTilt)
-            // Le regard rattrape la souris avec un petit ressort.
-            .animation(.spring(response: 0.3, dampingFraction: 0.65), value: look)
-            // Balancement de repos, limité à cette rotation pour ne pas contaminer les autres animations.
-            .animation(.easeInOut(duration: 2.8).repeatForever(autoreverses: true)) { content in
-                content.rotationEffect(.degrees(swayRight ? 2 : -2), anchor: .bottom)
-            }
-            .onAppear { swayRight = true }
-            .task { await blinkForever() }
+        // 30 images/s suffisent pour un balancement aussi lent ; en pause quand la notch est fermée.
+        TimelineView(.animation(minimumInterval: 1 / 30, paused: !isAwake)) { timeline in
+            ZeboCharacter(look: look, eyeOpenness: eyeOpenness, headTilt: headTilt)
+                // Le regard rattrape la souris avec un petit ressort.
+                .animation(.spring(response: 0.3, dampingFraction: 0.65), value: look)
+                .rotationEffect(.degrees(isAwake ? sway(at: timeline.date) : 0), anchor: .bottom)
+        }
+        .task { await blinkForever() }
+    }
+
+    /// Balancement de ±2° avec une période de 5,6 s.
+    private func sway(at date: Date) -> Double {
+        sin(date.timeIntervalSinceReferenceDate * 2 * .pi / 5.6) * 2
     }
 
     /// Écart souris − Zebo ; dy > 0 quand la souris est en dessous.
