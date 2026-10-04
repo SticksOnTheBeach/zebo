@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// Crée la notch et la bulle de dialogue, les place sur le bon écran
+/// Crée la notch, la bulle de dialogue et la fenêtre de chute, les place sur le bon écran
 /// et ouvre/ferme la notch selon la position de la souris.
 @MainActor
 final class NotchController: NSObject {
@@ -11,6 +11,8 @@ final class NotchController: NSObject {
     private let panel: OverlayPanel
     /// Fenêtre de la bulle : juste sous la notch, ne capte jamais les clics.
     private let bubblePanel: OverlayPanel
+    /// Fenêtre plein écran où Zebo tombe quand il est éjecté ; affichée seulement pendant la chute.
+    private let fallPanel: OverlayPanel
     private var mouseMonitors: [Any] = []
 
     override init() {
@@ -19,7 +21,20 @@ final class NotchController: NSObject {
         bubblePanel = OverlayPanel(rootView: SpeechBubbleView(model: model, speech: speech))
         // Sous la notch : les points qui dépassent vers Zebo passent derrière elle.
         bubblePanel.level = .mainMenu + 2
+        fallPanel = OverlayPanel(rootView: FallingZeboView(behavior: behavior))
+        // Au-dessus de la notch : Zebo en sort par-dessus.
+        fallPanel.level = .mainMenu + 4
         super.init()
+
+        behavior.onFlightChange = { [weak self] isFlying in
+            guard let self else { return }
+            if isFlying {
+                fallPanel.setFrame(model.screenFrame, display: true)
+                fallPanel.orderFrontRegardless()
+            } else {
+                fallPanel.orderOut(nil)
+            }
+        }
 
         reposition()
         bubblePanel.orderFrontRegardless()

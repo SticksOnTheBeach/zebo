@@ -26,8 +26,11 @@ struct NotchView: View {
                                  isAwake: model.isOpen, hopTrigger: speech.lineID,
                                  isDizzy: behavior.state == .dizzy)
                         .frame(width: zeboFrame.width, height: zeboFrame.height)
+                        // Éjecté : il disparaît de la notch, puis revient avec un « pop ».
+                        .scaleEffect(behavior.isHome ? 1 : 0.01)
+                        .opacity(behavior.isHome ? 1 : 0)
                         .contentShape(Rectangle())
-                        // Un clic sur Zebo : il parle.
+                        // Un clic sur Zebo : il parle (et trop de clics l'assomment).
                         .onTapGesture { behavior.poke() }
                         .offset(x: zeboFrame.minX, y: zeboFrame.minY)
                 }
