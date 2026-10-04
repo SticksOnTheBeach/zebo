@@ -58,6 +58,10 @@ struct ZeboCharacter: View {
                     }
                 }
                 .offset(x: look.x * 4 * u, y: look.y * 3 * u)
+
+                if dizzy {
+                    stars(u)
+                }
             }
             .frame(width: geo.size.width, height: geo.size.height)
             .rotationEffect(headTilt, anchor: .bottom)
@@ -79,6 +83,20 @@ struct ZeboCharacter: View {
                 .frame(width: 8 * u, height: max(13 * eyeOpenness, 2.5) * u)
         }
     }
+
+    /// Trois étoiles qui tournent en rond au-dessus de la tête.
+    private func stars(_ u: CGFloat) -> some View {
+        ForEach(0..<3, id: \.self) { i in
+            let angle = dizzySpin.radians + Double(i) * 2 * .pi / 3
+            // Plus petites quand elles passent « derrière » la tête : effet de perspective.
+            let depth = 0.75 + 0.25 * sin(angle)
+            StarShape()
+                .fill(Color(red: 1.0, green: 0.84, blue: 0.3))
+                .frame(width: 11 * u, height: 11 * u)
+                .scaleEffect(depth)
+                .offset(x: cos(angle) * 34 * u, y: (-44 + sin(angle) * 7) * u)
+        }
+    }
 }
 
 /// Spirale (yeux étourdis).
@@ -96,6 +114,24 @@ private struct Spiral: Shape {
                                 y: center.y + sin(angle) * f * maxRadius)
             if i == 0 { p.move(to: point) } else { p.addLine(to: point) }
         }
+        return p
+    }
+}
+
+/// Étoile à 5 branches.
+private struct StarShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        let center = CGPoint(x: rect.midX, y: rect.midY)
+        let outer = min(rect.width, rect.height) / 2
+        let inner = outer * 0.45
+        var p = Path()
+        for i in 0..<10 {
+            let radius = i.isMultiple(of: 2) ? outer : inner
+            let angle = -CGFloat.pi / 2 + CGFloat(i) * .pi / 5
+            let point = CGPoint(x: center.x + cos(angle) * radius, y: center.y + sin(angle) * radius)
+            if i == 0 { p.move(to: point) } else { p.addLine(to: point) }
+        }
+        p.closeSubpath()
         return p
     }
 }
