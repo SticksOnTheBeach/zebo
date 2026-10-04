@@ -9,6 +9,10 @@ struct ZeboCharacter: View {
     var eyeOpenness: CGFloat = 1
     /// Inclinaison de la tête (pivote autour de la base du nuage).
     var headTilt: Angle = .zero
+    /// Étourdi : yeux en spirale et étoiles qui tournent autour de la tête.
+    var dizzy = false
+    /// Rotation des spirales et des étoiles (on la fait avancer pour les animer).
+    var dizzySpin: Angle = .zero
 
     private static let cloudTop = Color(red: 1.00, green: 0.91, blue: 0.95)
     private static let cloudBottom = Color(red: 0.99, green: 0.78, blue: 0.87)
@@ -53,10 +57,38 @@ struct ZeboCharacter: View {
     }
 
     /// Petit œil ovale noir ; en clignant, il s'aplatit jusqu'à devenir un trait.
+    /// Étourdi, il devient une spirale qui tourne.
+    @ViewBuilder
     private func eye(_ u: CGFloat) -> some View {
-        Capsule()
-            .fill(Self.ink)
-            .frame(width: 8 * u, height: max(13 * eyeOpenness, 2.5) * u)
+        if dizzy {
+            Spiral()
+                .stroke(Self.ink, style: StrokeStyle(lineWidth: 2.2 * u, lineCap: .round))
+                .frame(width: 15 * u, height: 15 * u)
+                .rotationEffect(dizzySpin)
+        } else {
+            Capsule()
+                .fill(Self.ink)
+                .frame(width: 8 * u, height: max(13 * eyeOpenness, 2.5) * u)
+        }
+    }
+}
+
+/// Spirale (yeux étourdis).
+private struct Spiral: Shape {
+    func path(in rect: CGRect) -> Path {
+        let center = CGPoint(x: rect.midX, y: rect.midY)
+        let maxRadius = min(rect.width, rect.height) / 2
+        let turns: CGFloat = 2.5
+        let steps = 60
+        var p = Path()
+        for i in 0...steps {
+            let f = CGFloat(i) / CGFloat(steps)
+            let angle = f * turns * 2 * .pi
+            let point = CGPoint(x: center.x + cos(angle) * f * maxRadius,
+                                y: center.y + sin(angle) * f * maxRadius)
+            if i == 0 { p.move(to: point) } else { p.addLine(to: point) }
+        }
+        return p
     }
 }
 
