@@ -8,6 +8,8 @@ struct AnimatedZebo: View {
 
     var body: some View {
         ZeboCharacter(look: look)
+            // Le regard rattrape la souris avec un petit ressort.
+            .animation(.spring(response: 0.3, dampingFraction: 0.65), value: look)
     }
 
     /// Écart souris − Zebo ; dy > 0 quand la souris est en dessous.
