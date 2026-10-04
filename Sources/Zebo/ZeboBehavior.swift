@@ -33,9 +33,10 @@ final class ZeboBehavior {
     @ObservationIgnored private let model: NotchModel
     @ObservationIgnored private let speech: ZeboSpeech
 
-    /// Clics rapprochés qui le font tomber dans les pommes.
-    private static let clicksToFaint = 5
-    private static let clickWindow: TimeInterval = 3
+    /// Clics d'affilée qui le font tomber dans les pommes…
+    private static let clicksToFaint = 3
+    /// …s'ils tiennent tous dans cette durée.
+    private static let clickWindow: TimeInterval = 1.5
     /// Après un message, un clic ne peut en lancer un nouveau qu'au bout de ce délai.
     private static let messageCooldown: TimeInterval = 4
 
