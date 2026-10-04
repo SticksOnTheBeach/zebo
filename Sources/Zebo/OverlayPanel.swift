@@ -24,9 +24,15 @@ final class OverlayPanel: NSPanel {
         // Visible sur tous les bureaux et par-dessus les apps en plein écran.
         collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
 
-        contentView = NSHostingView(rootView: rootView)
+        contentView = FirstClickHostingView(rootView: rootView)
     }
 
     // Nécessaire plus tard pour pouvoir taper dans le champ de discussion.
     override var canBecomeKey: Bool { true }
+}
+
+/// Sans ça, le premier clic sur une fenêtre inactive sert juste à l'activer
+/// et n'atteint pas Zebo.
+private final class FirstClickHostingView<Content: View>: NSHostingView<Content> {
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 }
