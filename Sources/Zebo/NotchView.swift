@@ -4,7 +4,8 @@ import SwiftUI
 struct NotchView: View {
     let model: NotchModel
 
-    private var size: CGSize { model.isOpen ? model.openSize : model.closedSize }
+    private var size: CGSize { model.notchSize }
+    private var zeboFrame: CGRect { model.zeboFrame }
     private var bottomRadius: CGFloat { model.isOpen ? 28 : 12 }
 
     var body: some View {
@@ -19,7 +20,7 @@ struct NotchView: View {
                     }
 
                     // Un seul Zebo : il glisse et grandit de l'aile gauche jusqu'à sa place.
-                    AnimatedZebo(mouse: model.mouseLocation, center: zeboScreenCenter, isAwake: model.isOpen)
+                    AnimatedZebo(mouse: model.mouseLocation, center: model.zeboScreenCenter, isAwake: model.isOpen)
                         .frame(width: zeboFrame.width, height: zeboFrame.height)
                         .offset(x: zeboFrame.minX, y: zeboFrame.minY)
                 }
@@ -30,28 +31,6 @@ struct NotchView: View {
             }
             // La fenêtre est plus grande que la notch : on colle le dessin en haut.
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-    }
-
-    /// Place de Zebo dans la notch : petit dans l'aile gauche, grand à gauche une fois ouverte.
-    private var zeboFrame: CGRect {
-        let closedHeight = model.closedSize.height
-        if model.isOpen {
-            let side: CGFloat = 96
-            let y = closedHeight + (model.openSize.height - closedHeight - side) / 2
-            return CGRect(x: 32, y: y, width: side, height: side)
-        } else {
-            let side: CGFloat = 22
-            return CGRect(x: NotchShape.topRadius + 4, y: (closedHeight - side) / 2,
-                          width: side, height: side)
-        }
-    }
-
-    /// Centre de Zebo en coordonnées écran, pour savoir dans quelle direction regarder.
-    private var zeboScreenCenter: CGPoint {
-        // La notch est centrée en haut de la fenêtre.
-        let notchMinX = model.panelFrame.midX - size.width / 2
-        return CGPoint(x: notchMinX + zeboFrame.midX,
-                       y: model.panelFrame.maxY - zeboFrame.midY)
     }
 
     /// Texte provisoire à droite de Zebo : le chat viendra ici.
