@@ -7,13 +7,15 @@ import SwiftUI
 final class NotchController: NSObject {
     private let model = NotchModel()
     private let speech = ZeboSpeech()
+    private let behavior: ZeboBehavior
     private let panel: OverlayPanel
     /// Fenêtre de la bulle : juste sous la notch, ne capte jamais les clics.
     private let bubblePanel: OverlayPanel
     private var mouseMonitors: [Any] = []
 
     override init() {
-        panel = OverlayPanel(rootView: NotchView(model: model, speech: speech))
+        behavior = ZeboBehavior(model: model, speech: speech)
+        panel = OverlayPanel(rootView: NotchView(model: model, speech: speech, behavior: behavior))
         bubblePanel = OverlayPanel(rootView: SpeechBubbleView(model: model, speech: speech))
         // Sous la notch : les points qui dépassent vers Zebo passent derrière elle.
         bubblePanel.level = .mainMenu + 2

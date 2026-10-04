@@ -4,6 +4,7 @@ import SwiftUI
 struct NotchView: View {
     let model: NotchModel
     let speech: ZeboSpeech
+    let behavior: ZeboBehavior
 
     private var size: CGSize { model.notchSize }
     private var zeboFrame: CGRect { model.zeboFrame }
@@ -26,7 +27,7 @@ struct NotchView: View {
                         .frame(width: zeboFrame.width, height: zeboFrame.height)
                         .contentShape(Rectangle())
                         // Un clic sur Zebo : il parle.
-                        .onTapGesture { speech.sayRandom() }
+                        .onTapGesture { behavior.poke() }
                         .offset(x: zeboFrame.minX, y: zeboFrame.minY)
                 }
             }
