@@ -1,14 +1,18 @@
 import SwiftUI
 import Observation
 
-/// Ce que Zebo est en train de dire.
+/// Ce que Zebo est en train de dire, révélé lettre par lettre.
 @MainActor
 @Observable
 final class ZeboSpeech {
     /// Réplique en cours (nil = Zebo ne parle pas).
     private(set) var line: String?
+    /// Nombre de caractères déjà affichés (effet machine à écrire).
+    private(set) var revealedCount = 0
     /// Change à chaque nouvelle réplique (fait sauter Zebo).
     private(set) var lineID = 0
+
+    private var speakingTask: Task<Void, Never>?
 
     /// Répliques toutes faites, en attendant de brancher l'IA.
     private static let lines = [
@@ -31,9 +35,19 @@ final class ZeboSpeech {
     }
 
     func say(_ text: String) {
+        speakingTask?.cancel()
         lineID += 1
+        revealedCount = 0
         withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
             line = text
+        }
+
+        speakingTask = Task { [weak self] in
+            for count in 1...text.count {
+                try? await Task.sleep(for: .milliseconds(30))
+                guard let self, !Task.isCancelled else { return }
+                revealedCount = count
+            }
         }
     }
 }
