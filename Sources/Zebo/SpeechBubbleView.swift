@@ -61,12 +61,12 @@ struct SpeechBubbleView: View {
     // MARK: - Dessin
 
     private func bubble(_ line: String, time t: Double) -> some View {
-        Text(typed(line))
-            .font(.system(size: 13, weight: .medium, design: .rounded))
-            .foregroundStyle(ink)
-            .multilineTextAlignment(.leading)
-            .frame(maxWidth: maxTextWidth, alignment: .leading)
-            .fixedSize(horizontal: false, vertical: true)
+        CappedWidth(maxWidth: maxTextWidth) {
+            Text(typed(line))
+                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .foregroundStyle(ink)
+                .multilineTextAlignment(.leading)
+        }
             .padding(.horizontal, 22)
             .padding(.vertical, 16)
             .background {
@@ -148,5 +148,21 @@ struct CloudBubbleShape: Shape {
         puff(rect.minX + h * 0.22, rect.midY + h * 0.05, h * 0.42)
         puff(rect.maxX - h * 0.22, rect.midY - h * 0.02, h * 0.46)
         return p
+    }
+}
+
+/// Largeur = celle du texte sur une seule ligne, plafonnée à `maxWidth` (au-delà, le texte passe à la ligne).
+/// Une bulle pour « Coucou ! » reste donc petite au lieu de prendre toute la largeur.
+private struct CappedWidth: Layout {
+    var maxWidth: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        guard let child = subviews.first else { return .zero }
+        let width = min(child.sizeThatFits(.unspecified).width, maxWidth)
+        return child.sizeThatFits(ProposedViewSize(width: width, height: nil))
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        subviews.first?.place(at: bounds.origin, proposal: ProposedViewSize(bounds.size))
     }
 }
