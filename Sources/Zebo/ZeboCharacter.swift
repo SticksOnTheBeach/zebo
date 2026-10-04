@@ -44,10 +44,18 @@ struct ZeboCharacter: View {
                     }
                     .offset(x: look.x * 5 * u, y: look.y * 4 * u)
 
-                    Smile()
-                        .stroke(Self.ink, style: StrokeStyle(lineWidth: 3 * u, lineCap: .round))
-                        .frame(width: 10 * u, height: 4 * u)
-                        .offset(y: 27 * u)
+                    if dizzy {
+                        // Bouche en « o » : il est sonné.
+                        Ellipse()
+                            .stroke(Self.ink, lineWidth: 2.5 * u)
+                            .frame(width: 7 * u, height: 8 * u)
+                            .offset(y: 28 * u)
+                    } else {
+                        Smile()
+                            .stroke(Self.ink, style: StrokeStyle(lineWidth: 3 * u, lineCap: .round))
+                            .frame(width: 10 * u, height: 4 * u)
+                            .offset(y: 27 * u)
+                    }
                 }
                 .offset(x: look.x * 4 * u, y: look.y * 3 * u)
             }
