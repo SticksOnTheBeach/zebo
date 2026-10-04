@@ -46,6 +46,7 @@ final class NotchController: NSObject {
         panel.setFrame(topCentered(model.openSize), display: true)
         bubblePanel.setFrame(topCentered(SpeechBubbleView.windowSize), display: true)
         model.panelFrame = panel.frame
+        model.screenFrame = screen.frame
         model.mouseLocation = NSEvent.mouseLocation
     }
 

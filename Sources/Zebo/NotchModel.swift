@@ -16,6 +16,8 @@ final class NotchModel {
     /// Cadre de la fenêtre de la notch et position de la souris, en coordonnées écran.
     var panelFrame: CGRect = .zero
     var mouseLocation: CGPoint = .zero
+    /// Écran qui porte la notch (là où Zebo peut tomber).
+    var screenFrame: CGRect = .zero
 
     /// Taille visible de la notch.
     var notchSize: CGSize { isOpen ? openSize : closedSize }
