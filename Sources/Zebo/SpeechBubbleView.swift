@@ -74,6 +74,9 @@ struct SpeechBubbleView: View {
                     .fill(.white)
                     .shadow(color: .black.opacity(0.25), radius: 8, y: 3)
             }
+            // Il respire et tangue un peu, comme posé sur l'air.
+            .scaleEffect(1 + 0.02 * sin(t * 1.3))
+            .rotationEffect(.degrees(1.2 * sin(t * 0.9)))
     }
 
     /// Trois points de plus en plus gros, de Zebo vers le nuage.
