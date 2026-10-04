@@ -19,7 +19,7 @@ struct NotchView: View {
                     }
 
                     // Un seul Zebo : il glisse et grandit de l'aile gauche jusqu'à sa place.
-                    ZeboCharacter()
+                    AnimatedZebo(mouse: model.mouseLocation, center: zeboScreenCenter)
                         .frame(width: zeboFrame.width, height: zeboFrame.height)
                         .offset(x: zeboFrame.minX, y: zeboFrame.minY)
                 }
@@ -44,6 +44,14 @@ struct NotchView: View {
             return CGRect(x: NotchShape.topRadius + 4, y: (closedHeight - side) / 2,
                           width: side, height: side)
         }
+    }
+
+    /// Centre de Zebo en coordonnées écran, pour savoir dans quelle direction regarder.
+    private var zeboScreenCenter: CGPoint {
+        // La notch est centrée en haut de la fenêtre.
+        let notchMinX = model.panelFrame.midX - size.width / 2
+        return CGPoint(x: notchMinX + zeboFrame.midX,
+                       y: model.panelFrame.maxY - zeboFrame.midY)
     }
 
     /// Texte provisoire à droite de Zebo : le chat viendra ici.
