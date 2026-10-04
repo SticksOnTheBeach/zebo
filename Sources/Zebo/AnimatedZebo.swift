@@ -7,6 +7,8 @@ struct AnimatedZebo: View {
     var center: CGPoint
     /// Notch ouverte : Zebo se balance. Fermée, il reste immobile pour économiser le CPU.
     var isAwake: Bool
+    /// Chaque changement fait faire un petit saut à Zebo (quand il se met à parler).
+    var hopTrigger: Int = 0
 
     @State private var eyeOpenness: CGFloat = 1
 
@@ -17,6 +19,12 @@ struct AnimatedZebo: View {
                 // Le regard rattrape la souris avec un petit ressort.
                 .animation(.spring(response: 0.3, dampingFraction: 0.65), value: look)
                 .rotationEffect(.degrees(isAwake ? sway(at: timeline.date) : 0), anchor: .bottom)
+        }
+        // Petit saut : il gonfle, s'écrase un peu, puis revient.
+        .phaseAnimator([1.0, 1.15, 0.94, 1.0], trigger: hopTrigger) { content, scale in
+            content.scaleEffect(scale, anchor: .bottom)
+        } animation: { _ in
+            .spring(response: 0.16, dampingFraction: 0.6)
         }
         .task { await blinkForever() }
     }

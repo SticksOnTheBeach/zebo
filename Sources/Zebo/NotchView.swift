@@ -21,7 +21,8 @@ struct NotchView: View {
                     }
 
                     // Un seul Zebo : il glisse et grandit de l'aile gauche jusqu'à sa place.
-                    AnimatedZebo(mouse: model.mouseLocation, center: model.zeboScreenCenter, isAwake: model.isOpen)
+                    AnimatedZebo(mouse: model.mouseLocation, center: model.zeboScreenCenter,
+                                 isAwake: model.isOpen, hopTrigger: speech.lineID)
                         .frame(width: zeboFrame.width, height: zeboFrame.height)
                         .contentShape(Rectangle())
                         // Un clic sur Zebo : il parle.
