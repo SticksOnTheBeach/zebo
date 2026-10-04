@@ -1,17 +1,23 @@
 import SwiftUI
 
-/// Zebo vivant : suit la souris du regard, penche la tête et cligne des yeux.
+/// Zebo vivant : suit la souris du regard, penche la tête, cligne des yeux et se balance doucement.
 struct AnimatedZebo: View {
     /// Position de la souris et centre de Zebo, en coordonnées écran (origine en bas à gauche).
     var mouse: CGPoint
     var center: CGPoint
 
     @State private var eyeOpenness: CGFloat = 1
+    @State private var swayRight = false
 
     var body: some View {
         ZeboCharacter(look: look, eyeOpenness: eyeOpenness, headTilt: headTilt)
             // Le regard rattrape la souris avec un petit ressort.
             .animation(.spring(response: 0.3, dampingFraction: 0.65), value: look)
+            // Balancement de repos, limité à cette rotation pour ne pas contaminer les autres animations.
+            .animation(.easeInOut(duration: 2.8).repeatForever(autoreverses: true)) { content in
+                content.rotationEffect(.degrees(swayRight ? 2 : -2), anchor: .bottom)
+            }
+            .onAppear { swayRight = true }
             .task { await blinkForever() }
     }
 
