@@ -48,6 +48,12 @@ final class ZeboSpeech {
                 guard let self, !Task.isCancelled else { return }
                 revealedCount = count
             }
+            // Laisse le temps de lire avant de faire disparaître la bulle.
+            try? await Task.sleep(for: .seconds(2.5 + Double(text.count) * 0.04))
+            guard let self, !Task.isCancelled else { return }
+            withAnimation(.easeOut(duration: 0.25)) {
+                self.line = nil
+            }
         }
     }
 }
