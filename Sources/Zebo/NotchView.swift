@@ -11,13 +11,17 @@ struct NotchView: View {
         NotchShape(bottomRadius: bottomRadius)
             .fill(.black)
             .frame(width: size.width, height: size.height)
-            .overlay {
-                if model.isOpen {
-                    openContent
-                        .transition(.opacity.combined(with: .scale(scale: 0.85, anchor: .top)))
-                } else {
-                    closedContent
-                        .transition(.opacity)
+            .overlay(alignment: .topLeading) {
+                ZStack(alignment: .topLeading) {
+                    if model.isOpen {
+                        openText
+                            .transition(.opacity.combined(with: .offset(x: -12)))
+                    }
+
+                    // Un seul Zebo : il glisse et grandit de l'aile gauche jusqu'à sa place.
+                    ZeboCharacter()
+                        .frame(width: zeboFrame.width, height: zeboFrame.height)
+                        .offset(x: zeboFrame.minX, y: zeboFrame.minY)
                 }
             }
             .clipShape(NotchShape(bottomRadius: bottomRadius))
@@ -28,26 +32,34 @@ struct NotchView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
-    /// Notch fermée : juste un petit indice dans l'aile gauche.
-    private var closedContent: some View {
-        Text("👀")
-            .font(.system(size: 13))
-            .padding(.leading, NotchShape.topRadius + 8)
-            .frame(maxWidth: .infinity, alignment: .leading)
+    /// Place de Zebo dans la notch : petit dans l'aile gauche, grand à gauche une fois ouverte.
+    private var zeboFrame: CGRect {
+        let closedHeight = model.closedSize.height
+        if model.isOpen {
+            let side: CGFloat = 96
+            let y = closedHeight + (model.openSize.height - closedHeight - side) / 2
+            return CGRect(x: 32, y: y, width: side, height: side)
+        } else {
+            let side: CGFloat = 22
+            return CGRect(x: NotchShape.topRadius + 4, y: (closedHeight - side) / 2,
+                          width: side, height: side)
+        }
     }
 
-    /// Notch ouverte : provisoire, le personnage et le chat viendront ici.
-    private var openContent: some View {
-        VStack(spacing: 8) {
-            Text("👀")
-                .font(.system(size: 48))
+    /// Texte provisoire à droite de Zebo : le chat viendra ici.
+    private var openText: some View {
+        VStack(alignment: .leading, spacing: 4) {
             Text("Salut, moi c'est Zebo !")
                 .font(.headline)
                 .foregroundStyle(.white)
+            Text("Bientôt on pourra discuter 👋")
+                .font(.subheadline)
+                .foregroundStyle(.white.opacity(0.6))
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         // Le haut est caché par l'encoche physique : on démarre en dessous.
         .padding(.top, model.closedSize.height)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.leading, 32 + 96 + 20)
     }
 }
 
