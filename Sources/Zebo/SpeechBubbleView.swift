@@ -55,8 +55,8 @@ struct SpeechBubbleView: View {
             .multilineTextAlignment(.leading)
             .frame(maxWidth: maxTextWidth, alignment: .leading)
             .fixedSize(horizontal: false, vertical: true)
-            .padding(.horizontal, 26)
-            .padding(.vertical, 22)
+            .padding(.horizontal, 30)
+            .padding(.vertical, 26)
             .background {
                 PuffyBubbleShape()
                     .fill(.white)
@@ -94,10 +94,10 @@ struct SpeechBubbleView: View {
     }
 }
 
-/// Bulle « nuage » : un rectangle arrondi bordé de bosses.
+/// Bulle « nuage » : un rectangle arrondi bordé de bosses de tailles variées.
 struct PuffyBubbleShape: Shape {
-    /// Rayon des bosses.
-    var puff: CGFloat = 13
+    /// Rayon moyen des bosses.
+    var puff: CGFloat = 18
 
     func path(in rect: CGRect) -> Path {
         var p = Path()
@@ -107,12 +107,14 @@ struct PuffyBubbleShape: Shape {
 
         func puffs(from a: CGPoint, to b: CGPoint) {
             let length = hypot(b.x - a.x, b.y - a.y)
-            // Bosses espacées d'environ 1,4 rayon : de petits creux entre elles.
-            let count = max(1, Int((length / (puff * 1.4)).rounded()))
+            // Bosses espacées d'environ 1,6 rayon : de vrais creux entre elles.
+            let count = max(1, Int((length / (puff * 1.6)).rounded()))
             for i in 0...count {
                 let t = CGFloat(i) / CGFloat(count)
                 let c = CGPoint(x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t)
-                p.addEllipse(in: CGRect(x: c.x - puff, y: c.y - puff, width: puff * 2, height: puff * 2))
+                // Une bosse sur deux un peu plus petite : plus naturel qu'une rangée de perles.
+                let r = i.isMultiple(of: 2) ? puff : puff * 0.8
+                p.addEllipse(in: CGRect(x: c.x - r, y: c.y - r, width: r * 2, height: r * 2))
             }
         }
 
