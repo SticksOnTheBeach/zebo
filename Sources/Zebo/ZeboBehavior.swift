@@ -71,8 +71,8 @@ final class ZeboBehavior {
         speech.say("Ouuuh… je vois des étoiles…")
 
         Task {
-            // Il titube un moment…
-            try? await Task.sleep(for: .seconds(1.8))
+            // Il gigote de gauche à droite…
+            try? await Task.sleep(for: .seconds(1.3))
             let duration = launch()
             // …vole à travers l'écran…
             try? await Task.sleep(for: .seconds(duration))

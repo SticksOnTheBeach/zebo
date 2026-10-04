@@ -21,13 +21,15 @@ struct AnimatedZebo: View {
             let t = timeline.date.timeIntervalSinceReferenceDate
             ZeboCharacter(look: isDizzy ? .zero : look,
                           eyeOpenness: isDizzy ? 1 : eyeOpenness,
-                          // Sonné, il titube de gauche à droite.
-                          headTilt: isDizzy ? .degrees(sin(t * 5) * 12) : headTilt,
+                          headTilt: isDizzy ? .zero : headTilt,
                           dizzy: isDizzy,
                           dizzySpin: .degrees(t * 300))
                 // Le regard rattrape la souris avec un petit ressort.
                 .animation(.spring(response: 0.3, dampingFraction: 0.65), value: look)
                 .rotationEffect(.degrees(isAwake && !isDizzy ? sway(at: timeline.date) : 0), anchor: .bottom)
+                // Sonné, il gigote vite de gauche à droite (environ 6 fois par seconde).
+                .rotationEffect(.degrees(isDizzy ? sin(t * 38) * 14 : 0), anchor: .bottom)
+                .offset(x: isDizzy ? sin(t * 38) * 5 : 0)
         }
         // Petit saut : il gonfle, s'écrase un peu, puis revient.
         .phaseAnimator([1.0, 1.15, 0.94, 1.0], trigger: hopTrigger) { content, scale in
