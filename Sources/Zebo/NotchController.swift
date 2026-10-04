@@ -1,18 +1,43 @@
 import AppKit
 import SwiftUI
 
-/// Crée la notch, la place sur le bon écran et l'ouvre/ferme selon la position de la souris.
+/// Crée la notch, la bulle de dialogue et la fenêtre de chute, les place sur le bon écran
+/// et ouvre/ferme la notch selon la position de la souris.
 @MainActor
 final class NotchController: NSObject {
     private let model = NotchModel()
-    private let panel: NotchPanel
+    private let speech = ZeboSpeech()
+    private let behavior: ZeboBehavior
+    private let panel: OverlayPanel
+    /// Fenêtre de la bulle : juste sous la notch, ne capte jamais les clics.
+    private let bubblePanel: OverlayPanel
+    /// Fenêtre plein écran où Zebo tombe quand il est éjecté ; affichée seulement pendant la chute.
+    private let fallPanel: OverlayPanel
     private var mouseMonitors: [Any] = []
 
     override init() {
-        panel = NotchPanel(model: model)
+        behavior = ZeboBehavior(model: model, speech: speech)
+        panel = OverlayPanel(rootView: NotchView(model: model, speech: speech, behavior: behavior))
+        bubblePanel = OverlayPanel(rootView: SpeechBubbleView(model: model, speech: speech))
+        // Sous la notch : les points qui dépassent vers Zebo passent derrière elle.
+        bubblePanel.level = .mainMenu + 2
+        fallPanel = OverlayPanel(rootView: FallingZeboView(behavior: behavior))
+        // Au-dessus de la notch : Zebo en sort par-dessus.
+        fallPanel.level = .mainMenu + 4
         super.init()
 
+        behavior.onFlightChange = { [weak self] isFlying in
+            guard let self else { return }
+            if isFlying {
+                fallPanel.setFrame(model.screenFrame, display: true)
+                fallPanel.orderFrontRegardless()
+            } else {
+                fallPanel.orderOut(nil)
+            }
+        }
+
         reposition()
+        bubblePanel.orderFrontRegardless()
         panel.orderFrontRegardless()
         startMouseMonitoring()
 
@@ -28,12 +53,18 @@ final class NotchController: NSObject {
     @objc private func reposition() {
         guard let screen = NSScreen.notchScreen else { return }
         let notch = screen.notchSize
-        model.closedSize = CGSize(width: notch.width + NotchPanel.wingWidth * 2, height: notch.height)
+        model.closedSize = CGSize(width: notch.width + NotchModel.wingWidth * 2, height: notch.height)
 
-        let size = model.openSize
-        let origin = CGPoint(x: screen.frame.midX - size.width / 2,
-                             y: screen.frame.maxY - size.height)
-        panel.setFrame(CGRect(origin: origin, size: size), display: true)
+        // Les deux fenêtres sont centrées sur la notch et collées en haut de l'écran.
+        func topCentered(_ size: CGSize) -> CGRect {
+            CGRect(x: screen.frame.midX - size.width / 2, y: screen.frame.maxY - size.height,
+                   width: size.width, height: size.height)
+        }
+        panel.setFrame(topCentered(model.openSize), display: true)
+        bubblePanel.setFrame(topCentered(SpeechBubbleView.windowSize), display: true)
+        model.panelFrame = panel.frame
+        model.screenFrame = screen.frame
+        model.mouseLocation = NSEvent.mouseLocation
     }
 
     // MARK: - Survol
@@ -57,6 +88,9 @@ final class NotchController: NSObject {
     }
 
     private func mouseDidMove() {
+        // Zebo suit la souris des yeux, notch ouverte ou fermée.
+        model.mouseLocation = NSEvent.mouseLocation
+
         // Fermée, seule la petite notch réagit ; ouverte, toute la fenêtre compte.
         let activeArea = model.isOpen ? panel.frame : closedFrame
         // +1 en haut : la souris collée au bord de l'écran est pile sur maxY.

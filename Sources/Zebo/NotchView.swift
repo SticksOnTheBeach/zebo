@@ -3,8 +3,11 @@ import SwiftUI
 
 struct NotchView: View {
     let model: NotchModel
+    let speech: ZeboSpeech
+    let behavior: ZeboBehavior
 
-    private var size: CGSize { model.isOpen ? model.openSize : model.closedSize }
+    private var size: CGSize { model.notchSize }
+    private var zeboFrame: CGRect { model.zeboFrame }
     private var bottomRadius: CGFloat { model.isOpen ? 28 : 12 }
 
     var body: some View {
@@ -19,8 +22,16 @@ struct NotchView: View {
                     }
 
                     // Un seul Zebo : il glisse et grandit de l'aile gauche jusqu'à sa place.
-                    ZeboCharacter()
+                    AnimatedZebo(mouse: model.mouseLocation, center: model.zeboScreenCenter,
+                                 isAwake: model.isOpen, hopTrigger: speech.lineID,
+                                 isDizzy: behavior.state == .dizzy)
                         .frame(width: zeboFrame.width, height: zeboFrame.height)
+                        // Éjecté : il disparaît de la notch, puis revient avec un « pop ».
+                        .scaleEffect(behavior.isHome ? 1 : 0.01)
+                        .opacity(behavior.isHome ? 1 : 0)
+                        .contentShape(Rectangle())
+                        // Un clic sur Zebo : il parle (et trop de clics l'assomment).
+                        .onTapGesture { behavior.poke() }
                         .offset(x: zeboFrame.minX, y: zeboFrame.minY)
                 }
             }
@@ -32,29 +43,16 @@ struct NotchView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
-    /// Place de Zebo dans la notch : petit dans l'aile gauche, grand à gauche une fois ouverte.
-    private var zeboFrame: CGRect {
-        let closedHeight = model.closedSize.height
-        if model.isOpen {
-            let side: CGFloat = 96
-            let y = closedHeight + (model.openSize.height - closedHeight - side) / 2
-            return CGRect(x: 32, y: y, width: side, height: side)
-        } else {
-            let side: CGFloat = 22
-            return CGRect(x: NotchShape.topRadius + 4, y: (closedHeight - side) / 2,
-                          width: side, height: side)
-        }
-    }
-
     /// Texte provisoire à droite de Zebo : le chat viendra ici.
     private var openText: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Salut, moi c'est Zebo !")
                 .font(.headline)
                 .foregroundStyle(.white)
-            Text("Bientôt on pourra discuter 👋")
-                .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.6))
+            Text("SOON... In progress…")
+                .fontWidth(Font.Width.expanded)
+                .fontWeight(Font.Weight.bold)
+                .foregroundStyle(.white.opacity(1.5))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         // Le haut est caché par l'encoche physique : on démarre en dessous.

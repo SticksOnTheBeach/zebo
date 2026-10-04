@@ -1,13 +1,10 @@
 import AppKit
 import SwiftUI
 
-/// Fenêtre sans bordure, transparente, posée par-dessus la barre des menus à l'emplacement de l'encoche.
-/// Elle a la taille de la notch ouverte ; le dessin SwiftUI gère la taille visible.
-final class NotchPanel: NSPanel {
-    /// Largeur ajoutée de chaque côté de l'encoche pour que la notch de Zebo dépasse un peu.
-    static let wingWidth: CGFloat = 36
-
-    init(model: NotchModel) {
+/// Fenêtre sans bordure et transparente, posée par-dessus la barre des menus.
+/// Sert à la notch et à la bulle de dialogue ; le dessin SwiftUI gère ce qui est visible.
+final class OverlayPanel: NSPanel {
+    init<Content: View>(rootView: Content) {
         super.init(
             contentRect: .zero,
             styleMask: [.borderless, .nonactivatingPanel],
@@ -19,7 +16,7 @@ final class NotchPanel: NSPanel {
         backgroundColor = .clear
         hasShadow = false
         isMovable = false
-        // Fermée au démarrage : les clics passent au travers.
+        // Par défaut les clics passent au travers.
         ignoresMouseEvents = true
         acceptsMouseMovedEvents = true
         // Au-dessus de la barre des menus.
@@ -27,9 +24,15 @@ final class NotchPanel: NSPanel {
         // Visible sur tous les bureaux et par-dessus les apps en plein écran.
         collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
 
-        contentView = NSHostingView(rootView: NotchView(model: model))
+        contentView = FirstClickHostingView(rootView: rootView)
     }
 
     // Nécessaire plus tard pour pouvoir taper dans le champ de discussion.
     override var canBecomeKey: Bool { true }
+}
+
+/// Sans ça, le premier clic sur une fenêtre inactive sert juste à l'activer
+/// et n'atteint pas Zebo.
+private final class FirstClickHostingView<Content: View>: NSHostingView<Content> {
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 }

@@ -1,18 +1,23 @@
 import SwiftUI
 
-/// Le personnage, dessiné en formes SwiftUI.
+/// Le personnage : un petit nuage rose, dessiné en formes SwiftUI.
 /// Il s'adapte à la taille qu'on lui donne (tout est calculé sur une grille de 100 × 100).
 struct ZeboCharacter: View {
     /// Direction du regard, de -1 à 1 sur chaque axe (0,0 = regarde droit devant).
     var look: CGPoint = .zero
     /// 1 = yeux grands ouverts, 0 = fermés.
     var eyeOpenness: CGFloat = 1
-    /// Inclinaison de la tête (pivote autour du menton).
+    /// Inclinaison de la tête (pivote autour de la base du nuage).
     var headTilt: Angle = .zero
+    /// Étourdi : yeux en spirale et étoiles qui tournent autour de la tête.
+    var dizzy = false
+    /// Rotation des spirales et des étoiles (on la fait avancer pour les animer).
+    var dizzySpin: Angle = .zero
 
-    private static let skinTop = Color(red: 0.56, green: 0.95, blue: 0.79)
-    private static let skinBottom = Color(red: 0.25, green: 0.76, blue: 0.63)
-    private static let ink = Color(red: 0.10, green: 0.12, blue: 0.16)
+    private static let cloudTop = Color(red: 1.00, green: 0.91, blue: 0.95)
+    private static let cloudBottom = Color(red: 0.99, green: 0.78, blue: 0.87)
+    private static let cloudShade = Color(red: 0.93, green: 0.62, blue: 0.75)
+    private static let ink = Color(red: 0.24, green: 0.13, blue: 0.20)
 
     var body: some View {
         GeometryReader { geo in
@@ -20,78 +25,140 @@ struct ZeboCharacter: View {
             let u = min(geo.size.width, geo.size.height) / 100
 
             ZStack {
-                ear(u).offset(x: -30 * u, y: -38 * u)
-                ear(u).offset(x: 30 * u, y: -38 * u)
+                // Couche plus foncée derrière : donne du volume, et part un peu
+                // à l'opposé du regard (effet de profondeur).
+                CloudShape()
+                    .fill(Self.cloudShade)
+                    .offset(x: -look.x * 2 * u, y: 3 * u)
 
-                RoundedRectangle(cornerRadius: 40 * u, style: .continuous)
-                    .fill(LinearGradient(colors: [Self.skinTop, Self.skinBottom],
+                CloudShape()
+                    .fill(LinearGradient(colors: [Self.cloudTop, Self.cloudBottom],
                                          startPoint: .top, endPoint: .bottom))
-                    .frame(width: 96 * u, height: 84 * u)
-                    .offset(y: 6 * u)
 
-                cheek(u).offset(x: -31 * u, y: 21 * u)
-                cheek(u).offset(x: 31 * u, y: 21 * u)
+                // Le visage glisse vers le regard : le nuage a l'air de tourner.
+                ZStack {
+                    // Pas de pupilles : ce sont les yeux entiers qui suivent le regard.
+                    Group {
+                        eye(u).offset(x: -13 * u, y: 10 * u)
+                        eye(u).offset(x: 13 * u, y: 10 * u)
+                    }
+                    .offset(x: look.x * 5 * u, y: look.y * 4 * u)
 
-                eye(u).offset(x: -19 * u)
-                eye(u).offset(x: 19 * u)
+                    if dizzy {
+                        // Bouche en « o » : il est sonné.
+                        Ellipse()
+                            .stroke(Self.ink, lineWidth: 2.5 * u)
+                            .frame(width: 7 * u, height: 8 * u)
+                            .offset(y: 28 * u)
+                    } else {
+                        Smile()
+                            .stroke(Self.ink, style: StrokeStyle(lineWidth: 3 * u, lineCap: .round))
+                            .frame(width: 10 * u, height: 4 * u)
+                            .offset(y: 27 * u)
+                    }
+                }
+                .offset(x: look.x * 4 * u, y: look.y * 3 * u)
 
-                Smile()
-                    .stroke(Self.ink, style: StrokeStyle(lineWidth: 3 * u, lineCap: .round))
-                    .frame(width: 12 * u, height: 5 * u)
-                    .offset(y: 27 * u)
+                if dizzy {
+                    stars(u)
+                }
             }
             .frame(width: geo.size.width, height: geo.size.height)
             .rotationEffect(headTilt, anchor: .bottom)
         }
     }
 
-    private func ear(_ u: CGFloat) -> some View {
-        Circle()
-            .fill(Self.skinBottom)
-            .frame(width: 22 * u, height: 22 * u)
-    }
-
-    private func cheek(_ u: CGFloat) -> some View {
-        Ellipse()
-            .fill(Color.pink.opacity(0.55))
-            .frame(width: 13 * u, height: 7 * u)
-    }
-
+    /// Petit œil ovale noir ; en clignant, il s'aplatit jusqu'à devenir un trait.
+    /// Étourdi, il devient une spirale qui tourne.
+    @ViewBuilder
     private func eye(_ u: CGFloat) -> some View {
-        ZStack {
-            eyeball(u)
-                // Clignement : l'œil s'écrase verticalement…
-                .scaleEffect(x: 1, y: max(eyeOpenness, 0.05))
-                .opacity(eyeOpenness < 0.15 ? 0 : 1)
-
-            // …et devient un petit trait une fois fermé.
+        if dizzy {
+            Spiral()
+                .stroke(Self.ink, style: StrokeStyle(lineWidth: 2.2 * u, lineCap: .round))
+                .frame(width: 15 * u, height: 15 * u)
+                .rotationEffect(dizzySpin)
+        } else {
             Capsule()
                 .fill(Self.ink)
-                .frame(width: 20 * u, height: 3.5 * u)
-                .opacity(eyeOpenness < 0.15 ? 1 : 0)
+                .frame(width: 8 * u, height: max(13 * eyeOpenness, 2.5) * u)
         }
     }
 
-    private func eyeball(_ u: CGFloat) -> some View {
-        ZStack {
-            Ellipse()
-                .fill(.white)
-                .frame(width: 26 * u, height: 30 * u)
-
-            // Pupille + petit reflet, déplacés selon le regard.
-            Circle()
-                .fill(Self.ink)
-                .frame(width: 14 * u, height: 14 * u)
-                .overlay {
-                    Circle()
-                        .fill(.white)
-                        .frame(width: 4 * u, height: 4 * u)
-                        .offset(x: 2.5 * u, y: -2.5 * u)
-                }
-                .offset(x: look.x * 5 * u, y: look.y * 7 * u)
+    /// Trois étoiles qui tournent en rond au-dessus de la tête.
+    private func stars(_ u: CGFloat) -> some View {
+        ForEach(0..<3, id: \.self) { i in
+            let angle = dizzySpin.radians + Double(i) * 2 * .pi / 3
+            // Plus petites quand elles passent « derrière » la tête : effet de perspective.
+            let depth = 0.75 + 0.25 * sin(angle)
+            StarShape()
+                .fill(Color(red: 1.0, green: 0.84, blue: 0.3))
+                .frame(width: 11 * u, height: 11 * u)
+                .scaleEffect(depth)
+                .offset(x: cos(angle) * 34 * u, y: (-44 + sin(angle) * 7) * u)
         }
-        // La pupille ne sort jamais du blanc de l'œil.
-        .clipShape(Ellipse())
+    }
+}
+
+/// Spirale (yeux étourdis).
+private struct Spiral: Shape {
+    func path(in rect: CGRect) -> Path {
+        let center = CGPoint(x: rect.midX, y: rect.midY)
+        let maxRadius = min(rect.width, rect.height) / 2
+        let turns: CGFloat = 2.5
+        let steps = 60
+        var p = Path()
+        for i in 0...steps {
+            let f = CGFloat(i) / CGFloat(steps)
+            let angle = f * turns * 2 * .pi
+            let point = CGPoint(x: center.x + cos(angle) * f * maxRadius,
+                                y: center.y + sin(angle) * f * maxRadius)
+            if i == 0 { p.move(to: point) } else { p.addLine(to: point) }
+        }
+        return p
+    }
+}
+
+/// Étoile à 5 branches.
+private struct StarShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        let center = CGPoint(x: rect.midX, y: rect.midY)
+        let outer = min(rect.width, rect.height) / 2
+        let inner = outer * 0.45
+        var p = Path()
+        for i in 0..<10 {
+            let radius = i.isMultiple(of: 2) ? outer : inner
+            let angle = -CGFloat.pi / 2 + CGFloat(i) * .pi / 5
+            let point = CGPoint(x: center.x + cos(angle) * radius, y: center.y + sin(angle) * radius)
+            if i == 0 { p.move(to: point) } else { p.addLine(to: point) }
+        }
+        p.closeSubpath()
+        return p
+    }
+}
+
+/// Silhouette de nuage : un socle arrondi surmonté de bosses, fusionnés en une seule forme.
+private struct CloudShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        // Mêmes coordonnées que le personnage : grille 100 × 100 centrée.
+        let u = min(rect.width, rect.height) / 100
+        let center = CGPoint(x: rect.midX, y: rect.midY)
+
+        func circle(_ x: CGFloat, _ y: CGFloat, _ r: CGFloat) -> CGRect {
+            CGRect(x: center.x + (x - r) * u, y: center.y + (y - r) * u,
+                   width: 2 * r * u, height: 2 * r * u)
+        }
+
+        var p = Path()
+        // Socle
+        p.addRoundedRect(in: CGRect(x: center.x - 46 * u, y: center.y - 4 * u,
+                                    width: 92 * u, height: 46 * u),
+                         cornerSize: CGSize(width: 23 * u, height: 23 * u),
+                         style: .continuous)
+        // Bosses (de gauche à droite)
+        p.addEllipse(in: circle(-30, 2, 19))
+        p.addEllipse(in: circle(-4, -14, 29))
+        p.addEllipse(in: circle(27, -2, 21))
+        return p
     }
 }
 
