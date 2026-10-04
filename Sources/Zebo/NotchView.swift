@@ -49,7 +49,7 @@ struct NotchView: View {
             Text("Salut, moi c'est Zebo !")
                 .font(.headline)
                 .foregroundStyle(.white)
-            Text("SOON... In progress…")
+            Text("SOON... In progress….")
                 .fontWidth(Font.Width.expanded)
                 .fontWeight(Font.Weight.bold)
                 .foregroundStyle(.white.opacity(1.5))
