@@ -34,6 +34,14 @@ final class ZeboSpeech {
         say(next)
     }
 
+    /// Coupe la parole : la bulle disparaît tout de suite.
+    func silence() {
+        speakingTask?.cancel()
+        withAnimation(.easeOut(duration: 0.15)) {
+            line = nil
+        }
+    }
+
     func say(_ text: String) {
         speakingTask?.cancel()
         lineID += 1
