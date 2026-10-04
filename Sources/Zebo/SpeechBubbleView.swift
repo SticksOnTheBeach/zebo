@@ -70,7 +70,7 @@ struct SpeechBubbleView: View {
             .padding(.horizontal, 22)
             .padding(.vertical, 16)
             .background {
-                CloudBubbleShape()
+                CloudBubbleShape(time: t)
                     .fill(.white)
                     .shadow(color: .black.opacity(0.25), radius: 8, y: 3)
             }
@@ -110,8 +110,11 @@ struct SpeechBubbleView: View {
 }
 
 /// Silhouette de nuage autour du texte : un corps arrondi, de grosses bosses dessus,
-/// des plus petites dessous et une de chaque côté.
+/// des plus petites dessous et une de chaque côté. Chaque bosse gonfle et dégonfle à son rythme.
 struct CloudBubbleShape: Shape {
+    /// Temps en secondes, pour la respiration des bosses.
+    var time: Double = 0
+
     func path(in rect: CGRect) -> Path {
         let w = rect.width
         let h = rect.height
@@ -120,8 +123,12 @@ struct CloudBubbleShape: Shape {
 
         // Tailles variées pour que ça ne fasse pas une rangée de perles.
         let sizes: [CGFloat] = [1, 0.8, 0.95, 0.75, 0.9]
+        var index = 0
         func puff(_ x: CGFloat, _ y: CGFloat, _ r: CGFloat) {
-            p.addEllipse(in: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2))
+            let breath = 1 + 0.06 * CGFloat(sin(time * 1.7 + Double(index) * 1.9))
+            index += 1
+            let radius = r * breath
+            p.addEllipse(in: CGRect(x: x - radius, y: y - radius, width: radius * 2, height: radius * 2))
         }
 
         // Grosses bosses sur le dessus
