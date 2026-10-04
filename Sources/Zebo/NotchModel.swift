@@ -9,4 +9,8 @@ final class NotchModel {
     /// Taille de la notch fermée : l'encoche physique + les ailes.
     var closedSize: CGSize = .zero
     let openSize = CGSize(width: 480, height: 180)
+
+    /// Cadre de la fenêtre et position de la souris, en coordonnées écran.
+    var panelFrame: CGRect = .zero
+    var mouseLocation: CGPoint = .zero
 }

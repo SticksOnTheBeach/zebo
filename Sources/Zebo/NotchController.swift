@@ -34,6 +34,8 @@ final class NotchController: NSObject {
         let origin = CGPoint(x: screen.frame.midX - size.width / 2,
                              y: screen.frame.maxY - size.height)
         panel.setFrame(CGRect(origin: origin, size: size), display: true)
+        model.panelFrame = panel.frame
+        model.mouseLocation = NSEvent.mouseLocation
     }
 
     // MARK: - Survol
@@ -57,6 +59,9 @@ final class NotchController: NSObject {
     }
 
     private func mouseDidMove() {
+        // Zebo suit la souris des yeux, notch ouverte ou fermée.
+        model.mouseLocation = NSEvent.mouseLocation
+
         // Fermée, seule la petite notch réagit ; ouverte, toute la fenêtre compte.
         let activeArea = model.isOpen ? panel.frame : closedFrame
         // +1 en haut : la souris collée au bord de l'écran est pile sur maxY.
