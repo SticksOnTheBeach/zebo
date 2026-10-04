@@ -9,16 +9,25 @@ struct AnimatedZebo: View {
     var isAwake: Bool
     /// Chaque changement fait faire un petit saut à Zebo (quand il se met à parler).
     var hopTrigger: Int = 0
+    /// Sonné : yeux en spirale, étoiles, et il titube.
+    var isDizzy = false
 
     @State private var eyeOpenness: CGFloat = 1
 
     var body: some View {
         // 30 images/s suffisent pour un balancement aussi lent ; en pause quand la notch est fermée.
-        TimelineView(.animation(minimumInterval: 1 / 30, paused: !isAwake)) { timeline in
-            ZeboCharacter(look: look, eyeOpenness: eyeOpenness, headTilt: headTilt)
+        // Sonné, les spirales et les étoiles ont besoin de toutes les images.
+        TimelineView(.animation(minimumInterval: isDizzy ? nil : 1 / 30, paused: !(isAwake || isDizzy))) { timeline in
+            let t = timeline.date.timeIntervalSinceReferenceDate
+            ZeboCharacter(look: isDizzy ? .zero : look,
+                          eyeOpenness: isDizzy ? 1 : eyeOpenness,
+                          // Sonné, il titube de gauche à droite.
+                          headTilt: isDizzy ? .degrees(sin(t * 5) * 12) : headTilt,
+                          dizzy: isDizzy,
+                          dizzySpin: .degrees(t * 300))
                 // Le regard rattrape la souris avec un petit ressort.
                 .animation(.spring(response: 0.3, dampingFraction: 0.65), value: look)
-                .rotationEffect(.degrees(isAwake ? sway(at: timeline.date) : 0), anchor: .bottom)
+                .rotationEffect(.degrees(isAwake && !isDizzy ? sway(at: timeline.date) : 0), anchor: .bottom)
         }
         // Petit saut : il gonfle, s'écrase un peu, puis revient.
         .phaseAnimator([1.0, 1.15, 0.94, 1.0], trigger: hopTrigger) { content, scale in
