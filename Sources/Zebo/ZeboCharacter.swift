@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Le personnage : un petit nuage, dessiné en formes SwiftUI.
+/// Le personnage : un petit nuage rose, dessiné en formes SwiftUI.
 /// Il s'adapte à la taille qu'on lui donne (tout est calculé sur une grille de 100 × 100).
 struct ZeboCharacter: View {
     /// Direction du regard, de -1 à 1 sur chaque axe (0,0 = regarde droit devant).
@@ -10,9 +10,10 @@ struct ZeboCharacter: View {
     /// Inclinaison de la tête (pivote autour de la base du nuage).
     var headTilt: Angle = .zero
 
-    private static let skinTop = Color(red: 0.56, green: 0.95, blue: 0.79)
-    private static let skinBottom = Color(red: 0.25, green: 0.76, blue: 0.63)
-    private static let ink = Color(red: 0.10, green: 0.12, blue: 0.16)
+    private static let cloudTop = Color(red: 1.00, green: 0.91, blue: 0.95)
+    private static let cloudBottom = Color(red: 0.99, green: 0.78, blue: 0.87)
+    private static let blush = Color(red: 0.96, green: 0.42, blue: 0.60)
+    private static let ink = Color(red: 0.24, green: 0.13, blue: 0.20)
 
     var body: some View {
         GeometryReader { geo in
@@ -21,7 +22,7 @@ struct ZeboCharacter: View {
 
             ZStack {
                 CloudShape()
-                    .fill(LinearGradient(colors: [Self.skinTop, Self.skinBottom],
+                    .fill(LinearGradient(colors: [Self.cloudTop, Self.cloudBottom],
                                          startPoint: .top, endPoint: .bottom))
 
                 // Le visage glisse vers le regard : le nuage a l'air de tourner.
@@ -46,7 +47,7 @@ struct ZeboCharacter: View {
 
     private func cheek(_ u: CGFloat) -> some View {
         Ellipse()
-            .fill(Color.pink.opacity(0.55))
+            .fill(Self.blush.opacity(0.45))
             .frame(width: 13 * u, height: 7 * u)
     }
 
