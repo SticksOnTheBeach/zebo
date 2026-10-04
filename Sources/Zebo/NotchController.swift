@@ -1,18 +1,26 @@
 import AppKit
 import SwiftUI
 
-/// Crée la notch, la place sur le bon écran et l'ouvre/ferme selon la position de la souris.
+/// Crée la notch et la bulle de dialogue, les place sur le bon écran
+/// et ouvre/ferme la notch selon la position de la souris.
 @MainActor
 final class NotchController: NSObject {
     private let model = NotchModel()
+    private let speech = ZeboSpeech()
     private let panel: OverlayPanel
+    /// Fenêtre de la bulle : juste sous la notch, ne capte jamais les clics.
+    private let bubblePanel: OverlayPanel
     private var mouseMonitors: [Any] = []
 
     override init() {
         panel = OverlayPanel(rootView: NotchView(model: model))
+        bubblePanel = OverlayPanel(rootView: SpeechBubbleView(model: model, speech: speech))
+        // Sous la notch : les points qui dépassent vers Zebo passent derrière elle.
+        bubblePanel.level = .mainMenu + 2
         super.init()
 
         reposition()
+        bubblePanel.orderFrontRegardless()
         panel.orderFrontRegardless()
         startMouseMonitoring()
 
@@ -30,10 +38,13 @@ final class NotchController: NSObject {
         let notch = screen.notchSize
         model.closedSize = CGSize(width: notch.width + NotchModel.wingWidth * 2, height: notch.height)
 
-        let size = model.openSize
-        let origin = CGPoint(x: screen.frame.midX - size.width / 2,
-                             y: screen.frame.maxY - size.height)
-        panel.setFrame(CGRect(origin: origin, size: size), display: true)
+        // Les deux fenêtres sont centrées sur la notch et collées en haut de l'écran.
+        func topCentered(_ size: CGSize) -> CGRect {
+            CGRect(x: screen.frame.midX - size.width / 2, y: screen.frame.maxY - size.height,
+                   width: size.width, height: size.height)
+        }
+        panel.setFrame(topCentered(model.openSize), display: true)
+        bubblePanel.setFrame(topCentered(SpeechBubbleView.windowSize), display: true)
         model.panelFrame = panel.frame
         model.mouseLocation = NSEvent.mouseLocation
     }

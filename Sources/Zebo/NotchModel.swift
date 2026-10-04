@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 
-/// État partagé entre AppKit (la fenêtre) et SwiftUI (le dessin).
+/// État partagé entre AppKit (les fenêtres) et SwiftUI (le dessin).
 @MainActor
 @Observable
 final class NotchModel {
