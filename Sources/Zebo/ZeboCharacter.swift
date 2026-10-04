@@ -37,13 +37,17 @@ struct ZeboCharacter: View {
                     cheek(u).offset(x: -29 * u, y: 24 * u)
                     cheek(u).offset(x: 29 * u, y: 24 * u)
 
-                    eye(u).offset(x: -17 * u, y: 8 * u)
-                    eye(u).offset(x: 17 * u, y: 8 * u)
+                    // Pas de pupilles : ce sont les yeux entiers qui suivent le regard.
+                    Group {
+                        eye(u).offset(x: -13 * u, y: 10 * u)
+                        eye(u).offset(x: 13 * u, y: 10 * u)
+                    }
+                    .offset(x: look.x * 5 * u, y: look.y * 4 * u)
 
                     Smile()
                         .stroke(Self.ink, style: StrokeStyle(lineWidth: 3 * u, lineCap: .round))
-                        .frame(width: 11 * u, height: 4.5 * u)
-                        .offset(y: 30 * u)
+                        .frame(width: 10 * u, height: 4 * u)
+                        .offset(y: 27 * u)
                 }
                 .offset(x: look.x * 4 * u, y: look.y * 3 * u)
             }
@@ -58,41 +62,11 @@ struct ZeboCharacter: View {
             .frame(width: 13 * u, height: 7 * u)
     }
 
+    /// Petit œil ovale noir ; en clignant, il s'aplatit jusqu'à devenir un trait.
     private func eye(_ u: CGFloat) -> some View {
-        ZStack {
-            eyeball(u)
-                // Clignement : l'œil s'écrase verticalement…
-                .scaleEffect(x: 1, y: max(eyeOpenness, 0.05))
-                .opacity(eyeOpenness < 0.15 ? 0 : 1)
-
-            // …et devient un petit trait une fois fermé.
-            Capsule()
-                .fill(Self.ink)
-                .frame(width: 20 * u, height: 3.5 * u)
-                .opacity(eyeOpenness < 0.15 ? 1 : 0)
-        }
-    }
-
-    private func eyeball(_ u: CGFloat) -> some View {
-        ZStack {
-            Ellipse()
-                .fill(.white)
-                .frame(width: 26 * u, height: 30 * u)
-
-            // Pupille + petit reflet, déplacés selon le regard.
-            Circle()
-                .fill(Self.ink)
-                .frame(width: 14 * u, height: 14 * u)
-                .overlay {
-                    Circle()
-                        .fill(.white)
-                        .frame(width: 4 * u, height: 4 * u)
-                        .offset(x: 2.5 * u, y: -2.5 * u)
-                }
-                .offset(x: look.x * 5 * u, y: look.y * 7 * u)
-        }
-        // La pupille ne sort jamais du blanc de l'œil.
-        .clipShape(Ellipse())
+        Capsule()
+            .fill(Self.ink)
+            .frame(width: 8 * u, height: max(13 * eyeOpenness, 2.5) * u)
     }
 }
 
