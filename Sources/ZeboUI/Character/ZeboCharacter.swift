@@ -49,6 +49,12 @@ struct ZeboCharacter: View {
                     .offset(x: look.x * 5 * u, y: look.y * 4 * u)
 
                     switch mood {
+                    case .sleeping:
+                        // Petite bouche ronde : il respire en dormant.
+                        Ellipse()
+                            .stroke(ZeboPalette.ink, lineWidth: 2.2 * u)
+                            .frame(width: 4.5 * u, height: 5.5 * u)
+                            .offset(y: 27 * u)
                     case .dizzy:
                         // Bouche en « o » : il est sonné.
                         Ellipse()
@@ -81,10 +87,14 @@ struct ZeboCharacter: View {
     }
 
     /// Petit œil ovale noir ; en clignant, il s'aplatit jusqu'à devenir un trait.
-    /// Étourdi, il devient une spirale qui tourne.
+    /// Étourdi, il devient une spirale qui tourne ; endormi, un petit arc fermé.
     @ViewBuilder
     private func eye(_ u: CGFloat) -> some View {
-        if mood == .dizzy {
+        if mood == .sleeping {
+            SmileShape()
+                .stroke(ZeboPalette.ink, style: StrokeStyle(lineWidth: 2.6 * u, lineCap: .round))
+                .frame(width: 10 * u, height: 2.5 * u)
+        } else if mood == .dizzy {
             SpiralShape()
                 .stroke(ZeboPalette.ink, style: StrokeStyle(lineWidth: 2.2 * u, lineCap: .round))
                 .frame(width: 15 * u, height: 15 * u)

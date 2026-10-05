@@ -6,4 +6,6 @@ enum ZeboMood: Equatable {
     case thinking
     /// Sonné : yeux en spirale, bouche en « o », étoiles autour de la tête.
     case dizzy
+    /// Notch fermée : yeux clos, petite bouche ronde, il dort.
+    case sleeping
 }
