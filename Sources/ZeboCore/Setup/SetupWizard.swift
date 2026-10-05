@@ -9,7 +9,6 @@ public final class SetupWizard {
     public enum Step: Int, CaseIterable, Comparable, Sendable {
         case welcome
         case name
-        case personality
         case ide
         case notch
         case ready

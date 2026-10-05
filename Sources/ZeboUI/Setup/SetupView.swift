@@ -49,7 +49,6 @@ public struct SetupView: View {
         switch step {
         case .welcome: WelcomeStep()
         case .name: NameStep(wizard: wizard)
-        case .personality: PersonalityStep(wizard: wizard)
         case .ide: IDEStep(wizard: wizard)
         case .notch: NotchStep(wizard: wizard)
         case .ready: ReadyStep(wizard: wizard)
@@ -79,7 +78,7 @@ public struct SetupView: View {
         switch displayedStep {
         case .welcome, .ready: .zero
         case .name: CGPoint(x: 70, y: -90)
-        case .personality, .ide: CGPoint(x: 20, y: -120)
+        case .ide: CGPoint(x: 20, y: -120)
         case .notch: CGPoint(x: 30, y: 120)
         }
     }

@@ -30,7 +30,7 @@ struct ZeboSettingsTests {
     @Test("Les préférences enregistrées sont relues au lancement")
     func savedPreferencesAreLoaded() {
         let store = MemoryStore()
-        store.saved = ZeboPreferences(name: "Mael", personality: .zen, showsClock: false, sleepsWhenClosed: false)
+        store.saved = ZeboPreferences(name: "Mael", showsClock: false, sleepsWhenClosed: false)
         #expect(ZeboSettings(store: store).preferences == store.saved)
     }
 
@@ -41,7 +41,7 @@ struct ZeboSettingsTests {
         defer { defaults.removePersistentDomain(forName: suite) }
 
         let preferences = ZeboPreferences(
-            name: "Mael", personality: .playful, showsClock: false, sleepsWhenClosed: true)
+            name: "Mael", showsClock: false, sleepsWhenClosed: true)
         UserDefaultsPreferencesStore(defaults: defaults).savePreferences(preferences)
         #expect(UserDefaultsPreferencesStore(defaults: defaults).loadPreferences() == preferences)
     }

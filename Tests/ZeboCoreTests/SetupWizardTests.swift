@@ -26,7 +26,7 @@ struct SetupWizardTests {
 
         wizard.draft.name = "Mael"
         wizard.advance()
-        #expect(wizard.step == .personality)
+        #expect(wizard.step == .ide)
     }
 
     @Test("Revenir en arrière change le sens du déplacement")
@@ -57,7 +57,7 @@ struct SetupWizardTests {
 
     @Test("Part des réglages qu'on lui donne")
     func startsFromGivenDraft() {
-        let draft = ZeboPreferences(name: "Mael", personality: .zen, showsClock: false, sleepsWhenClosed: true)
+        let draft = ZeboPreferences(name: "Mael", showsClock: false, sleepsWhenClosed: true)
         #expect(SetupWizard(draft: draft).preferences == draft)
     }
 }
