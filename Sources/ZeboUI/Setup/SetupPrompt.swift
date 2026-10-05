@@ -14,15 +14,8 @@ struct SetupPrompt: View {
                 .foregroundStyle(.white.opacity(0.7))
             Button(action: onConfigure) {
                 Label("Configurer Zebo", systemImage: "sparkles")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 7)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .fill(ZeboPalette.button))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(ZeboButtonStyle())
             .padding(.top, 4)
         }
     }
