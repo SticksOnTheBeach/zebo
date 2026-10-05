@@ -9,10 +9,8 @@ struct AnimatedZebo: View {
     var isAwake: Bool
     /// Chaque changement fait faire un petit saut à Zebo (quand il se met à parler).
     var hopTrigger: Int = 0
-    /// Sonné : yeux en spirale, étoiles, et il titube.
-    var isDizzy = false
-    /// Pensif (pendant qu'il parle) : il lève les yeux, la main sous le menton.
-    var isThinking = false
+    /// Sonné, il titube ; pensif, il lève les yeux.
+    var mood: ZeboMood = .calm
 
     @State private var eyeOpenness: CGFloat = 1
 
@@ -24,9 +22,8 @@ struct AnimatedZebo: View {
             ZeboCharacter(look: isDizzy ? .zero : look,
                           eyeOpenness: isDizzy ? 1 : eyeOpenness,
                           headTilt: isDizzy ? .zero : headTilt,
-                          dizzy: isDizzy,
-                          dizzySpin: .degrees(t * 300),
-                          thinking: isThinking)
+                          mood: mood,
+                          dizzySpin: .degrees(t * 300))
                 // Le regard rattrape la souris avec un petit ressort.
                 .animation(.spring(response: 0.3, dampingFraction: 0.65), value: look)
                 .animation(.spring(response: 0.35, dampingFraction: 0.7), value: isThinking)
@@ -43,6 +40,9 @@ struct AnimatedZebo: View {
         }
         .task { await blinkForever() }
     }
+
+    private var isDizzy: Bool { mood == .dizzy }
+    private var isThinking: Bool { mood == .thinking }
 
     /// Balancement de ±2° avec une période de 5,6 s.
     private func sway(at date: Date) -> Double {

@@ -16,7 +16,7 @@ public struct FallingZeboView: View {
                 let t = timeline.date.timeIntervalSince(flight.start)
                 let position = flight.position(at: t)
 
-                ZeboCharacter(dizzy: true, dizzySpin: .degrees(t * 720))
+                ZeboCharacter(mood: .dizzy, dizzySpin: .degrees(t * 720))
                     .frame(width: flight.size, height: flight.size)
                     .rotationEffect(.degrees(flight.spinSpeed * t))
                     .opacity(flight.opacity(at: position.y))

@@ -31,9 +31,7 @@ public struct NotchView: View {
                     // Un seul Zebo : il glisse et grandit de l'aile gauche jusqu'à sa place.
                     AnimatedZebo(mouse: model.mouseLocation, center: model.zeboScreenCenter,
                                  isAwake: model.isOpen, hopTrigger: speech.lineID,
-                                 isDizzy: behavior.state == .dizzy,
-                                 // Quand il parle, il prend un air pensif 🤔.
-                                 isThinking: speech.line != nil)
+                                 mood: mood)
                         .frame(width: zeboFrame.width, height: zeboFrame.height)
                         // Éjecté : il disparaît de la notch, puis revient avec un « pop ».
                         .scaleEffect(behavior.isHome ? 1 : 0.01)
@@ -53,6 +51,12 @@ public struct NotchView: View {
             }
             // La fenêtre est plus grande que la notch : on colle le dessin en haut.
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+
+    /// Sonné avant tout ; sinon, quand il parle, il prend un air pensif 🤔.
+    private var mood: ZeboMood {
+        if behavior.state == .dizzy { return .dizzy }
+        return speech.line != nil ? .thinking : .calm
     }
 
     /// Texte provisoire à droite de Zebo : le chat viendra ici.

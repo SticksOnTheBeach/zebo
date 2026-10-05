@@ -9,12 +9,9 @@ struct ZeboCharacter: View {
     var eyeOpenness: CGFloat = 1
     /// Inclinaison de la tête (pivote autour de la base du nuage).
     var headTilt: Angle = .zero
-    /// Étourdi : yeux en spirale et étoiles qui tournent autour de la tête.
-    var dizzy = false
+    var mood: ZeboMood = .calm
     /// Rotation des spirales et des étoiles (on la fait avancer pour les animer).
     var dizzySpin: Angle = .zero
-    /// Pensif (quand il parle) : sourcils levés, comme l'émoji 🤔.
-    var thinking = false
 
     private static let cloudTop = Color(red: 1.00, green: 0.91, blue: 0.95)
     private static let cloudBottom = Color(red: 0.99, green: 0.78, blue: 0.87)
@@ -37,7 +34,7 @@ struct ZeboCharacter: View {
                         eye(u).offset(x: -13 * u, y: 10 * u)
                         eye(u).offset(x: 13 * u, y: 10 * u)
 
-                        if thinking && !dizzy {
+                        if mood == .thinking {
                             // Un sourcil bien haut, l'autre plus bas et penché : il se demande quelque chose.
                             BrowShape()
                                 .stroke(Self.ink, style: StrokeStyle(lineWidth: 2.6 * u, lineCap: .round))
@@ -53,20 +50,21 @@ struct ZeboCharacter: View {
                     }
                     .offset(x: look.x * 5 * u, y: look.y * 4 * u)
 
-                    if dizzy {
+                    switch mood {
+                    case .dizzy:
                         // Bouche en « o » : il est sonné.
                         Ellipse()
                             .stroke(Self.ink, lineWidth: 2.5 * u)
                             .frame(width: 7 * u, height: 8 * u)
                             .offset(y: 28 * u)
-                    } else if thinking {
+                    case .thinking:
                         // Moue « hmm » un peu de travers.
                         PensiveMouthShape()
                             .stroke(Self.ink, style: StrokeStyle(lineWidth: 3 * u, lineCap: .round))
                             .frame(width: 10 * u, height: 3 * u)
                             .rotationEffect(.degrees(-8))
                             .offset(x: -1 * u, y: 28 * u)
-                    } else {
+                    case .calm:
                         SmileShape()
                             .stroke(Self.ink, style: StrokeStyle(lineWidth: 3 * u, lineCap: .round))
                             .frame(width: 10 * u, height: 4 * u)
@@ -75,7 +73,7 @@ struct ZeboCharacter: View {
                 }
                 .offset(x: look.x * 4 * u, y: look.y * 3 * u)
 
-                if dizzy {
+                if mood == .dizzy {
                     stars(u)
                 }
             }
@@ -88,7 +86,7 @@ struct ZeboCharacter: View {
     /// Étourdi, il devient une spirale qui tourne.
     @ViewBuilder
     private func eye(_ u: CGFloat) -> some View {
-        if dizzy {
+        if mood == .dizzy {
             SpiralShape()
                 .stroke(Self.ink, style: StrokeStyle(lineWidth: 2.2 * u, lineCap: .round))
                 .frame(width: 15 * u, height: 15 * u)
