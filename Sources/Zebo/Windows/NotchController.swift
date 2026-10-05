@@ -23,7 +23,9 @@ final class NotchController: NSObject {
     override init() {
         behavior = ZeboBehavior(placement: model, speech: speech)
         panel = OverlayPanel(
-            rootView: NotchView(model: model, speech: speech, behavior: behavior, setup: setup, settings: settings))
+            rootView: NotchView(
+                model: model, speech: speech, behavior: behavior, setup: setup, settings: settings,
+                onReset: Self.devReset))
         bubblePanel = OverlayPanel(rootView: SpeechBubbleView(model: model, speech: speech))
         // Sous la notch : les points qui dépassent vers Zebo passent derrière elle.
         bubblePanel.level = .mainMenu + 2
@@ -76,6 +78,15 @@ final class NotchController: NSObject {
         model.panelFrame = panel.frame
         model.screenFrame = screen.frame
         model.mouseLocation = NSEvent.mouseLocation
+    }
+
+    /// Remise à zéro, en développement seulement.
+    private static var devReset: (() -> Void)? {
+        #if DEBUG
+            return DevReset.resetAndRelaunch
+        #else
+            return nil
+        #endif
     }
 
     // MARK: - Configuration

@@ -8,15 +8,19 @@ public struct NotchView: View {
     private let behavior: ZeboBehavior
     private let setup: SetupFlow
     private let settings: ZeboSettings
+    /// Remise à zéro complète, proposée au clic droit (versions de développement seulement).
+    private let onReset: (() -> Void)?
 
     public init(
-        model: NotchModel, speech: ZeboSpeech, behavior: ZeboBehavior, setup: SetupFlow, settings: ZeboSettings
+        model: NotchModel, speech: ZeboSpeech, behavior: ZeboBehavior, setup: SetupFlow, settings: ZeboSettings,
+        onReset: (() -> Void)? = nil
     ) {
         self.model = model
         self.speech = speech
         self.behavior = behavior
         self.setup = setup
         self.settings = settings
+        self.onReset = onReset
     }
 
     private var size: CGSize { model.notchSize }
@@ -65,6 +69,9 @@ public struct NotchView: View {
             .clipShape(NotchShape(bottomRadius: bottomRadius))
             .contextMenu {
                 Button("Reconfigurer Zebo…") { setup.reconfigure() }
+                if let onReset {
+                    Button("Réinitialiser Zebo", action: onReset)
+                }
                 Divider()
                 Button("Quitter Zebo") { NSApp.terminate(nil) }
             }
