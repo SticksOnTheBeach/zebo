@@ -1,7 +1,7 @@
 import SwiftUI
 import ZeboCore
 
-/// Couleurs et badge de chaque langage, inspirés de leurs logos.
+/// La couleur de chaque langage, inspirée de son logo (contours, coches, pastilles).
 extension Language {
     var color: Color {
         switch self {
@@ -18,48 +18,5 @@ extension Language {
         case .php: Color(red: 0.47, green: 0.48, blue: 0.71)
         case .ruby: Color(red: 0.8, green: 0.2, blue: 0.18)
         }
-    }
-
-    /// Texte sur le badge (le logo pour Swift).
-    var badge: String {
-        switch self {
-        case .swift: ""
-        case .typescript: "TS"
-        case .javascript: "JS"
-        case .python: "Py"
-        case .rust: "Rs"
-        case .kotlin: "Kt"
-        case .java: "Jv"
-        case .cpp: "C++"
-        case .csharp: "C#"
-        case .go: "Go"
-        case .php: "php"
-        case .ruby: "Rb"
-        }
-    }
-
-    /// Texte foncé sur les badges clairs (JavaScript).
-    var badgeForeground: Color { self == .javascript ? .black : .white }
-}
-
-/// Le badge d'un langage : un carré arrondi à sa couleur, avec son sigle.
-struct LanguageBadge: View {
-    let language: Language
-    var size: CGFloat = 38
-
-    var body: some View {
-        RoundedRectangle(cornerRadius: size * 0.24, style: .continuous)
-            .fill(language.color.gradient)
-            .frame(width: size, height: size)
-            .overlay {
-                if language == .swift {
-                    Image(systemName: "swift")
-                        .font(.system(size: size * 0.5, weight: .bold))
-                } else {
-                    Text(language.badge)
-                        .font(.system(size: size * 0.36, weight: .heavy, design: .rounded))
-                }
-            }
-            .foregroundStyle(language.badgeForeground)
     }
 }

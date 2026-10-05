@@ -37,7 +37,7 @@ private struct LanguageTile: View {
 
     var body: some View {
         VStack(spacing: 7) {
-            LanguageBadge(language: language)
+            LanguageLogo(language: language)
                 .scaleEffect(isSelected ? 1.08 : 1)
             Text(language.name)
                 .font(.system(size: 11, weight: .medium, design: .rounded))
