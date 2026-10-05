@@ -11,6 +11,7 @@ final class NotchController: NSObject {
     private let speech = ZeboSpeech()
     private let behavior: ZeboBehavior
     private let setup = SetupFlow(store: UserDefaultsSetupStore())
+    private let settings = ZeboSettings(store: UserDefaultsPreferencesStore())
     private let panel: OverlayPanel
     /// Fenêtre de la bulle : juste sous la notch, ne capte jamais les clics.
     private let bubblePanel: OverlayPanel
@@ -21,7 +22,8 @@ final class NotchController: NSObject {
 
     override init() {
         behavior = ZeboBehavior(placement: model, speech: speech)
-        panel = OverlayPanel(rootView: NotchView(model: model, speech: speech, behavior: behavior, setup: setup))
+        panel = OverlayPanel(
+            rootView: NotchView(model: model, speech: speech, behavior: behavior, setup: setup, settings: settings))
         bubblePanel = OverlayPanel(rootView: SpeechBubbleView(model: model, speech: speech))
         // Sous la notch : les points qui dépassent vers Zebo passent derrière elle.
         bubblePanel.level = .mainMenu + 2
@@ -32,6 +34,7 @@ final class NotchController: NSObject {
         super.init()
 
         setup.onPhaseChange = { [weak self] phase in self?.setupPhaseDidChange(phase) }
+        applyPreferences()
 
         behavior.onFlightChange = { [weak self] isFlying in
             guard let self else { return }
@@ -80,11 +83,19 @@ final class NotchController: NSObject {
     private func setupPhaseDidChange(_ phase: SetupFlow.Phase) {
         // D'abord l'animation, qui part de la notch encore ouverte…
         setupWindow.phaseDidChange(to: phase)
+        // Configuration terminée : Zebo parle désormais selon ses nouveaux réglages.
+        if phase == .returning { applyPreferences() }
         guard phase == .detaching else { return }
         // …pendant que la notch, masquée, se referme : c'est elle qui part vers le centre de l'écran.
         // Elle sera fermée quand elle reviendra. Zebo se tait : sa bulle ne reste pas seule à l'écran.
         speech.silence()
         setOpen(false)
+    }
+
+    /// Une fois configuré, Zebo parle selon sa personnalité et t'appelle par ton prénom.
+    private func applyPreferences() {
+        guard setup.isComplete else { return }
+        speech.lineSource = CannedLines(preferences: settings.preferences)
     }
 
     // MARK: - Survol

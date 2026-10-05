@@ -7,12 +7,16 @@ public struct NotchView: View {
     private let speech: ZeboSpeech
     private let behavior: ZeboBehavior
     private let setup: SetupFlow
+    private let settings: ZeboSettings
 
-    public init(model: NotchModel, speech: ZeboSpeech, behavior: ZeboBehavior, setup: SetupFlow) {
+    public init(
+        model: NotchModel, speech: ZeboSpeech, behavior: ZeboBehavior, setup: SetupFlow, settings: ZeboSettings
+    ) {
         self.model = model
         self.speech = speech
         self.behavior = behavior
         self.setup = setup
+        self.settings = settings
     }
 
     private var size: CGSize { model.notchSize }
@@ -28,7 +32,7 @@ public struct NotchView: View {
                     if model.isOpen {
                         openText
                             .transition(.opacity.combined(with: .offset(x: -12)))
-                    } else {
+                    } else if preferences.showsClock {
                         clock
                             .transition(.opacity)
                     }
@@ -60,6 +64,8 @@ public struct NotchView: View {
             }
             .clipShape(NotchShape(bottomRadius: bottomRadius))
             .contextMenu {
+                Button("Reconfigurer Zebo…") { setup.reconfigure() }
+                Divider()
                 Button("Quitter Zebo") { NSApp.terminate(nil) }
             }
             // Pendant la configuration, la notch est devenue la fenêtre : elle n'est plus là.
@@ -70,15 +76,18 @@ public struct NotchView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
+    private var preferences: ZeboPreferences { settings.preferences }
+
     /// Zebo est dans la notch : ni éjecté, ni parti dans la fenêtre de configuration.
     private var isZeboHere: Bool { behavior.isHome && setup.isNotchAvailable }
 
     /// Sonné avant tout ; sinon, quand il parle, il prend un air pensif 🤔 ;
-    /// et quand la notch est fermée, il dort.
+    /// et quand la notch est fermée, il dort (s'il fait la sieste).
     private var mood: ZeboMood {
         if behavior.state == .dizzy { return .dizzy }
         if speech.line != nil { return .thinking }
-        return model.isOpen ? .calm : .sleeping
+        if model.isOpen || !preferences.sleepsWhenClosed { return .calm }
+        return .sleeping
     }
 
     /// L'heure, centrée dans l'aile droite de la notch fermée.
@@ -106,7 +115,7 @@ public struct NotchView: View {
 
     private var comingSoon: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Salut, moi c'est Zebo !")
+            Text(preferences.name.isEmpty ? "Salut, moi c'est Zebo !" : "Salut, \(preferences.name) !")
                 .font(.headline)
                 .foregroundStyle(.white)
             Text("SOON... In progress…")
