@@ -21,6 +21,7 @@ enum ZeboPalette {
     static let button = Color(white: 0.2)
     static let buttonHovered = Color(white: 0.28)
     static let buttonPressed = Color(white: 0.14)
+    static let buttonDisabled = Color(white: 0.12)
     /// Étoiles qui tournent quand il est sonné.
     static let star = Color(red: 1.0, green: 0.84, blue: 0.3)
 }
