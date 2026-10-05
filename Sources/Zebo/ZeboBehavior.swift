@@ -1,5 +1,5 @@
+import Foundation
 import Observation
-import SwiftUI
 import ZeboCore
 
 /// Ce que fait Zebo quand on clique dessus : il parle… et si on insiste trop,
@@ -96,9 +96,7 @@ final class ZeboBehavior {
     }
 
     private func comeBack() {
-        withAnimation(.spring(response: 0.5, dampingFraction: 0.55)) {
-            state = .normal
-        }
+        state = .normal
         speech.say("Me revoilà ! 😤")
         // « Me revoilà » compte comme un message : pas de spam juste après son retour.
         pokes.noteMessage(at: Date())
