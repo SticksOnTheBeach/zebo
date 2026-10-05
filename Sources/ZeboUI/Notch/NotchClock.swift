@@ -10,10 +10,6 @@ struct NotchClock: View {
     var body: some View {
         TimelineView(.everyMinute) { context in
             Text(context.date, format: Self.format)
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .monospacedDigit()
-                .foregroundStyle(.white)
-                .lineLimit(1)
                 .fixedSize()
         }
     }
