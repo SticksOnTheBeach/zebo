@@ -63,7 +63,7 @@ struct SetupWizardTests {
 }
 
 @MainActor
-@Suite("Choix de l'éditeur de code")
+@Suite("Choix des éditeurs de code")
 struct IDEChoiceTests {
     /// Ne connaît que les éditeurs qu'on lui donne.
     private struct FakeLocator: ApplicationLocator {
@@ -71,49 +71,74 @@ struct IDEChoiceTests {
         func locate(_ ide: IDE) -> URL? { installed[ide.id] }
     }
 
-    private let vscode = IDE.catalog[0]
+    private let vscode = IDE.catalog.first { $0.id == "vscode" }!
+    private let xcode = IDE.catalog.first { $0.id == "xcode" }!
     private let vscodeURL = URL(fileURLWithPath: "/Applications/Visual Studio Code.app")
+    private let xcodeURL = URL(fileURLWithPath: "/Applications/Xcode.app")
+
+    private func makeWizard(installed: [String: URL] = [:]) -> SetupWizard {
+        SetupWizard(locator: FakeLocator(installed: installed))
+    }
 
     @Test("Choisir un éditeur installé enregistre son emplacement")
     func choosingAnInstalledIDE() {
-        let wizard = SetupWizard(locator: FakeLocator(installed: ["vscode": vscodeURL]))
-        wizard.chooseIDE(vscode)
+        let wizard = makeWizard(installed: ["vscode": vscodeURL])
+        wizard.toggleIDE(vscode)
         let choice = IDEChoice(id: "vscode", name: "VS Code", path: vscodeURL.path)
         #expect(wizard.ideSearch == .found(choice))
-        #expect(wizard.preferences.ide == choice)
+        #expect(wizard.preferences.ides == [choice])
+        #expect(wizard.isSelected(vscode))
     }
 
-    @Test("Un éditeur introuvable n'est pas enregistré")
+    @Test("On peut en choisir plusieurs")
+    func choosingSeveralIDEs() {
+        let wizard = makeWizard(installed: ["vscode": vscodeURL, "xcode": xcodeURL])
+        wizard.toggleIDE(vscode)
+        wizard.toggleIDE(xcode)
+        #expect(wizard.preferences.ides.map(\.id) == ["vscode", "xcode"])
+    }
+
+    @Test("Recliquer sur un éditeur choisi le retire")
+    func togglingRemoves() {
+        let wizard = makeWizard(installed: ["vscode": vscodeURL, "xcode": xcodeURL])
+        wizard.toggleIDE(vscode)
+        wizard.toggleIDE(xcode)
+        wizard.toggleIDE(vscode)
+        #expect(wizard.preferences.ides.map(\.id) == ["xcode"])
+        #expect(!wizard.isSelected(vscode))
+    }
+
+    @Test("Un éditeur introuvable n'est pas ajouté")
     func choosingAMissingIDE() {
-        let wizard = SetupWizard(locator: FakeLocator(installed: [:]))
-        wizard.chooseIDE(vscode)
+        let wizard = makeWizard()
+        wizard.toggleIDE(vscode)
         #expect(wizard.ideSearch == .notFound(vscode))
-        #expect(wizard.preferences.ide == nil)
+        #expect(wizard.preferences.ides.isEmpty)
     }
 
     @Test("On peut indiquer soi-même où est l'éditeur introuvable")
     func choosingTheMissingIDEByHand() {
-        let wizard = SetupWizard(locator: FakeLocator(installed: [:]))
-        wizard.chooseIDE(vscode)
+        let wizard = makeWizard()
+        wizard.toggleIDE(vscode)
         let url = URL(fileURLWithPath: "/Users/me/Apps/Code.app")
         wizard.chooseApplication(at: url, as: vscode)
-        #expect(wizard.preferences.ide == IDEChoice(id: "vscode", name: "VS Code", path: url.path))
+        #expect(wizard.preferences.ides == [IDEChoice(id: "vscode", name: "VS Code", path: url.path)])
     }
 
-    @Test("Une autre app prend le nom de son fichier")
+    @Test("Une autre app prend le nom de son fichier, sans doublon")
     func choosingAnotherApplication() {
-        let wizard = SetupWizard()
-        wizard.chooseApplication(at: URL(fileURLWithPath: "/Applications/Nova.app"), as: nil)
-        #expect(
-            wizard.preferences.ide == IDEChoice(id: IDEChoice.customID, name: "Nova", path: "/Applications/Nova.app"))
+        let wizard = makeWizard()
+        let nova = URL(fileURLWithPath: "/Applications/Nova.app")
+        wizard.chooseApplication(at: nova, as: nil)
+        wizard.chooseApplication(at: nova, as: nil)
+        #expect(wizard.preferences.ides == [IDEChoice(id: IDEChoice.customID, name: "Nova", path: nova.path)])
     }
 
-    @Test("Un éditeur déjà choisi est retrouvé à la reconfiguration")
-    func previousChoiceIsKept() {
-        let choice = IDEChoice(id: "xcode", name: "Xcode", path: "/Applications/Xcode.app")
+    @Test("Les éditeurs déjà choisis sont retrouvés à la reconfiguration")
+    func previousChoicesAreKept() {
         var draft = ZeboPreferences.standard
-        draft.ide = choice
-        #expect(SetupWizard(draft: draft).ideSearch == .found(choice))
+        draft.ides = [IDEChoice(id: "xcode", name: "Xcode", path: xcodeURL.path)]
+        #expect(SetupWizard(draft: draft).isSelected(xcode))
     }
 
     @Test("Le catalogue n'a pas deux éditeurs avec le même identifiant")

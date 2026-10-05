@@ -47,13 +47,30 @@ struct ZeboSettingsTests {
     }
 }
 
-@Suite("Préférences enregistrées avant le choix de l'éditeur")
+@Suite("Préférences enregistrées par une ancienne version")
 struct LegacyPreferencesTests {
+    private func decode(_ json: String) throws -> ZeboPreferences {
+        try JSONDecoder().decode(ZeboPreferences.self, from: Data(json.utf8))
+    }
+
     @Test("Des préférences sans éditeur se relisent quand même")
     func decodesPreferencesWithoutIDE() throws {
-        let json = #"{"name":"Mael","personality":"zen","showsClock":true,"sleepsWhenClosed":false}"#
-        let preferences = try JSONDecoder().decode(ZeboPreferences.self, from: Data(json.utf8))
+        let preferences = try decode(#"{"name":"Mael","personality":"zen","showsClock":true,"sleepsWhenClosed":false}"#)
         #expect(preferences.name == "Mael")
-        #expect(preferences.ide == nil)
+        #expect(preferences.ides.isEmpty)
+        #expect(!preferences.sleepsWhenClosed)
+    }
+
+    @Test("Un éditeur unique devient le premier de la liste")
+    func migratesSingleIDE() throws {
+        let preferences = try decode(
+            #"{"name":"Mael","showsClock":true,"sleepsWhenClosed":true,"ide":{"id":"xcode","name":"Xcode","path":"/Applications/Xcode.app"}}"#
+        )
+        #expect(preferences.ides == [IDEChoice(id: "xcode", name: "Xcode", path: "/Applications/Xcode.app")])
+    }
+
+    @Test("Des préférences vides prennent les valeurs par défaut")
+    func emptyPreferencesUseDefaults() throws {
+        #expect(try decode("{}") == .standard)
     }
 }
