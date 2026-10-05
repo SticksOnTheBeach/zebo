@@ -6,11 +6,8 @@ import Observation
 @MainActor
 @Observable
 public final class NotchModel {
-    /// Largeur ajoutée de chaque côté de l'encoche ; l'heure s'affiche dans l'aile droite.
+    /// Largeur ajoutée de chaque côté de l'encoche : à gauche le lit de Zebo, à droite l'heure.
     public static let wingWidth: CGFloat = 46
-    /// Bandeau ajouté sous l'encoche physique quand la notch est fermée : Zebo y dort,
-    /// au milieu (l'encoche elle-même n'a pas de pixels).
-    public static let sleepBandHeight: CGFloat = 26
     /// Rayon des petits arrondis concaves en haut de la notch.
     public nonisolated static let topCornerRadius: CGFloat = 6
 
@@ -27,31 +24,31 @@ public final class NotchModel {
 
     public init() {}
 
-    /// Taille de la notch fermée : l'encoche physique, les ailes, et le bandeau du dessous.
+    /// Taille de la notch fermée : l'encoche physique + les ailes.
     public var closedSize: CGSize {
-        CGSize(
-            width: hardwareNotchSize.width + Self.wingWidth * 2,
-            height: hardwareNotchSize.height + Self.sleepBandHeight)
+        CGSize(width: hardwareNotchSize.width + Self.wingWidth * 2, height: hardwareNotchSize.height)
     }
 
     /// Taille visible de la notch.
     public var notchSize: CGSize { isOpen ? openSize : closedSize }
 
     /// Place de Zebo dans la notch (origine en haut à gauche de la notch) :
-    /// couché dans son lit au milieu du bandeau, grand à gauche une fois ouverte.
+    /// couché dans son lit dans l'aile gauche, grand à gauche une fois ouverte.
     public var zeboFrame: CGRect {
-        // Juste sous l'encoche physique, centré dans la place restante.
-        let top = hardwareNotchSize.height
+        let closedHeight = closedSize.height
         if isOpen {
+            // Sous l'encoche physique, centré dans la place restante.
             let side: CGFloat = 96
-            return CGRect(x: 32, y: top + (openSize.height - top - side) / 2, width: side, height: side)
+            let top = hardwareNotchSize.height
+            let y = top + (openSize.height - top - side) / 2
+            return CGRect(x: 32, y: y, width: side, height: side)
         } else {
-            // Le lit, vu de profil, est plus large que haut.
-            let height = max(Self.sleepBandHeight - 3, 0)
-            let width = height * 2
+            // Toute l'aile gauche : le lit, vu de profil, est plus large que haut.
+            // Un peu de marge à gauche pour que le coin arrondi du bas ne mange pas la tête de lit.
+            let height = max(closedHeight - 4, 0)
             return CGRect(
-                x: (closedSize.width - width) / 2, y: top + (Self.sleepBandHeight - height) / 2,
-                width: width, height: height)
+                x: Self.topCornerRadius + 3, y: (closedHeight - height) / 2,
+                width: Self.wingWidth - Self.topCornerRadius - 4, height: height)
         }
     }
 

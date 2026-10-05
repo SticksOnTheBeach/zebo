@@ -13,23 +13,13 @@ struct NotchModelTests {
         return model
     }
 
-    @Test("Notch fermée, Zebo dort sous l'encoche physique", arguments: [24, 32, 38] as [CGFloat])
-    func closedZeboIsBelowHardwareNotch(notchHeight: CGFloat) {
-        let model = makeModel(isOpen: false, notchHeight: notchHeight)
-        #expect(model.zeboFrame.minY >= notchHeight)
-        #expect(model.zeboFrame.maxY <= model.closedSize.height)
-    }
-
-    @Test("Notch fermée, Zebo est au milieu")
-    func closedZeboIsCentered() {
-        let model = makeModel(isOpen: false)
-        #expect(abs(model.zeboFrame.midX - model.closedSize.width / 2) < 0.001)
-    }
-
-    @Test("Notch fermée, le bandeau s'ajoute sous l'encoche")
-    func closedNotchAddsSleepBand() {
-        let model = makeModel(isOpen: false)
-        #expect(model.closedSize.height == 32 + NotchModel.sleepBandHeight)
+    @Test("Notch fermée, Zebo tient dans l'aile gauche", arguments: [24, 32, 38] as [CGFloat])
+    func closedZeboFitsInLeftWing(notchHeight: CGFloat) {
+        let frame = makeModel(isOpen: false, notchHeight: notchHeight).zeboFrame
+        #expect(frame.minX >= NotchModel.topCornerRadius)
+        #expect(frame.maxX <= NotchModel.wingWidth)
+        #expect(frame.minY >= 0)
+        #expect(frame.maxY <= notchHeight)
     }
 
     @Test("Notch ouverte, Zebo est sous l'encoche physique")
