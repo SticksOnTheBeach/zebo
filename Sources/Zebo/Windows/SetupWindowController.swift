@@ -4,26 +4,29 @@ import ZeboCore
 import ZeboUI
 
 /// Montre la configuration de Zebo : la notch qui se détache et rejoint le centre de l'écran,
-/// puis une vraie fenêtre d'application à sa place. Le temps de la configuration,
-/// Zebo a une icône dans le Dock comme n'importe quelle app.
+/// puis une vraie fenêtre d'application à sa place, qui retourne dans la notch une fois terminée.
+/// Le temps de la configuration, Zebo a une icône dans le Dock comme n'importe quelle app.
 @MainActor
 final class SetupWindowController: NSObject, NSWindowDelegate {
     private let flow: SetupFlow
     private let model: NotchModel
+    private let settings: ZeboSettings
     /// Fenêtre plein écran transparente, le temps de l'animation.
     private var transitionPanel: OverlayPanel?
     private var window: NSWindow?
 
-    init(flow: SetupFlow, model: NotchModel) {
+    init(flow: SetupFlow, model: NotchModel, settings: ZeboSettings) {
         self.flow = flow
         self.model = model
+        self.settings = settings
     }
 
     func phaseDidChange(to phase: SetupFlow.Phase) {
         switch phase {
         case .detaching: showTransition()
         case .configuring: showWindow()
-        case .returning, .idle: tearDown()
+        case .returning: showReturn()
+        case .idle: tearDown()
         }
     }
 
@@ -60,8 +63,13 @@ final class SetupWindowController: NSObject, NSWindowDelegate {
         window.backgroundColor = .black
         window.appearance = NSAppearance(named: .darkAqua)
         window.isReleasedWhenClosed = false
-        let wizard = SetupWizard()
-        let content = NSHostingView(rootView: SetupView(wizard: wizard) { [weak self] in self?.flow.complete() })
+        // On part des réglages actuels : une reconfiguration les retrouve tels quels.
+        let wizard = SetupWizard(draft: settings.preferences)
+        let content = NSHostingView(
+            rootView: SetupView(wizard: wizard) { [weak self] in
+                self?.settings.preferences = wizard.preferences
+                self?.flow.complete()
+            })
         // La fenêtre garde la taille prévue, sans s'ajuster au contenu.
         content.sizingOptions = []
         window.contentView = content
@@ -79,6 +87,32 @@ final class SetupWindowController: NSObject, NSWindowDelegate {
         // La fenêtre est en place : l'animation peut disparaître sans saut.
         transitionPanel?.orderOut(nil)
         transitionPanel = nil
+    }
+
+    /// La fenêtre (là où elle est, même déplacée) se rétracte dans la notch fermée.
+    private func showReturn() {
+        guard let window else { return tearDown() }
+        let notch = overlayRect(closedNotchFrame)
+        let view = SetupTransitionView(
+            notchFrame: notch,
+            windowFrame: overlayRect(window.frame),
+            zeboStart: model.zeboFrame.offsetBy(dx: notch.minX, dy: notch.minY),
+            notchBottomRadius: 12,
+            isReversed: true,
+            onFinished: { [weak self] in self?.flow.finishReturning() }
+        )
+        let panel = OverlayPanel(rootView: view)
+        panel.level = .mainMenu + 4
+        panel.setFrame(model.screenFrame, display: true)
+        // L'animation se pose par-dessus la fenêtre avant qu'elle disparaisse : pas de saut.
+        panel.orderFrontRegardless()
+        transitionPanel = panel
+
+        self.window = nil
+        window.delegate = nil
+        window.orderOut(nil)
+        window.close()
+        NSApp.setActivationPolicy(.accessory)
     }
 
     private func tearDown() {
@@ -109,6 +143,14 @@ final class SetupWindowController: NSObject, NSWindowDelegate {
         let size = SetupWindowLayout.size
         return CGRect(
             x: (area.midX - size.width / 2).rounded(), y: (area.midY - size.height / 2).rounded(),
+            width: size.width, height: size.height)
+    }
+
+    /// La notch fermée, en coordonnées écran : centrée en haut de la fenêtre de la notch.
+    private var closedNotchFrame: CGRect {
+        let size = model.closedSize
+        return CGRect(
+            x: model.panelFrame.midX - size.width / 2, y: model.panelFrame.maxY - size.height,
             width: size.width, height: size.height)
     }
 
