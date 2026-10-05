@@ -14,8 +14,8 @@ struct ReadyStep: View {
                 row(0, "person.fill", .blue, "Je t'appelle", wizard.trimmedName)
                 divider
                 row(
-                    1, "chevron.left.forwardslash.chevron.right", .purple, "Ton éditeur",
-                    wizard.draft.ide?.name ?? "Aucun")
+                    1, "chevron.left.forwardslash.chevron.right", .purple, "Tes éditeurs",
+                    wizard.draft.ides.isEmpty ? "Aucun" : wizard.draft.ides.map(\.name).joined(separator: ", "))
                 divider
                 row(2, "clock.fill", .teal, "L'heure dans la notch", wizard.draft.showsClock ? "Oui" : "Non")
                 divider

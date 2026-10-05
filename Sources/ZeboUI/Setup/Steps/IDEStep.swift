@@ -3,8 +3,8 @@ import SwiftUI
 import UniformTypeIdentifiers
 import ZeboCore
 
-/// Étape de l'éditeur de code : on choisit le sien, Zebo retrouve tout seul où il est installé,
-/// pour pouvoir le lancer plus tard.
+/// Étape des éditeurs de code : on choisit les siens (un ou plusieurs), Zebo retrouve tout seul
+/// où ils sont installés, pour pouvoir les lancer plus tard.
 struct IDEStep: View {
     @Bindable var wizard: SetupWizard
 
@@ -18,7 +18,7 @@ struct IDEStep: View {
     var body: some View {
         SetupStepLayout(
             title: "Tu codes avec quoi ?",
-            subtitle: "Choisis ton éditeur : je retrouve tout seul où il est installé."
+            subtitle: "Choisis tes éditeurs : je retrouve tout seul où ils sont installés."
         ) {
             VStack(spacing: 14) {
                 LazyVGrid(columns: columns, spacing: 8) {
@@ -26,7 +26,7 @@ struct IDEStep: View {
                         IDETile(
                             ide: ide,
                             icon: installed[ide.id].map(Self.icon),
-                            isSelected: wizard.draft.ide?.id == ide.id,
+                            isSelected: wizard.isSelected(ide),
                             isSearching: searching == ide
                         ) { search(ide) }
                         // Les tuiles arrivent en vague, une colonne après l'autre.
@@ -49,13 +49,18 @@ struct IDEStep: View {
 
     // MARK: - Recherche
 
+    /// Un éditeur coché se retire tout de suite ; sinon Zebo le cherche avant de l'ajouter.
     private func search(_ ide: IDE) {
         guard searching == nil else { return }
+        if wizard.isSelected(ide) {
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { wizard.toggleIDE(ide) }
+            return
+        }
         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { searching = ide }
         // Le temps de voir Zebo chercher : la recherche elle-même est instantanée.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                wizard.chooseIDE(ide)
+                wizard.toggleIDE(ide)
                 searching = nil
             }
         }
@@ -64,7 +69,7 @@ struct IDEStep: View {
     /// Choisir une app à la main, pour l'éditeur introuvable ou un autre.
     private func pickApplication(for ide: IDE?) {
         let panel = NSOpenPanel()
-        panel.title = ide.map { "Où est \($0.name) ?" } ?? "Choisis ton éditeur"
+        panel.title = ide.map { "Où est \($0.name) ?" } ?? "Choisis un éditeur"
         panel.prompt = "Choisir"
         panel.allowedContentTypes = [.application]
         panel.directoryURL = URL(fileURLWithPath: "/Applications")
@@ -97,7 +102,7 @@ struct IDEStep: View {
                             .frame(width: 30, height: 30)
                     } text: {
                         VStack(alignment: .leading, spacing: 1) {
-                            Text("Trouvé : \(choice.name)")
+                            Text("Ajouté : \(choice.name)")
                                 .font(.system(size: 14, weight: .semibold, design: .rounded))
                                 .foregroundStyle(.white)
                             Text(choice.path)
@@ -107,7 +112,7 @@ struct IDEStep: View {
                                 .truncationMode(.middle)
                         }
                     } action: {
-                        Button("Changer…") { pickApplication(for: nil) }
+                        Button("Autre…") { pickApplication(for: nil) }
                             .buttonStyle(ZeboButtonStyle())
                     }
                 case .notFound(let ide):
@@ -128,8 +133,9 @@ struct IDEStep: View {
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(.white.opacity(0.5))
                     } text: {
-                        Text("Pas dans la liste ? Tu peux aussi passer cette étape.")
+                        Text(summary)
                             .foregroundStyle(.white.opacity(0.6))
+                            .lineLimit(1)
                     } action: {
                         Button("Autre…") { pickApplication(for: nil) }
                             .buttonStyle(ZeboButtonStyle())
@@ -139,6 +145,13 @@ struct IDEStep: View {
         }
         .font(.system(size: 13, design: .rounded))
         .transition(.opacity.combined(with: .offset(y: 6)))
+    }
+
+    /// Les éditeurs choisis, ou une invitation à en choisir.
+    private var summary: String {
+        let names = wizard.draft.ides.map(\.name)
+        guard !names.isEmpty else { return "Pas dans la liste ? Tu peux aussi passer cette étape." }
+        return "Tes éditeurs : " + names.joined(separator: ", ")
     }
 
     private static func icon(_ url: URL) -> NSImage {
