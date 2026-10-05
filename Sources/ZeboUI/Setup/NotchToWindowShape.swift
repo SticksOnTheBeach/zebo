@@ -7,11 +7,10 @@ import ZeboCore
 struct NotchToWindowShape: Shape {
     var from: CGRect
     var to: CGRect
-    /// 0 = la notch ouverte, 1 = la fenêtre.
+    /// 0 = la notch, 1 = la fenêtre.
     var progress: CGFloat
-
-    /// Arrondi du bas de la notch ouverte.
-    private static let notchBottomRadius: CGFloat = 28
+    /// Arrondi du bas de la notch : 28 ouverte, 12 fermée.
+    var notchBottomRadius: CGFloat = 28
     /// Part de l'animation pendant laquelle les arrondis creusés du haut s'effacent.
     private static let flareFadeEnd: CGFloat = 0.3
 
@@ -25,7 +24,7 @@ struct NotchToWindowShape: Shape {
         let rect = CGRect(
             x: lerp(from.minX, to.minX, p), y: lerp(from.minY, to.minY, p),
             width: lerp(from.width, to.width, p), height: lerp(from.height, to.height, p))
-        let bottom = lerp(Self.notchBottomRadius, SetupWindowLayout.cornerRadius, p)
+        let bottom = lerp(notchBottomRadius, SetupWindowLayout.cornerRadius, p)
         let flare = NotchModel.topCornerRadius * max(0, 1 - p / Self.flareFadeEnd)
 
         guard flare > 0 else {
