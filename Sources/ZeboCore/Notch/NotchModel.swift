@@ -37,8 +37,9 @@ public final class NotchModel {
             return CGRect(x: 32, y: y, width: side, height: side)
         } else {
             let side: CGFloat = 22
-            return CGRect(x: Self.topCornerRadius + 4, y: (closedHeight - side) / 2,
-                          width: side, height: side)
+            return CGRect(
+                x: Self.topCornerRadius + 4, y: (closedHeight - side) / 2,
+                width: side, height: side)
         }
     }
 
@@ -46,7 +47,8 @@ public final class NotchModel {
     public var zeboScreenCenter: CGPoint {
         // La notch est centrée en haut de la fenêtre.
         let notchMinX = panelFrame.midX - notchSize.width / 2
-        return CGPoint(x: notchMinX + zeboFrame.midX,
-                       y: panelFrame.maxY - zeboFrame.midY)
+        return CGPoint(
+            x: notchMinX + zeboFrame.midX,
+            y: panelFrame.maxY - zeboFrame.midY)
     }
 }

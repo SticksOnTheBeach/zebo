@@ -12,16 +12,22 @@ final class MouseMonitor {
         stop()
 
         // Souris au-dessus des autres apps.
-        if let global = NSEvent.addGlobalMonitorForEvents(matching: Self.events, handler: { _ in
-            MainActor.assumeIsolated { onMove() }
-        }) {
+        if let global = NSEvent.addGlobalMonitorForEvents(
+            matching: Self.events,
+            handler: { _ in
+                MainActor.assumeIsolated { onMove() }
+            })
+        {
             monitors.append(global)
         }
         // Souris au-dessus de nos propres fenêtres.
-        if let local = NSEvent.addLocalMonitorForEvents(matching: Self.events, handler: { event in
-            MainActor.assumeIsolated { onMove() }
-            return event
-        }) {
+        if let local = NSEvent.addLocalMonitorForEvents(
+            matching: Self.events,
+            handler: { event in
+                MainActor.assumeIsolated { onMove() }
+                return event
+            })
+        {
             monitors.append(local)
         }
     }

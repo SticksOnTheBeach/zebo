@@ -34,16 +34,22 @@ public struct SpeechBubbleView: View {
                 }
                 // La bulle « sort » de Zebo.
                 .transition(
-                    .scale(scale: 0.3, anchor: UnitPoint(x: zeboCenter.x / Self.windowSize.width,
-                                                         y: zeboCenter.y / Self.windowSize.height))
+                    .scale(
+                        scale: 0.3,
+                        anchor: UnitPoint(
+                            x: zeboCenter.x / Self.windowSize.width,
+                            y: zeboCenter.y / Self.windowSize.height)
+                    )
                     .combined(with: .opacity)
                 )
             }
         }
         .frame(width: Self.windowSize.width, height: Self.windowSize.height, alignment: .topLeading)
         // La bulle surgit avec un ressort et s'efface en douceur.
-        .animation(speech.line == nil ? .easeOut(duration: 0.2) : .spring(response: 0.35, dampingFraction: 0.7),
-                   value: speech.line)
+        .animation(
+            speech.line == nil ? .easeOut(duration: 0.2) : .spring(response: 0.35, dampingFraction: 0.7),
+            value: speech.line
+        )
         .onChange(of: speech.lineID, initial: true) { lineStart = Date() }
     }
 
@@ -78,16 +84,16 @@ public struct SpeechBubbleView: View {
                 .foregroundStyle(ZeboPalette.ink)
                 .multilineTextAlignment(.leading)
         }
-            .padding(.horizontal, 22)
-            .padding(.vertical, 20)
-            .background {
-                CloudBubbleShape(time: t)
-                    .fill(.white)
-                    .shadow(color: .black.opacity(0.25), radius: 8, y: 3)
-            }
-            // Il respire et tangue un peu, comme posé sur l'air.
-            .scaleEffect(1 + 0.02 * sin(t * 1.3))
-            .rotationEffect(.degrees(1.2 * sin(t * 0.9)))
+        .padding(.horizontal, 22)
+        .padding(.vertical, 20)
+        .background {
+            CloudBubbleShape(time: t)
+                .fill(.white)
+                .shadow(color: .black.opacity(0.25), radius: 8, y: 3)
+        }
+        // Il respire et tangue un peu, comme posé sur l'air.
+        .scaleEffect(1 + 0.02 * sin(t * 1.3))
+        .rotationEffect(.degrees(1.2 * sin(t * 0.9)))
     }
 
     /// Trois points de plus en plus gros, de Zebo vers le nuage ; chacun flotte à son rythme.
@@ -113,8 +119,9 @@ public struct SpeechBubbleView: View {
                     .frame(width: step.size, height: step.size)
                     .scaleEffect(Self.easeOutBack(pop))
                     .opacity(fade)
-                    .offset(x: start.x + (end.x - start.x) * step.t - step.size / 2,
-                            y: start.y + (end.y - start.y) * step.t - step.size / 2 + float)
+                    .offset(
+                        x: start.x + (end.x - start.x) * step.t - step.size / 2,
+                        y: start.y + (end.y - start.y) * step.t - step.size / 2 + float)
             }
         }
     }

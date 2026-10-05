@@ -13,13 +13,14 @@ extension NSScreen {
     /// Taille de l'encoche physique, ou d'une fausse notch si l'écran n'en a pas.
     var notchSize: CGSize {
         guard hasNotch,
-              let left = auxiliaryTopLeftArea,
-              let right = auxiliaryTopRightArea
+            let left = auxiliaryTopLeftArea,
+            let right = auxiliaryTopRightArea
         else {
             let menuBarHeight = frame.maxY - visibleFrame.maxY
             return CGSize(width: 190, height: max(menuBarHeight, 24))
         }
-        return CGSize(width: frame.width - left.width - right.width,
-                      height: safeAreaInsets.top)
+        return CGSize(
+            width: frame.width - left.width - right.width,
+            height: safeAreaInsets.top)
     }
 }

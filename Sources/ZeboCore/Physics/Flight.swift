@@ -57,8 +57,9 @@ public struct Flight: Sendable {
 
     public func position(at t: Double) -> CGPoint {
         let t = CGFloat(t)
-        return CGPoint(x: origin.x + velocity.dx * t,
-                       y: origin.y + velocity.dy * t + 0.5 * Self.gravity * t * t)
+        return CGPoint(
+            x: origin.x + velocity.dx * t,
+            y: origin.y + velocity.dy * t + 0.5 * Self.gravity * t * t)
     }
 
     /// Temps pour sortir par le bas de l'écran.

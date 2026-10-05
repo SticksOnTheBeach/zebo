@@ -29,20 +29,24 @@ public struct NotchView: View {
                     }
 
                     // Un seul Zebo : il glisse et grandit de l'aile gauche jusqu'à sa place.
-                    AnimatedZebo(mouse: model.mouseLocation, center: model.zeboScreenCenter,
-                                 isAwake: model.isOpen, hopTrigger: speech.lineID,
-                                 mood: mood)
-                        .frame(width: zeboFrame.width, height: zeboFrame.height)
-                        // Éjecté : il disparaît de la notch, puis revient avec un « pop ».
-                        .scaleEffect(behavior.isHome ? 1 : 0.01)
-                        .opacity(behavior.isHome ? 1 : 0)
-                        // Il disparaît d'un coup, mais revient avec un rebond.
-                        .animation(behavior.isHome ? .spring(response: 0.5, dampingFraction: 0.55) : nil,
-                                   value: behavior.isHome)
-                        .contentShape(Rectangle())
-                        // Un clic sur Zebo : il parle (et trop de clics l'assomment).
-                        .onTapGesture { behavior.poke() }
-                        .offset(x: zeboFrame.minX, y: zeboFrame.minY)
+                    AnimatedZebo(
+                        mouse: model.mouseLocation, center: model.zeboScreenCenter,
+                        isAwake: model.isOpen, hopTrigger: speech.lineID,
+                        mood: mood
+                    )
+                    .frame(width: zeboFrame.width, height: zeboFrame.height)
+                    // Éjecté : il disparaît de la notch, puis revient avec un « pop ».
+                    .scaleEffect(behavior.isHome ? 1 : 0.01)
+                    .opacity(behavior.isHome ? 1 : 0)
+                    // Il disparaît d'un coup, mais revient avec un rebond.
+                    .animation(
+                        behavior.isHome ? .spring(response: 0.5, dampingFraction: 0.55) : nil,
+                        value: behavior.isHome
+                    )
+                    .contentShape(Rectangle())
+                    // Un clic sur Zebo : il parle (et trop de clics l'assomment).
+                    .onTapGesture { behavior.poke() }
+                    .offset(x: zeboFrame.minX, y: zeboFrame.minY)
                 }
             }
             .clipShape(NotchShape(bottomRadius: bottomRadius))

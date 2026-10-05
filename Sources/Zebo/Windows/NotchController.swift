@@ -59,8 +59,9 @@ final class NotchController: NSObject {
 
         // Les deux fenêtres sont centrées sur la notch et collées en haut de l'écran.
         func topCentered(_ size: CGSize) -> CGRect {
-            CGRect(x: screen.frame.midX - size.width / 2, y: screen.frame.maxY - size.height,
-                   width: size.width, height: size.height)
+            CGRect(
+                x: screen.frame.midX - size.width / 2, y: screen.frame.maxY - size.height,
+                width: size.width, height: size.height)
         }
         panel.setFrame(topCentered(model.openSize), display: true)
         bubblePanel.setFrame(topCentered(SpeechBubbleView.windowSize), display: true)
@@ -90,9 +91,10 @@ final class NotchController: NSObject {
 
     private var closedFrame: CGRect {
         let size = model.closedSize
-        return CGRect(x: panel.frame.midX - size.width / 2,
-                      y: panel.frame.maxY - size.height,
-                      width: size.width,
-                      height: size.height)
+        return CGRect(
+            x: panel.frame.midX - size.width / 2,
+            y: panel.frame.maxY - size.height,
+            width: size.width,
+            height: size.height)
     }
 }

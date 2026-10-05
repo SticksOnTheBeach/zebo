@@ -20,8 +20,10 @@ struct ZeboCharacter: View {
 
             ZStack {
                 CloudShape()
-                    .fill(LinearGradient(colors: [ZeboPalette.cloudTop, ZeboPalette.cloudBottom],
-                                         startPoint: .top, endPoint: .bottom))
+                    .fill(
+                        LinearGradient(
+                            colors: [ZeboPalette.cloudTop, ZeboPalette.cloudBottom],
+                            startPoint: .top, endPoint: .bottom))
 
                 // Le visage glisse vers le regard : le nuage a l'air de tourner.
                 ZStack {

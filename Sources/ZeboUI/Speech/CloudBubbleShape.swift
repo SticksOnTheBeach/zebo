@@ -11,8 +11,9 @@ struct CloudBubbleShape: Shape {
         // Taille des bosses : jamais trop petite, pour qu'une bulle d'une ligne reste bien ronde.
         let s = max(rect.height, w * 0.3)
         var p = Path()
-        p.addRoundedRect(in: rect, cornerSize: CGSize(width: rect.height / 2, height: rect.height / 2),
-                         style: .continuous)
+        p.addRoundedRect(
+            in: rect, cornerSize: CGSize(width: rect.height / 2, height: rect.height / 2),
+            style: .continuous)
 
         // Tailles variées pour que ça ne fasse pas une rangée de perles.
         let sizes: [CGFloat] = [1, 0.8, 0.95, 0.75, 0.9]

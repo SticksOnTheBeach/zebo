@@ -19,18 +19,20 @@ struct AnimatedZebo: View {
         // Sonné, les spirales et les étoiles ont besoin de toutes les images.
         TimelineView(.animation(minimumInterval: isDizzy ? nil : 1 / 30, paused: !(isAwake || isDizzy))) { timeline in
             let t = timeline.date.timeIntervalSinceReferenceDate
-            ZeboCharacter(look: isDizzy ? .zero : look,
-                          eyeOpenness: isDizzy ? 1 : eyeOpenness,
-                          headTilt: isDizzy ? .zero : headTilt,
-                          mood: mood,
-                          dizzySpin: .degrees(t * 300))
-                // Le regard rattrape la souris avec un petit ressort.
-                .animation(.spring(response: 0.3, dampingFraction: 0.65), value: look)
-                .animation(.spring(response: 0.35, dampingFraction: 0.7), value: isThinking)
-                .rotationEffect(.degrees(isAwake && !isDizzy ? sway(at: timeline.date) : 0), anchor: .bottom)
-                // Sonné, il gigote vite de gauche à droite (environ 6 fois par seconde).
-                .rotationEffect(.degrees(isDizzy ? sin(t * 38) * 14 : 0), anchor: .bottom)
-                .offset(x: isDizzy ? sin(t * 38) * 5 : 0)
+            ZeboCharacter(
+                look: isDizzy ? .zero : look,
+                eyeOpenness: isDizzy ? 1 : eyeOpenness,
+                headTilt: isDizzy ? .zero : headTilt,
+                mood: mood,
+                dizzySpin: .degrees(t * 300)
+            )
+            // Le regard rattrape la souris avec un petit ressort.
+            .animation(.spring(response: 0.3, dampingFraction: 0.65), value: look)
+            .animation(.spring(response: 0.35, dampingFraction: 0.7), value: isThinking)
+            .rotationEffect(.degrees(isAwake && !isDizzy ? sway(at: timeline.date) : 0), anchor: .bottom)
+            // Sonné, il gigote vite de gauche à droite (environ 6 fois par seconde).
+            .rotationEffect(.degrees(isDizzy ? sin(t * 38) * 14 : 0), anchor: .bottom)
+            .offset(x: isDizzy ? sin(t * 38) * 5 : 0)
         }
         // Petit saut : il gonfle, s'écrase un peu, puis revient.
         .phaseAnimator([1.0, 1.15, 0.94, 1.0], trigger: hopTrigger) { content, scale in
@@ -61,8 +63,9 @@ struct AnimatedZebo: View {
         let distance = hypot(delta.dx, delta.dy)
         guard distance > 1 else { return .zero }
         let strength = min(distance / 120, 1)
-        return CGPoint(x: delta.dx / distance * strength,
-                       y: delta.dy / distance * strength)
+        return CGPoint(
+            x: delta.dx / distance * strength,
+            y: delta.dy / distance * strength)
     }
 
     /// La tête penche vers le côté où se trouve la souris (10° max).

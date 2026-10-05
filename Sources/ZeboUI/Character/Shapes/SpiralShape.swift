@@ -11,8 +11,9 @@ struct SpiralShape: Shape {
         for i in 0...steps {
             let f = CGFloat(i) / CGFloat(steps)
             let angle = f * turns * 2 * .pi
-            let point = CGPoint(x: center.x + cos(angle) * f * maxRadius,
-                                y: center.y + sin(angle) * f * maxRadius)
+            let point = CGPoint(
+                x: center.x + cos(angle) * f * maxRadius,
+                y: center.y + sin(angle) * f * maxRadius)
             if i == 0 { p.move(to: point) } else { p.addLine(to: point) }
         }
         return p
