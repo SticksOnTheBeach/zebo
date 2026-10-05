@@ -86,4 +86,12 @@ struct FlightEjectionTests {
         let flight = Flight.ejection(from: CGPoint(x: 700, y: 900), in: screen, size: 96, using: &generator)
         #expect((flight.velocity.dx > 0) == (flight.spinSpeed > 0))
     }
+
+    @Test("Garde la taille de Zebo et tombe jusqu'au bas de l'écran")
+    func keepsSizeAndScreenHeight() {
+        var generator = SeededGenerator(state: 7)
+        let flight = Flight.ejection(from: CGPoint(x: 700, y: 900), in: screen, size: 96, using: &generator)
+        #expect(flight.size == 96)
+        #expect(flight.floorY == screen.height)
+    }
 }

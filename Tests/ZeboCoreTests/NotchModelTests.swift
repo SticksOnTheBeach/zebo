@@ -28,4 +28,28 @@ struct NotchModelTests {
         #expect(model.zeboFrame.minY >= model.hardwareNotchSize.height)
         #expect(model.zeboFrame.maxY <= model.openSize.height)
     }
+
+    @Test("La notch fermée, c'est l'encoche plus une aile de chaque côté")
+    func closedSizeAddsWings() {
+        let model = makeModel(isOpen: false)
+        #expect(model.closedSize == CGSize(width: 185 + NotchModel.wingWidth * 2, height: 32))
+    }
+
+    @Test("La taille visible suit l'ouverture de la notch")
+    func notchSizeFollowsIsOpen() {
+        let model = makeModel(isOpen: false)
+        #expect(model.notchSize == model.closedSize)
+        model.isOpen = true
+        #expect(model.notchSize == model.openSize)
+    }
+
+    @Test("Le centre de Zebo à l'écran tient compte de la notch centrée dans sa fenêtre")
+    func zeboScreenCenterIsInScreenCoordinates() {
+        let model = makeModel(isOpen: true)
+        model.panelFrame = CGRect(x: 600, y: 900, width: 480, height: 180)
+        let notchMinX = model.panelFrame.midX - model.openSize.width / 2
+        #expect(model.zeboScreenCenter.x == notchMinX + model.zeboFrame.midX)
+        // Origine de l'écran en bas : plus Zebo est bas dans la notch, plus y est petit.
+        #expect(model.zeboScreenCenter.y == model.panelFrame.maxY - model.zeboFrame.midY)
+    }
 }

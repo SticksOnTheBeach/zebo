@@ -52,4 +52,26 @@ struct ZeboBehaviorTests {
         behavior.poke()
         #expect(speech.randomLines == 1)
     }
+
+    @Test("Un deuxième clic pendant le cooldown ne relance pas de message")
+    func secondPokeDuringCooldownIsIgnored() {
+        behavior.poke()
+        behavior.poke()
+        #expect(speech.randomLines == 1)
+        #expect(behavior.state == .normal)
+    }
+
+    @Test("Assommé, il finit par être éjecté de la notch")
+    func faintingEndsWithAnEjection() async {
+        var flightChanges: [Bool] = []
+        behavior.onFlightChange = { flightChanges.append($0) }
+        for _ in 0..<3 { behavior.poke() }
+
+        #expect(await waitUntil(timeout: .seconds(3)) { behavior.state == .flying })
+        #expect(behavior.flight != nil)
+        #expect(!behavior.isHome)
+        #expect(flightChanges == [true])
+        // Il se tait au moment d'être catapulté.
+        #expect(speech.silences == 1)
+    }
 }
