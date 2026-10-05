@@ -8,15 +8,20 @@ public struct ZeboPreferences: Codable, Equatable, Sendable {
     public var showsClock: Bool
     /// Notch fermée, Zebo dort dans son lit (sinon il reste éveillé).
     public var sleepsWhenClosed: Bool
+    /// L'éditeur de code choisi, pour pouvoir le lancer (absent des anciennes préférences).
+    public var ide: IDEChoice?
 
     public static let standard = ZeboPreferences(
         name: "", personality: .gentle, showsClock: true, sleepsWhenClosed: true)
 
-    public init(name: String, personality: Personality, showsClock: Bool, sleepsWhenClosed: Bool) {
+    public init(
+        name: String, personality: Personality, showsClock: Bool, sleepsWhenClosed: Bool, ide: IDEChoice? = nil
+    ) {
         self.name = name
         self.personality = personality
         self.showsClock = showsClock
         self.sleepsWhenClosed = sleepsWhenClosed
+        self.ide = ide
     }
 }
 
