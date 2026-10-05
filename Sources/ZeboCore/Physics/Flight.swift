@@ -32,6 +32,29 @@ public struct Flight: Sendable {
         self.floorY = floorY
     }
 
+    /// Zebo catapulté hors de la notch, vers le haut et d'un côté pris au hasard.
+    /// - Parameters:
+    ///   - center: centre de Zebo en coordonnées écran (origine en bas à gauche).
+    ///   - screen: cadre de l'écran où il tombe.
+    public static func ejection(
+        from center: CGPoint,
+        in screen: CGRect,
+        size: CGFloat,
+        start: Date = Date(),
+        using generator: inout some RandomNumberGenerator
+    ) -> Flight {
+        let direction: CGFloat = Bool.random(using: &generator) ? 1 : -1
+        return Flight(
+            start: start,
+            // Coordonnées de la fenêtre de chute (plein écran, origine en haut à gauche).
+            origin: CGPoint(x: center.x - screen.minX, y: screen.maxY - center.y),
+            velocity: CGVector(dx: direction * .random(in: 180...320, using: &generator), dy: -640),
+            size: size,
+            spinSpeed: Double(direction) * .random(in: 380...620, using: &generator),
+            floorY: screen.height
+        )
+    }
+
     public func position(at t: Double) -> CGPoint {
         let t = CGFloat(t)
         return CGPoint(x: origin.x + velocity.dx * t,

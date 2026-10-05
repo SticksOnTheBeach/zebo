@@ -68,20 +68,12 @@ public final class ZeboBehavior {
     private func launch() -> Double {
         speech.silence()
 
-        let screen = model.screenFrame
-        let center = model.zeboScreenCenter
-        // Coordonnées de la fenêtre de chute (plein écran, origine en haut à gauche).
-        let origin = CGPoint(x: center.x - screen.minX, y: screen.maxY - center.y)
-        let direction: CGFloat = Bool.random() ? 1 : -1
-
-        let newFlight = Flight(
-            start: Date(),
-            origin: origin,
-            // Catapulté vers le haut et sur le côté.
-            velocity: CGVector(dx: direction * .random(in: 180...320), dy: -640),
+        var generator = SystemRandomNumberGenerator()
+        let newFlight = Flight.ejection(
+            from: model.zeboScreenCenter,
+            in: model.screenFrame,
             size: model.zeboFrame.width,
-            spinSpeed: Double(direction) * .random(in: 380...620),
-            floorY: screen.height
+            using: &generator
         )
         flight = newFlight
         state = .flying
