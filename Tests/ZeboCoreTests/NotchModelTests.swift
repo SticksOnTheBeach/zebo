@@ -8,7 +8,7 @@ import Testing
 struct NotchModelTests {
     private func makeModel(isOpen: Bool, notchHeight: CGFloat = 32) -> NotchModel {
         let model = NotchModel()
-        model.closedSize = CGSize(width: 200 + NotchModel.wingWidth * 2, height: notchHeight)
+        model.hardwareNotchSize = CGSize(width: 185, height: notchHeight)
         model.isOpen = isOpen
         return model
     }
@@ -25,7 +25,7 @@ struct NotchModelTests {
     @Test("Notch ouverte, Zebo est sous l'encoche physique")
     func openZeboIsBelowPhysicalNotch() {
         let model = makeModel(isOpen: true)
-        #expect(model.zeboFrame.minY >= model.closedSize.height)
+        #expect(model.zeboFrame.minY >= model.hardwareNotchSize.height)
         #expect(model.zeboFrame.maxY <= model.openSize.height)
     }
 }

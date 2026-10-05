@@ -12,8 +12,8 @@ public final class NotchModel {
     public nonisolated static let topCornerRadius: CGFloat = 6
 
     public var isOpen = false
-    /// Taille de la notch fermée : l'encoche physique + les ailes.
-    public var closedSize: CGSize = .zero
+    /// Taille de l'encoche physique (ou de la fausse notch si l'écran n'en a pas).
+    public var hardwareNotchSize: CGSize = .zero
     public let openSize = CGSize(width: 480, height: 180)
 
     /// Cadre de la fenêtre de la notch et position de la souris, en coordonnées écran.
@@ -24,6 +24,11 @@ public final class NotchModel {
 
     public init() {}
 
+    /// Taille de la notch fermée : l'encoche physique + les ailes.
+    public var closedSize: CGSize {
+        CGSize(width: hardwareNotchSize.width + Self.wingWidth * 2, height: hardwareNotchSize.height)
+    }
+
     /// Taille visible de la notch.
     public var notchSize: CGSize { isOpen ? openSize : closedSize }
 
@@ -32,8 +37,10 @@ public final class NotchModel {
     public var zeboFrame: CGRect {
         let closedHeight = closedSize.height
         if isOpen {
+            // Sous l'encoche physique, centré dans la place restante.
             let side: CGFloat = 96
-            let y = closedHeight + (openSize.height - closedHeight - side) / 2
+            let top = hardwareNotchSize.height
+            let y = top + (openSize.height - top - side) / 2
             return CGRect(x: 32, y: y, width: side, height: side)
         } else {
             // Toute l'aile gauche : le lit, vu de profil, est plus large que haut.

@@ -74,7 +74,7 @@ public struct NotchView: View {
     /// L'heure, centrée dans l'aile droite de la notch fermée.
     private var clock: some View {
         NotchClock()
-            .frame(width: NotchModel.wingWidth - NotchModel.topCornerRadius, height: model.closedSize.height)
+            .frame(width: NotchModel.wingWidth - NotchModel.topCornerRadius, height: model.hardwareNotchSize.height)
             .offset(x: size.width - NotchModel.wingWidth)
     }
 
@@ -91,7 +91,7 @@ public struct NotchView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         // Le haut est caché par l'encoche physique : on démarre en dessous.
-        .padding(.top, model.closedSize.height)
+        .padding(.top, model.hardwareNotchSize.height)
         .padding(.leading, 32 + 96 + 20)
     }
 }

@@ -55,7 +55,7 @@ final class NotchController: NSObject {
     @objc private func reposition() {
         guard let screen = NSScreen.notchScreen else { return }
         let notch = screen.notchSize
-        model.closedSize = CGSize(width: notch.width + NotchModel.wingWidth * 2, height: notch.height)
+        model.hardwareNotchSize = notch
 
         // Les deux fenêtres sont centrées sur la notch et collées en haut de l'écran.
         func topCentered(_ size: CGSize) -> CGRect {
