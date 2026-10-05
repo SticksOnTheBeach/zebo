@@ -13,16 +13,27 @@ struct ReadyStep: View {
             VStack(spacing: 0) {
                 row(0, "person.fill", .blue, "Je t'appelle", wizard.trimmedName)
                 divider
+                row(1, "curlybraces", .orange, "Ton langage", wizard.draft.favoriteLanguage?.name ?? "Aucun")
+                divider
                 row(
-                    1, "chevron.left.forwardslash.chevron.right", .purple, "Tes éditeurs",
+                    2, "chevron.left.forwardslash.chevron.right", .purple, "Tes éditeurs",
                     wizard.draft.ides.isEmpty ? "Aucun" : wizard.draft.ides.map(\.name).joined(separator: ", "))
                 divider
-                row(2, "clock.fill", .teal, "L'heure dans la notch", wizard.draft.shows(.clock) ? "Oui" : "Non")
+                row(3, "rectangle.topthird.inset.filled", .teal, "Dans la notch", notchSummary)
                 divider
-                row(3, "moon.zzz.fill", .indigo, "La sieste", wizard.draft.sleepsWhenClosed ? "Oui" : "Non")
+                row(4, "moon.zzz.fill", .indigo, "La sieste", wizard.draft.sleepsWhenClosed ? "Oui" : "Non")
             }
             .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(.white.opacity(0.07)))
         }
+    }
+
+    /// Les widgets choisis, et leur rythme s'ils défilent.
+    private var notchSummary: String {
+        let widgets = wizard.draft.displayableWidgets
+        guard !widgets.isEmpty else { return "Rien" }
+        let names = widgets.map(\.shortTitle).joined(separator: ", ")
+        guard widgets.count > 1 else { return names }
+        return names + " · toutes les \(Int(wizard.draft.widgetRotationInterval)) s"
     }
 
     private var divider: some View {
