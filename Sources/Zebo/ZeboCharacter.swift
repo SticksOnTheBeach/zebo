@@ -104,14 +104,14 @@ struct ZeboCharacter: View {
         }
     }
 
-    /// Bulles de pensée : elles sortent une à une de la tête, vers le haut à gauche,
+    /// Bulles de pensée : elles sortent une à une de la tête en arc (vers la gauche puis vers le haut),
     /// puis s'effacent ensemble avant de recommencer.
     private func thoughtBubbles(_ u: CGFloat) -> some View {
         let period = 2.4
         let phase = thinkingTime.truncatingRemainder(dividingBy: period) / period
         // Disparition commune à la fin du cycle.
         let fade = 1 - min(max((phase - 0.8) / 0.15, 0), 1)
-        let bubbles: [(x: CGFloat, y: CGFloat, size: CGFloat)] = [(-37, -27, 6), (-43, -34.5, 9), (-51, -44.5, 13)]
+        let bubbles: [(x: CGFloat, y: CGFloat, size: CGFloat)] = [(-37, -25, 6), (-45, -30, 9), (-49.5, -42.5, 13)]
 
         return ForEach(bubbles.indices, id: \.self) { i in
             let bubble = bubbles[i]
