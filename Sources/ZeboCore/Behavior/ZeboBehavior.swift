@@ -29,11 +29,11 @@ public final class ZeboBehavior {
     public var isHome: Bool { state == .normal || state == .dizzy }
 
     @ObservationIgnored private var pokes = PokeTracker()
-    @ObservationIgnored private let model: NotchModel
-    @ObservationIgnored private let speech: ZeboSpeech
+    @ObservationIgnored private let placement: any ZeboPlacement
+    @ObservationIgnored private let speech: any ZeboSpeaking
 
-    public init(model: NotchModel, speech: ZeboSpeech) {
-        self.model = model
+    public init(placement: any ZeboPlacement, speech: any ZeboSpeaking) {
+        self.placement = placement
         self.speech = speech
     }
 
@@ -70,9 +70,9 @@ public final class ZeboBehavior {
 
         var generator = SystemRandomNumberGenerator()
         let newFlight = Flight.ejection(
-            from: model.zeboScreenCenter,
-            in: model.screenFrame,
-            size: model.zeboFrame.width,
+            from: placement.zeboScreenCenter,
+            in: placement.screenFrame,
+            size: placement.zeboFrame.width,
             using: &generator
         )
         flight = newFlight

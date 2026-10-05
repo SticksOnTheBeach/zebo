@@ -17,7 +17,7 @@ final class NotchController: NSObject {
     private var mouseMonitors: [Any] = []
 
     override init() {
-        behavior = ZeboBehavior(model: model, speech: speech)
+        behavior = ZeboBehavior(placement: model, speech: speech)
         panel = OverlayPanel(rootView: NotchView(model: model, speech: speech, behavior: behavior))
         bubblePanel = OverlayPanel(rootView: SpeechBubbleView(model: model, speech: speech))
         // Sous la notch : les points qui dépassent vers Zebo passent derrière elle.
