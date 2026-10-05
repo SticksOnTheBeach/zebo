@@ -47,3 +47,43 @@ struct FlightTests {
         #expect(flight.opacity(at: flight.floorY) == 0)
     }
 }
+
+@Suite("Éjection hors de la notch")
+struct FlightEjectionTests {
+    /// Générateur déterministe (SplitMix64) pour des tests reproductibles.
+    private struct SeededGenerator: RandomNumberGenerator {
+        var state: UInt64
+
+        mutating func next() -> UInt64 {
+            state &+= 0x9E37_79B9_7F4A_7C15
+            var z = state
+            z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
+            z = (z ^ (z >> 27)) &* 0x94D0_49BB_1331_11EB
+            return z ^ (z >> 31)
+        }
+    }
+
+    private let screen = CGRect(x: 0, y: 0, width: 1512, height: 982)
+
+    @Test("Part du centre de Zebo, converti en coordonnées de la fenêtre de chute")
+    func originIsConvertedToTopLeftCoordinates() {
+        var generator = SeededGenerator(state: 1)
+        let flight = Flight.ejection(from: CGPoint(x: 700, y: 900), in: screen, size: 96, using: &generator)
+        #expect(flight.origin == CGPoint(x: 700, y: 82))
+    }
+
+    @Test("Est toujours catapulté vers le haut", arguments: 0..<20)
+    func isAlwaysLaunchedUpwards(seed: UInt64) {
+        var generator = SeededGenerator(state: seed)
+        let flight = Flight.ejection(from: CGPoint(x: 700, y: 900), in: screen, size: 96, using: &generator)
+        #expect(flight.velocity.dy < 0)
+        #expect(abs(flight.velocity.dx) >= 180)
+    }
+
+    @Test("Tourne dans le sens où il part", arguments: 0..<20)
+    func spinsTowardsItsDirection(seed: UInt64) {
+        var generator = SeededGenerator(state: seed)
+        let flight = Flight.ejection(from: CGPoint(x: 700, y: 900), in: screen, size: 96, using: &generator)
+        #expect((flight.velocity.dx > 0) == (flight.spinSpeed > 0))
+    }
+}
