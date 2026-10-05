@@ -72,7 +72,7 @@ struct ZeboCharacter: View {
                             .stroke(Self.ink, style: StrokeStyle(lineWidth: 3 * u, lineCap: .round))
                             .frame(width: 10 * u, height: 3 * u)
                             .rotationEffect(.degrees(-8))
-                            .offset(x: -1 * u, y: 28 * u)
+                            .offset(x: -1 * u, y: 25.5 * u)
 
                         hand(u)
                     } else {
