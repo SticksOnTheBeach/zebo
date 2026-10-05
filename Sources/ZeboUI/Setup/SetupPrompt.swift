@@ -12,11 +12,9 @@ struct SetupPrompt: View {
             Text("Avant qu'on commence, il faut me configurer.")
                 .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.7))
-            Button(action: onConfigure) {
-                Label("Configurer Zebo", systemImage: "sparkles")
-            }
-            .buttonStyle(ZeboButtonStyle())
-            .padding(.top, 4)
+            Button("Configurer Zebo", action: onConfigure)
+                .buttonStyle(ZeboButtonStyle())
+                .padding(.top, 4)
         }
     }
 }
