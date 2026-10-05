@@ -19,14 +19,17 @@ struct AnimatedZebo: View {
     var body: some View {
         // 30 images/s suffisent pour un balancement aussi lent ; en pause quand la notch est fermée.
         // Sonné, les spirales et les étoiles ont besoin de toutes les images.
-        TimelineView(.animation(minimumInterval: isDizzy ? nil : 1 / 30, paused: !(isAwake || isDizzy))) { timeline in
+        // Pensif, les bulles de pensée doivent s'animer même notch fermée.
+        TimelineView(.animation(minimumInterval: isDizzy ? nil : 1 / 30,
+                                paused: !(isAwake || isDizzy || isThinking))) { timeline in
             let t = timeline.date.timeIntervalSinceReferenceDate
             ZeboCharacter(look: isDizzy ? .zero : look,
                           eyeOpenness: isDizzy ? 1 : eyeOpenness,
                           headTilt: isDizzy ? .zero : headTilt,
                           dizzy: isDizzy,
                           dizzySpin: .degrees(t * 300),
-                          thinking: isThinking)
+                          thinking: isThinking,
+                          thinkingTime: t)
                 // Le regard rattrape la souris avec un petit ressort.
                 .animation(.spring(response: 0.3, dampingFraction: 0.65), value: look)
                 .animation(.spring(response: 0.35, dampingFraction: 0.7), value: isThinking)
