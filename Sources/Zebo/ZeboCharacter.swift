@@ -73,8 +73,6 @@ struct ZeboCharacter: View {
                             .frame(width: 10 * u, height: 3 * u)
                             .rotationEffect(.degrees(-8))
                             .offset(x: -1 * u, y: 25.5 * u)
-
-                        hand(u)
                     } else {
                         Smile()
                             .stroke(Self.ink, style: StrokeStyle(lineWidth: 3 * u, lineCap: .round))
@@ -107,48 +105,6 @@ struct ZeboCharacter: View {
                 .fill(Self.ink)
                 .frame(width: 8 * u, height: max(13 * eyeOpenness, 2.5) * u)
         }
-    }
-
-    /// Petite main-nuage, comme l'émoji 🤔 : elle monte d'en bas à gauche, le pouce levé,
-    /// trois doigts repliés et l'index en diagonale jusque sous le menton.
-    private func hand(_ u: CGFloat) -> some View {
-        ZStack {
-            // Pouce : un petit bout replié sur le haut de la main.
-            handPart(Capsule(), u)
-                .frame(width: 5 * u, height: 7 * u)
-                .rotationEffect(.degrees(40))
-                .offset(x: -18.5 * u, y: 34.5 * u)
-            // Dos de la main.
-            handPart(RoundedRectangle(cornerRadius: 4.5 * u, style: .continuous), u)
-                .frame(width: 10 * u, height: 13 * u)
-                .rotationEffect(.degrees(-8))
-                .offset(x: -21 * u, y: 40 * u)
-            // Trois doigts repliés, empilés et de plus en plus courts.
-            ForEach((0..<3).reversed(), id: \.self) { i in
-                let row = CGFloat(i)
-                handPart(Capsule(), u)
-                    .frame(width: (10 - row * 1.5) * u, height: 4.2 * u)
-                    .offset(x: (-15.5 - row) * u, y: (38 + row * 3.6) * u)
-            }
-            // Index tendu vers le menton.
-            handPart(Capsule(), u)
-                .frame(width: 17 * u, height: 4.6 * u)
-                .rotationEffect(.degrees(-27))
-                .offset(x: -9.5 * u, y: 34 * u)
-        }
-        // Un peu plus grande, en gardant le bout de l'index sous le menton
-        // (le cadre 100 × 100 sert de repère à l'ancre).
-        .frame(width: 100 * u, height: 100 * u)
-        .scaleEffect(1.2, anchor: UnitPoint(x: 0.48, y: 0.8))
-        .offset(y: -1.5 * u)
-    }
-
-    /// Un morceau de main : rempli comme le nuage, cerné de rose foncé.
-    private func handPart(_ shape: some Shape, _ u: CGFloat) -> some View {
-        shape
-            .fill(LinearGradient(colors: [Self.cloudTop, Self.cloudBottom],
-                                 startPoint: .top, endPoint: .bottom))
-            .overlay(shape.stroke(Self.cloudShade, lineWidth: 1.3 * u))
     }
 
     /// Trois étoiles qui tournent en rond au-dessus de la tête.
