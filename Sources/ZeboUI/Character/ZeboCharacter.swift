@@ -19,12 +19,21 @@ struct ZeboCharacter: View {
             let u = min(geo.size.width, geo.size.height) / 100
 
             ZStack {
-                CloudShape()
-                    .fill(
-                        LinearGradient(
-                            colors: [ZeboPalette.cloudTop, ZeboPalette.cloudBottom],
-                            startPoint: .top, endPoint: .bottom))
+                // Le corps : endormi, il est allongé sur le dos, la tête (et le bonnet) vers la gauche.
+                ZStack {
+                    CloudShape()
+                        .fill(
+                            LinearGradient(
+                                colors: [ZeboPalette.cloudTop, ZeboPalette.cloudBottom],
+                                startPoint: .top, endPoint: .bottom))
 
+                    if mood == .sleeping {
+                        nightcap(u)
+                    }
+                }
+                .rotationEffect(isLyingDown ? Self.lyingRotation : .zero)
+
+                // Le visage reste droit, tourné vers nous, même allongé.
                 // Le visage glisse vers le regard : le nuage a l'air de tourner.
                 ZStack {
                     // Pas de pupilles : ce sont les yeux entiers qui suivent le regard.
@@ -76,10 +85,7 @@ struct ZeboCharacter: View {
                     }
                 }
                 .offset(x: look.x * 4 * u, y: look.y * 3 * u)
-
-                if mood == .sleeping {
-                    nightcap(u)
-                }
+                .offset(y: isLyingDown ? Self.lyingFaceOffsetY * u : 0)
 
                 if mood == .dizzy {
                     stars(u)
@@ -89,6 +95,12 @@ struct ZeboCharacter: View {
             .rotationEffect(headTilt, anchor: .bottom)
         }
     }
+
+    /// Endormi, Zebo est allongé : son corps fait un quart de tour vers la gauche.
+    private var isLyingDown: Bool { mood == .sleeping }
+    private static let lyingRotation = Angle.degrees(-90)
+    /// Le visage remonte au milieu du corps couché.
+    private static let lyingFaceOffsetY: CGFloat = -8
 
     /// Petit œil ovale noir ; en clignant, il s'aplatit jusqu'à devenir un trait.
     /// Étourdi, il devient une spirale qui tourne ; endormi, un petit arc fermé.
