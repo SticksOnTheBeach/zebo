@@ -50,7 +50,7 @@ public struct SetupView: View {
         case .welcome: WelcomeStep()
         case .name: NameStep(wizard: wizard)
         case .personality: PersonalityStep(wizard: wizard)
-        case .ide: SetupStepLayout(title: "Ton éditeur de code") { EmptyView() }
+        case .ide: IDEStep(wizard: wizard)
         case .notch: NotchStep(wizard: wizard)
         case .ready: ReadyStep(wizard: wizard)
         }
