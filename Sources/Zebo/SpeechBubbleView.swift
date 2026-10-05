@@ -13,6 +13,9 @@ struct SpeechBubbleView: View {
     private let maxTextWidth: CGFloat = 220
     private let ink = Color(red: 0.24, green: 0.13, blue: 0.20)
 
+    /// Début de la réplique en cours : les points se mettent à « pop » à partir de là.
+    @State private var lineStart = Date()
+
     var body: some View {
         ZStack(alignment: .topLeading) {
             if let line = speech.line {
@@ -20,7 +23,7 @@ struct SpeechBubbleView: View {
                 TimelineView(.animation) { timeline in
                     let t = timeline.date.timeIntervalSinceReferenceDate
                     ZStack(alignment: .topLeading) {
-                        dots(time: t)
+                        dots(time: t, elapsed: timeline.date.timeIntervalSince(lineStart))
                         bubble(line, time: t)
                             .offset(x: bubbleOrigin.x, y: bubbleOrigin.y + bob(t))
                     }
@@ -34,6 +37,7 @@ struct SpeechBubbleView: View {
             }
         }
         .frame(width: Self.windowSize.width, height: Self.windowSize.height, alignment: .topLeading)
+        .onChange(of: speech.lineID, initial: true) { lineStart = Date() }
     }
 
     // MARK: - Géométrie (origine en haut à gauche de cette fenêtre)
@@ -80,23 +84,39 @@ struct SpeechBubbleView: View {
     }
 
     /// Trois points de plus en plus gros, de Zebo vers le nuage ; chacun flotte à son rythme.
-    private func dots(time t: Double) -> some View {
+    /// Ils apparaissent un à un depuis Zebo, puis s'effacent ensemble, en boucle.
+    private func dots(time t: Double, elapsed: Double) -> some View {
         let start = CGPoint(x: zeboCenter.x, y: model.notchSize.height + 7)
         let end = CGPoint(x: bubbleOrigin.x + 18, y: bubbleOrigin.y - 6 + bob(t))
         let steps: [(t: CGFloat, size: CGFloat)] = [(0.0, 6), (0.4, 9), (0.78, 12)]
+        let period = 2.4
+        let phase = max(elapsed, 0).truncatingRemainder(dividingBy: period) / period
+        // Disparition commune à la fin du cycle.
+        let fade = 1 - min(max((phase - 0.8) / 0.15, 0), 1)
 
         return ZStack(alignment: .topLeading) {
             ForEach(steps.indices, id: \.self) { i in
                 let step = steps[i]
                 let float = 2 * sin(t * 2 + Double(i) * 0.8)
+                // Chacun « pop » à son tour, avec un léger rebond.
+                let pop = min(max((phase - 0.05 - Double(i) * 0.15) / 0.12, 0), 1)
                 Circle()
                     .fill(.white)
                     .shadow(color: .black.opacity(0.25), radius: 3, y: 1)
                     .frame(width: step.size, height: step.size)
+                    .scaleEffect(Self.easeOutBack(pop))
+                    .opacity(fade)
                     .offset(x: start.x + (end.x - start.x) * step.t - step.size / 2,
                             y: start.y + (end.y - start.y) * step.t - step.size / 2 + float)
             }
         }
+    }
+
+    /// Courbe qui dépasse un peu sa cible avant de s'y poser (effet « pop »).
+    private static func easeOutBack(_ x: Double) -> Double {
+        let c = 1.7
+        let t = x - 1
+        return 1 + (c + 1) * t * t * t + c * t * t
     }
 
     /// Toute la phrase est mise en page dès le début (la bulle ne change pas de taille),
