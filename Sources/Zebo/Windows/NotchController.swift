@@ -12,6 +12,9 @@ final class NotchController: NSObject {
     private let behavior: ZeboBehavior
     private let setup = SetupFlow(store: UserDefaultsSetupStore())
     private let settings = ZeboSettings(store: UserDefaultsPreferencesStore())
+    private let commits = CommitActivity(counter: GitCommitCounter())
+    /// Recompte les commits du jour de temps en temps.
+    private var commitsTimer: Timer?
     private let panel: OverlayPanel
     /// Fenêtre de la bulle : juste sous la notch, ne capte jamais les clics.
     private let bubblePanel: OverlayPanel
@@ -25,7 +28,7 @@ final class NotchController: NSObject {
         panel = OverlayPanel(
             rootView: NotchView(
                 model: model, speech: speech, behavior: behavior, setup: setup, settings: settings,
-                onReset: Self.devReset))
+                commits: commits, onReset: Self.devReset))
         bubblePanel = OverlayPanel(rootView: SpeechBubbleView(model: model, speech: speech))
         // Sous la notch : les points qui dépassent vers Zebo passent derrière elle.
         bubblePanel.level = .mainMenu + 2
@@ -37,6 +40,9 @@ final class NotchController: NSObject {
 
         setup.onPhaseChange = { [weak self] phase in self?.setupPhaseDidChange(phase) }
         applyPreferences()
+        commitsTimer = Timer.scheduledTimer(withTimeInterval: 5 * 60, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.refreshCommits() }
+        }
 
         behavior.onFlightChange = { [weak self] isFlying in
             guard let self else { return }
@@ -103,10 +109,20 @@ final class NotchController: NSObject {
         setOpen(false)
     }
 
-    /// Une fois configuré, Zebo parle selon sa personnalité et t'appelle par ton prénom.
+    /// Une fois configuré, Zebo t'appelle par ton prénom et compte tes commits du jour.
     private func applyPreferences() {
         guard setup.isComplete else { return }
         speech.lineSource = CannedLines(preferences: settings.preferences)
+        refreshCommits()
+    }
+
+    /// Recompte les commits du jour, si le widget des commits est affiché.
+    private func refreshCommits() {
+        let preferences = settings.preferences
+        guard setup.isComplete, preferences.shows(.commits) else { return }
+        let folder = preferences.projectsFolder.map { URL(fileURLWithPath: $0) } ?? ProjectsFolder.guessOnThisMac()
+        guard let folder else { return }
+        Task { await commits.refresh(in: folder) }
     }
 
     // MARK: - Survol

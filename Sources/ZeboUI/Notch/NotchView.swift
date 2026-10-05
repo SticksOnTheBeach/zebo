@@ -8,18 +8,20 @@ public struct NotchView: View {
     private let behavior: ZeboBehavior
     private let setup: SetupFlow
     private let settings: ZeboSettings
+    private let commits: CommitActivity
     /// Remise à zéro complète, proposée au clic droit (versions de développement seulement).
     private let onReset: (() -> Void)?
 
     public init(
         model: NotchModel, speech: ZeboSpeech, behavior: ZeboBehavior, setup: SetupFlow, settings: ZeboSettings,
-        onReset: (() -> Void)? = nil
+        commits: CommitActivity, onReset: (() -> Void)? = nil
     ) {
         self.model = model
         self.speech = speech
         self.behavior = behavior
         self.setup = setup
         self.settings = settings
+        self.commits = commits
         self.onReset = onReset
     }
 
@@ -36,8 +38,8 @@ public struct NotchView: View {
                     if model.isOpen {
                         openText
                             .transition(.opacity.combined(with: .offset(x: -12)))
-                    } else if preferences.shows(.clock) {
-                        clock
+                    } else if !preferences.displayableWidgets.isEmpty {
+                        widgets
                             .transition(.opacity)
                     }
 
@@ -97,11 +99,14 @@ public struct NotchView: View {
         return .sleeping
     }
 
-    /// L'heure, centrée dans l'aile droite de la notch fermée.
-    private var clock: some View {
-        NotchClock()
-            .frame(width: NotchModel.wingWidth - NotchModel.topCornerRadius, height: model.hardwareNotchSize.height)
-            .offset(x: size.width - NotchModel.wingWidth)
+    /// Les widgets choisis (l'heure, la date…), centrés dans l'aile droite de la notch fermée.
+    private var widgets: some View {
+        NotchWidgetsView(
+            widgets: preferences.displayableWidgets, interval: preferences.widgetRotationInterval,
+            language: preferences.favoriteLanguage, commitCount: commits.todayCount
+        )
+        .frame(width: NotchModel.wingWidth - NotchModel.topCornerRadius, height: model.hardwareNotchSize.height)
+        .offset(x: size.width - NotchModel.wingWidth)
     }
 
     /// À droite de Zebo : le bouton de configuration tant qu'il n'est pas configuré,
