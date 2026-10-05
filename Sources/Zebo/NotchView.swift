@@ -24,7 +24,9 @@ struct NotchView: View {
                     // Un seul Zebo : il glisse et grandit de l'aile gauche jusqu'à sa place.
                     AnimatedZebo(mouse: model.mouseLocation, center: model.zeboScreenCenter,
                                  isAwake: model.isOpen, hopTrigger: speech.lineID,
-                                 isDizzy: behavior.state == .dizzy)
+                                 isDizzy: behavior.state == .dizzy,
+                                 // Quand il parle, il prend un air pensif 🤔.
+                                 isThinking: speech.line != nil)
                         .frame(width: zeboFrame.width, height: zeboFrame.height)
                         // Éjecté : il disparaît de la notch, puis revient avec un « pop ».
                         .scaleEffect(behavior.isHome ? 1 : 0.01)
