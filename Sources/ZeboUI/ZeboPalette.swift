@@ -15,6 +15,8 @@ enum ZeboPalette {
     static let pillow = Color(red: 0.97, green: 0.96, blue: 0.99)
     static let blanket = Color(red: 0.62, green: 0.52, blue: 0.92)
     static let blanketFold = Color(red: 0.86, green: 0.82, blue: 1.00)
+    /// « z » qui s'échappent quand il dort.
+    static let sleepZ = Color(red: 0.86, green: 0.82, blue: 1.00)
     /// Étoiles qui tournent quand il est sonné.
     static let star = Color(red: 1.0, green: 0.84, blue: 0.3)
 }
