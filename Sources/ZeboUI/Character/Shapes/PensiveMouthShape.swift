@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Moue pensive : un arc bombé vers le haut, plus marqué d'un côté.
-struct Hmm: Shape {
+struct PensiveMouthShape: Shape {
     func path(in rect: CGRect) -> Path {
         var p = Path()
         p.move(to: CGPoint(x: rect.minX, y: rect.maxY))

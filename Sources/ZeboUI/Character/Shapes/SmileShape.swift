@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Petit sourire en arc.
-struct Smile: Shape {
+struct SmileShape: Shape {
     func path(in rect: CGRect) -> Path {
         var p = Path()
         p.move(to: CGPoint(x: rect.minX, y: rect.minY))

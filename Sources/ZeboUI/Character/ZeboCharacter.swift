@@ -39,12 +39,12 @@ struct ZeboCharacter: View {
 
                         if thinking && !dizzy {
                             // Un sourcil bien haut, l'autre plus bas et penché : il se demande quelque chose.
-                            Brow()
+                            BrowShape()
                                 .stroke(Self.ink, style: StrokeStyle(lineWidth: 2.6 * u, lineCap: .round))
                                 .frame(width: 10 * u, height: 4 * u)
                                 .rotationEffect(.degrees(-14))
                                 .offset(x: -13 * u, y: -7 * u)
-                            Brow()
+                            BrowShape()
                                 .stroke(Self.ink, style: StrokeStyle(lineWidth: 2.6 * u, lineCap: .round))
                                 .frame(width: 10 * u, height: 1.5 * u)
                                 .rotationEffect(.degrees(18))
@@ -61,13 +61,13 @@ struct ZeboCharacter: View {
                             .offset(y: 28 * u)
                     } else if thinking {
                         // Moue « hmm » un peu de travers.
-                        Hmm()
+                        PensiveMouthShape()
                             .stroke(Self.ink, style: StrokeStyle(lineWidth: 3 * u, lineCap: .round))
                             .frame(width: 10 * u, height: 3 * u)
                             .rotationEffect(.degrees(-8))
                             .offset(x: -1 * u, y: 28 * u)
                     } else {
-                        Smile()
+                        SmileShape()
                             .stroke(Self.ink, style: StrokeStyle(lineWidth: 3 * u, lineCap: .round))
                             .frame(width: 10 * u, height: 4 * u)
                             .offset(y: 27 * u)
@@ -89,7 +89,7 @@ struct ZeboCharacter: View {
     @ViewBuilder
     private func eye(_ u: CGFloat) -> some View {
         if dizzy {
-            Spiral()
+            SpiralShape()
                 .stroke(Self.ink, style: StrokeStyle(lineWidth: 2.2 * u, lineCap: .round))
                 .frame(width: 15 * u, height: 15 * u)
                 .rotationEffect(dizzySpin)

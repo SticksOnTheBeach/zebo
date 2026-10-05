@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Spirale (yeux étourdis).
-struct Spiral: Shape {
+struct SpiralShape: Shape {
     func path(in rect: CGRect) -> Path {
         let center = CGPoint(x: rect.midX, y: rect.midY)
         let maxRadius = min(rect.width, rect.height) / 2
