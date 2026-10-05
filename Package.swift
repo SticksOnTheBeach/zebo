@@ -10,7 +10,10 @@ let package = Package(
     targets: [
         // Logique pure et état observable : ni SwiftUI ni AppKit.
         .target(name: "ZeboCore"),
-        .executableTarget(name: "Zebo", dependencies: ["ZeboCore"]),
+        // Vues SwiftUI : le personnage, la notch, la bulle, la chute.
+        .target(name: "ZeboUI", dependencies: ["ZeboCore"]),
+        // L'app : fenêtres AppKit, souris, écrans.
+        .executableTarget(name: "Zebo", dependencies: ["ZeboCore", "ZeboUI"]),
         .testTarget(name: "ZeboCoreTests", dependencies: ["ZeboCore"]),
     ]
 )

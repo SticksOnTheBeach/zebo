@@ -2,16 +2,22 @@ import AppKit
 import SwiftUI
 import ZeboCore
 
-struct NotchView: View {
-    let model: NotchModel
-    let speech: ZeboSpeech
-    let behavior: ZeboBehavior
+public struct NotchView: View {
+    private let model: NotchModel
+    private let speech: ZeboSpeech
+    private let behavior: ZeboBehavior
+
+    public init(model: NotchModel, speech: ZeboSpeech, behavior: ZeboBehavior) {
+        self.model = model
+        self.speech = speech
+        self.behavior = behavior
+    }
 
     private var size: CGSize { model.notchSize }
     private var zeboFrame: CGRect { model.zeboFrame }
     private var bottomRadius: CGFloat { model.isOpen ? 28 : 12 }
 
-    var body: some View {
+    public var body: some View {
         NotchShape(bottomRadius: bottomRadius)
             .fill(.black)
             .frame(width: size.width, height: size.height)

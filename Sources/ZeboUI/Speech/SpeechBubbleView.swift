@@ -3,21 +3,25 @@ import ZeboCore
 
 /// Bulle de dialogue en forme de nuage qui flotte sous la notch, reliée à Zebo par des points (comme en BD).
 /// Elle vit dans sa propre fenêtre transparente, centrée sur la notch et collée en haut de l'écran.
-struct SpeechBubbleView: View {
-    let model: NotchModel
-    let speech: ZeboSpeech
-
-    static let windowSize = CGSize(width: 640, height: 420)
+public struct SpeechBubbleView: View {
+    public static let windowSize = CGSize(width: 640, height: 420)
 
     /// Espace entre le bas de la notch et le haut de la bulle, occupé par les points.
     private let gap: CGFloat = 50
     private let maxTextWidth: CGFloat = 220
+    private let model: NotchModel
+    private let speech: ZeboSpeech
     private let ink = Color(red: 0.24, green: 0.13, blue: 0.20)
 
     /// Début de la réplique en cours : les points se mettent à « pop » à partir de là.
     @State private var lineStart = Date()
 
-    var body: some View {
+    public init(model: NotchModel, speech: ZeboSpeech) {
+        self.model = model
+        self.speech = speech
+    }
+
+    public var body: some View {
         ZStack(alignment: .topLeading) {
             if let line = speech.line {
                 // Animé à chaque image, mais seulement tant que Zebo parle.

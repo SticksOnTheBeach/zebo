@@ -3,10 +3,14 @@ import ZeboCore
 
 /// Zebo éjecté de la notch, qui tombe en tournoyant à travers tout l'écran.
 /// Vit dans une fenêtre plein écran transparente, affichée seulement pendant la chute.
-struct FallingZeboView: View {
-    let behavior: ZeboBehavior
+public struct FallingZeboView: View {
+    private let behavior: ZeboBehavior
 
-    var body: some View {
+    public init(behavior: ZeboBehavior) {
+        self.behavior = behavior
+    }
+
+    public var body: some View {
         if let flight = behavior.flight {
             TimelineView(.animation) { timeline in
                 let t = timeline.date.timeIntervalSince(flight.start)

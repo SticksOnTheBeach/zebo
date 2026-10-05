@@ -1,6 +1,7 @@
 import AppKit
 import SwiftUI
 import ZeboCore
+import ZeboUI
 
 /// Crée la notch, la bulle de dialogue et la fenêtre de chute, les place sur le bon écran
 /// et ouvre/ferme la notch selon la position de la souris.
