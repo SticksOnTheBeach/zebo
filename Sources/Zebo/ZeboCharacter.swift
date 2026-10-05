@@ -48,14 +48,14 @@ struct ZeboCharacter: View {
                             // Un sourcil bien haut, l'autre plus bas et penché : il se demande quelque chose.
                             Brow()
                                 .stroke(Self.ink, style: StrokeStyle(lineWidth: 2.6 * u, lineCap: .round))
-                                .frame(width: 10 * u, height: 3 * u)
-                                .rotationEffect(.degrees(-10))
-                                .offset(x: -13 * u, y: -4 * u)
+                                .frame(width: 10 * u, height: 4 * u)
+                                .rotationEffect(.degrees(-14))
+                                .offset(x: -13 * u, y: -7 * u)
                             Brow()
                                 .stroke(Self.ink, style: StrokeStyle(lineWidth: 2.6 * u, lineCap: .round))
-                                .frame(width: 10 * u, height: 2 * u)
-                                .rotationEffect(.degrees(14))
-                                .offset(x: 13 * u, y: 0)
+                                .frame(width: 10 * u, height: 1.5 * u)
+                                .rotationEffect(.degrees(18))
+                                .offset(x: 13 * u, y: 1 * u)
                         }
                     }
                     .offset(x: look.x * 5 * u, y: look.y * 4 * u)
@@ -72,7 +72,7 @@ struct ZeboCharacter: View {
                             .stroke(Self.ink, style: StrokeStyle(lineWidth: 3 * u, lineCap: .round))
                             .frame(width: 10 * u, height: 3 * u)
                             .rotationEffect(.degrees(-8))
-                            .offset(x: 2 * u, y: 28 * u)
+                            .offset(x: -1 * u, y: 28 * u)
 
                         hand(u)
                     } else {
