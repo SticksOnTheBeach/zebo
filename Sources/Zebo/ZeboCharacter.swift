@@ -13,6 +13,8 @@ struct ZeboCharacter: View {
     var dizzy = false
     /// Rotation des spirales et des étoiles (on la fait avancer pour les animer).
     var dizzySpin: Angle = .zero
+    /// Pensif (quand il parle) : sourcils levés, comme l'émoji 🤔.
+    var thinking = false
 
     private static let cloudTop = Color(red: 1.00, green: 0.91, blue: 0.95)
     private static let cloudBottom = Color(red: 0.99, green: 0.78, blue: 0.87)
@@ -41,6 +43,20 @@ struct ZeboCharacter: View {
                     Group {
                         eye(u).offset(x: -13 * u, y: 10 * u)
                         eye(u).offset(x: 13 * u, y: 10 * u)
+
+                        if thinking && !dizzy {
+                            // Un sourcil bien haut, l'autre plus bas et penché : il se demande quelque chose.
+                            Brow()
+                                .stroke(Self.ink, style: StrokeStyle(lineWidth: 2.6 * u, lineCap: .round))
+                                .frame(width: 10 * u, height: 3 * u)
+                                .rotationEffect(.degrees(-10))
+                                .offset(x: -13 * u, y: -4 * u)
+                            Brow()
+                                .stroke(Self.ink, style: StrokeStyle(lineWidth: 2.6 * u, lineCap: .round))
+                                .frame(width: 10 * u, height: 2 * u)
+                                .rotationEffect(.degrees(14))
+                                .offset(x: 13 * u, y: 0)
+                        }
                     }
                     .offset(x: look.x * 5 * u, y: look.y * 4 * u)
 
@@ -158,6 +174,17 @@ private struct CloudShape: Shape {
         p.addEllipse(in: circle(-30, 2, 19))
         p.addEllipse(in: circle(-4, -14, 29))
         p.addEllipse(in: circle(27, -2, 21))
+        return p
+    }
+}
+
+/// Sourcil : un arc bombé vers le haut.
+private struct Brow: Shape {
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        p.move(to: CGPoint(x: rect.minX, y: rect.maxY))
+        p.addQuadCurve(to: CGPoint(x: rect.maxX, y: rect.maxY),
+                       control: CGPoint(x: rect.midX, y: rect.minY - rect.height))
         return p
     }
 }
