@@ -37,6 +37,9 @@ struct SpeechBubbleView: View {
             }
         }
         .frame(width: Self.windowSize.width, height: Self.windowSize.height, alignment: .topLeading)
+        // La bulle surgit avec un ressort et s'efface en douceur.
+        .animation(speech.line == nil ? .easeOut(duration: 0.2) : .spring(response: 0.35, dampingFraction: 0.7),
+                   value: speech.line)
         .onChange(of: speech.lineID, initial: true) { lineStart = Date() }
     }
 

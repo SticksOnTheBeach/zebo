@@ -1,5 +1,5 @@
+import Foundation
 import Observation
-import SwiftUI
 import ZeboCore
 
 /// Ce que Zebo est en train de dire, révélé lettre par lettre.
@@ -28,18 +28,14 @@ final class ZeboSpeech {
     /// Coupe la parole : la bulle disparaît tout de suite.
     func silence() {
         speakingTask?.cancel()
-        withAnimation(.easeOut(duration: 0.15)) {
-            line = nil
-        }
+        line = nil
     }
 
     func say(_ text: String) {
         speakingTask?.cancel()
         lineID += 1
         revealedCount = 0
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
-            line = text
-        }
+        line = text
 
         speakingTask = Task { [weak self] in
             for count in 1...text.count {
@@ -50,9 +46,7 @@ final class ZeboSpeech {
             // Laisse le temps de lire avant de faire disparaître la bulle.
             try? await Task.sleep(for: .seconds(2.5 + Double(text.count) * 0.04))
             guard let self, !Task.isCancelled else { return }
-            withAnimation(.easeOut(duration: 0.25)) {
-                self.line = nil
-            }
+            self.line = nil
         }
     }
 }
