@@ -46,3 +46,14 @@ struct ZeboSettingsTests {
         #expect(UserDefaultsPreferencesStore(defaults: defaults).loadPreferences() == preferences)
     }
 }
+
+@Suite("Préférences enregistrées avant le choix de l'éditeur")
+struct LegacyPreferencesTests {
+    @Test("Des préférences sans éditeur se relisent quand même")
+    func decodesPreferencesWithoutIDE() throws {
+        let json = #"{"name":"Mael","personality":"zen","showsClock":true,"sleepsWhenClosed":false}"#
+        let preferences = try JSONDecoder().decode(ZeboPreferences.self, from: Data(json.utf8))
+        #expect(preferences.name == "Mael")
+        #expect(preferences.ide == nil)
+    }
+}

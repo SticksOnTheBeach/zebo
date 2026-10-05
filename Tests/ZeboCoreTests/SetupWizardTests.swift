@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 
 @testable import ZeboCore
@@ -58,5 +59,65 @@ struct SetupWizardTests {
     func startsFromGivenDraft() {
         let draft = ZeboPreferences(name: "Mael", personality: .zen, showsClock: false, sleepsWhenClosed: true)
         #expect(SetupWizard(draft: draft).preferences == draft)
+    }
+}
+
+@MainActor
+@Suite("Choix de l'éditeur de code")
+struct IDEChoiceTests {
+    /// Ne connaît que les éditeurs qu'on lui donne.
+    private struct FakeLocator: ApplicationLocator {
+        var installed: [String: URL]
+        func locate(_ ide: IDE) -> URL? { installed[ide.id] }
+    }
+
+    private let vscode = IDE.catalog[0]
+    private let vscodeURL = URL(fileURLWithPath: "/Applications/Visual Studio Code.app")
+
+    @Test("Choisir un éditeur installé enregistre son emplacement")
+    func choosingAnInstalledIDE() {
+        let wizard = SetupWizard(locator: FakeLocator(installed: ["vscode": vscodeURL]))
+        wizard.chooseIDE(vscode)
+        let choice = IDEChoice(id: "vscode", name: "VS Code", path: vscodeURL.path)
+        #expect(wizard.ideSearch == .found(choice))
+        #expect(wizard.preferences.ide == choice)
+    }
+
+    @Test("Un éditeur introuvable n'est pas enregistré")
+    func choosingAMissingIDE() {
+        let wizard = SetupWizard(locator: FakeLocator(installed: [:]))
+        wizard.chooseIDE(vscode)
+        #expect(wizard.ideSearch == .notFound(vscode))
+        #expect(wizard.preferences.ide == nil)
+    }
+
+    @Test("On peut indiquer soi-même où est l'éditeur introuvable")
+    func choosingTheMissingIDEByHand() {
+        let wizard = SetupWizard(locator: FakeLocator(installed: [:]))
+        wizard.chooseIDE(vscode)
+        let url = URL(fileURLWithPath: "/Users/me/Apps/Code.app")
+        wizard.chooseApplication(at: url, as: vscode)
+        #expect(wizard.preferences.ide == IDEChoice(id: "vscode", name: "VS Code", path: url.path))
+    }
+
+    @Test("Une autre app prend le nom de son fichier")
+    func choosingAnotherApplication() {
+        let wizard = SetupWizard()
+        wizard.chooseApplication(at: URL(fileURLWithPath: "/Applications/Nova.app"), as: nil)
+        #expect(
+            wizard.preferences.ide == IDEChoice(id: IDEChoice.customID, name: "Nova", path: "/Applications/Nova.app"))
+    }
+
+    @Test("Un éditeur déjà choisi est retrouvé à la reconfiguration")
+    func previousChoiceIsKept() {
+        let choice = IDEChoice(id: "xcode", name: "Xcode", path: "/Applications/Xcode.app")
+        var draft = ZeboPreferences.standard
+        draft.ide = choice
+        #expect(SetupWizard(draft: draft).ideSearch == .found(choice))
+    }
+
+    @Test("Le catalogue n'a pas deux éditeurs avec le même identifiant")
+    func catalogIDsAreUnique() {
+        #expect(Set(IDE.catalog.map(\.id)).count == IDE.catalog.count)
     }
 }
