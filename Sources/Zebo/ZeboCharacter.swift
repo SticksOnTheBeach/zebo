@@ -109,24 +109,32 @@ struct ZeboCharacter: View {
         }
     }
 
-    /// Petite main-nuage : un poing rond, l'index tendu jusqu'au menton.
+    /// Petite main-nuage : un poing posé en bas à droite, l'index tendu sous le menton.
     private func hand(_ u: CGFloat) -> some View {
         let fill = LinearGradient(colors: [Self.cloudTop, Self.cloudBottom],
                                   startPoint: .top, endPoint: .bottom)
         let outline = StrokeStyle(lineWidth: 1.4 * u)
         return ZStack {
-            // L'index part du poing vers le haut-gauche.
+            // L'index file vers la gauche et remonte un peu jusqu'au menton.
             Capsule()
                 .fill(fill)
                 .overlay(Capsule().stroke(Self.cloudShade, style: outline))
-                .frame(width: 11 * u, height: 4.5 * u)
-                .rotationEffect(.degrees(29))
-                .offset(x: 9 * u, y: 34 * u)
-            Circle()
+                .frame(width: 16 * u, height: 5 * u)
+                .rotationEffect(.degrees(12))
+                .offset(x: 8 * u, y: 34.5 * u)
+            RoundedRectangle(cornerRadius: 6 * u, style: .continuous)
                 .fill(fill)
-                .overlay(Circle().stroke(Self.cloudShade, style: outline))
-                .frame(width: 12 * u, height: 12 * u)
-                .offset(x: 15 * u, y: 37 * u)
+                .overlay(RoundedRectangle(cornerRadius: 6 * u, style: .continuous)
+                    .stroke(Self.cloudShade, style: outline))
+                .frame(width: 13 * u, height: 12 * u)
+                .offset(x: 18 * u, y: 39 * u)
+            // Deux petits plis : les doigts repliés du poing.
+            ForEach(0..<2, id: \.self) { i in
+                Capsule()
+                    .fill(Self.cloudShade)
+                    .frame(width: 4 * u, height: 1.2 * u)
+                    .offset(x: 14 * u, y: (39 + CGFloat(i) * 3) * u)
+            }
         }
     }
 
