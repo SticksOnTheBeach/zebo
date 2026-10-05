@@ -15,7 +15,7 @@ final class NotchController: NSObject {
     private let bubblePanel: OverlayPanel
     /// Fenêtre plein écran où Zebo tombe quand il est éjecté ; affichée seulement pendant la chute.
     private let fallPanel: OverlayPanel
-    private var mouseMonitors: [Any] = []
+    private let mouse = MouseMonitor()
 
     override init() {
         behavior = ZeboBehavior(placement: model, speech: speech)
@@ -41,7 +41,7 @@ final class NotchController: NSObject {
         reposition()
         bubblePanel.orderFrontRegardless()
         panel.orderFrontRegardless()
-        startMouseMonitoring()
+        mouse.start { [weak self] in self?.mouseDidMove() }
 
         // Branchement/débranchement d'écran, changement de résolution…
         NotificationCenter.default.addObserver(
@@ -70,24 +70,6 @@ final class NotchController: NSObject {
     }
 
     // MARK: - Survol
-
-    private func startMouseMonitoring() {
-        let events: NSEvent.EventTypeMask = [.mouseMoved, .leftMouseDragged, .rightMouseDragged]
-
-        // Souris au-dessus des autres apps (aucune permission requise pour la souris).
-        if let global = NSEvent.addGlobalMonitorForEvents(matching: events, handler: { [weak self] _ in
-            MainActor.assumeIsolated { self?.mouseDidMove() }
-        }) {
-            mouseMonitors.append(global)
-        }
-        // Souris au-dessus de notre propre fenêtre.
-        if let local = NSEvent.addLocalMonitorForEvents(matching: events, handler: { [weak self] event in
-            MainActor.assumeIsolated { self?.mouseDidMove() }
-            return event
-        }) {
-            mouseMonitors.append(local)
-        }
-    }
 
     private func mouseDidMove() {
         // Zebo suit la souris des yeux, notch ouverte ou fermée.
