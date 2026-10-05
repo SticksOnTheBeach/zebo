@@ -73,6 +73,8 @@ struct ZeboCharacter: View {
                             .frame(width: 10 * u, height: 3 * u)
                             .rotationEffect(.degrees(-8))
                             .offset(x: 2 * u, y: 28 * u)
+
+                        hand(u)
                     } else {
                         Smile()
                             .stroke(Self.ink, style: StrokeStyle(lineWidth: 3 * u, lineCap: .round))
@@ -104,6 +106,27 @@ struct ZeboCharacter: View {
             Capsule()
                 .fill(Self.ink)
                 .frame(width: 8 * u, height: max(13 * eyeOpenness, 2.5) * u)
+        }
+    }
+
+    /// Petite main-nuage : un poing rond, l'index tendu jusqu'au menton.
+    private func hand(_ u: CGFloat) -> some View {
+        let fill = LinearGradient(colors: [Self.cloudTop, Self.cloudBottom],
+                                  startPoint: .top, endPoint: .bottom)
+        let outline = StrokeStyle(lineWidth: 1.4 * u)
+        return ZStack {
+            // L'index part du poing vers le haut-gauche.
+            Capsule()
+                .fill(fill)
+                .overlay(Capsule().stroke(Self.cloudShade, style: outline))
+                .frame(width: 11 * u, height: 4.5 * u)
+                .rotationEffect(.degrees(29))
+                .offset(x: 9 * u, y: 34 * u)
+            Circle()
+                .fill(fill)
+                .overlay(Circle().stroke(Self.cloudShade, style: outline))
+                .frame(width: 12 * u, height: 12 * u)
+                .offset(x: 15 * u, y: 37 * u)
         }
     }
 
