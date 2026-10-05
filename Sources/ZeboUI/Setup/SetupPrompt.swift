@@ -15,14 +15,12 @@ struct SetupPrompt: View {
             Button(action: onConfigure) {
                 Label("Configurer Zebo", systemImage: "sparkles")
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .foregroundStyle(ZeboPalette.ink)
+                    .foregroundStyle(.white)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 7)
                     .background(
-                        Capsule().fill(
-                            LinearGradient(
-                                colors: [ZeboPalette.cloudTop, ZeboPalette.cloudBottom],
-                                startPoint: .top, endPoint: .bottom)))
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(ZeboPalette.button))
             }
             .buttonStyle(.plain)
             .padding(.top, 4)
