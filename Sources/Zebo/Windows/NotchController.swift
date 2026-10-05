@@ -4,7 +4,7 @@ import ZeboCore
 import ZeboUI
 
 /// Crée la notch, la bulle de dialogue et la fenêtre de chute, les place sur le bon écran
-/// et ouvre/ferme la notch selon la position de la souris.
+/// et ouvre/ferme la notch selon la position de la souris. Lance aussi la configuration de Zebo.
 @MainActor
 final class NotchController: NSObject {
     private let model = NotchModel()
@@ -17,6 +17,7 @@ final class NotchController: NSObject {
     /// Fenêtre plein écran où Zebo tombe quand il est éjecté ; affichée seulement pendant la chute.
     private let fallPanel: OverlayPanel
     private let mouse = MouseMonitor()
+    private let setupWindow: SetupWindowController
 
     override init() {
         behavior = ZeboBehavior(placement: model, speech: speech)
@@ -27,7 +28,10 @@ final class NotchController: NSObject {
         fallPanel = OverlayPanel(rootView: FallingZeboView(behavior: behavior))
         // Au-dessus de la notch : Zebo en sort par-dessus.
         fallPanel.level = .mainMenu + 4
+        setupWindow = SetupWindowController(flow: setup, model: model)
         super.init()
+
+        setup.onPhaseChange = { [weak self] phase in self?.setupPhaseDidChange(phase) }
 
         behavior.onFlightChange = { [weak self] isFlying in
             guard let self else { return }
@@ -71,23 +75,38 @@ final class NotchController: NSObject {
         model.mouseLocation = NSEvent.mouseLocation
     }
 
+    // MARK: - Configuration
+
+    private func setupPhaseDidChange(_ phase: SetupFlow.Phase) {
+        // D'abord l'animation, qui part de la notch encore ouverte…
+        setupWindow.phaseDidChange(to: phase)
+        guard phase == .detaching else { return }
+        // …puis la notch se referme derrière elle : c'est sa forme qui part vers le centre de l'écran.
+        setOpen(false)
+    }
+
     // MARK: - Survol
 
     private func mouseDidMove() {
         // Zebo suit la souris des yeux, notch ouverte ou fermée.
         model.mouseLocation = NSEvent.mouseLocation
+        // Pendant la configuration, la notch reste fermée.
+        guard setup.isNotchAvailable else { return }
 
         // Fermée, seule la petite notch réagit ; ouverte, toute la fenêtre compte.
         let activeArea = model.isOpen ? panel.frame : closedFrame
         // +1 en haut : la souris collée au bord de l'écran est pile sur maxY.
         let isInside = activeArea.insetBy(dx: 0, dy: -1).contains(NSEvent.mouseLocation)
         guard isInside != model.isOpen else { return }
+        setOpen(isInside)
+    }
 
+    private func setOpen(_ isOpen: Bool) {
         withAnimation(.spring(response: 0.38, dampingFraction: 0.78)) {
-            model.isOpen = isInside
+            model.isOpen = isOpen
         }
         // Fermée, la fenêtre laisse passer les clics vers la barre des menus.
-        panel.ignoresMouseEvents = !isInside
+        panel.ignoresMouseEvents = !isOpen
     }
 
     private var closedFrame: CGRect {
