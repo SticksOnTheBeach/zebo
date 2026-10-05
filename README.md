@@ -34,9 +34,10 @@ Sources/
 │   └── Speech/     ZeboSpeech (machine à écrire), SpeechLineSource (répliques)
 ├── ZeboUI/
 │   ├── Character/  ZeboCharacter (dessin), AnimatedZebo (vie), ZeboMood, Shapes/
-│   ├── Notch/      NotchView, NotchShape
+│   ├── Notch/      NotchView, NotchShape, NotchClock
 │   ├── Speech/     SpeechBubbleView, CloudBubbleShape, CappedWidth
 │   ├── Fall/       FallingZeboView
+│   ├── Sleep/      InBed (le lit), SleepingZs (les « z »)
 │   └── ZeboPalette
 └── Zebo/
     ├── App/        ZeboApp, AppDelegate
@@ -53,7 +54,7 @@ Quelques choix :
 - **Les dépendances passent par des protocoles.** `ZeboBehavior` ne connaît que `ZeboSpeaking` et `ZeboPlacement`, pas les classes concrètes ; les tests utilisent de faux objets.
 - **Les répliques sont interchangeables.** `ZeboSpeech` reçoit un `SpeechLineSource` : pour brancher une IA, il suffit d'écrire une nouvelle source.
 - **Les animations restent dans les vues.** Les modèles changent l'état, les vues décident comment l'animer (`.animation(_:value:)`).
-- **Une humeur à la fois.** `ZeboMood` (calme, pensif, sonné) remplace des booléens qui pouvaient se contredire.
+- **Une humeur à la fois.** `ZeboMood` (calme, pensif, sonné, endormi) remplace des booléens qui pouvaient se contredire.
 
 ## Conventions
 
