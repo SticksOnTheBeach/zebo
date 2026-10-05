@@ -65,7 +65,6 @@ struct NotchView: View {
 
 /// Forme d'encoche : petits arrondis concaves en haut, coins arrondis en bas.
 struct NotchShape: Shape {
-    static let topRadius: CGFloat = 6
     var bottomRadius: CGFloat = 12
 
     // Permet à SwiftUI d'animer l'arrondi pendant l'ouverture.
@@ -75,7 +74,7 @@ struct NotchShape: Shape {
     }
 
     func path(in rect: CGRect) -> Path {
-        let top = Self.topRadius
+        let top = NotchModel.topCornerRadius
         var p = Path()
         p.move(to: CGPoint(x: rect.minX, y: rect.minY))
         p.addQuadCurve(to: CGPoint(x: rect.minX + top, y: rect.minY + top),

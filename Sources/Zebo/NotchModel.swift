@@ -7,6 +7,8 @@ import Observation
 final class NotchModel {
     /// Largeur ajoutée de chaque côté de l'encoche pour que la notch de Zebo dépasse un peu.
     static let wingWidth: CGFloat = 36
+    /// Rayon des petits arrondis concaves en haut de la notch.
+    nonisolated static let topCornerRadius: CGFloat = 6
 
     var isOpen = false
     /// Taille de la notch fermée : l'encoche physique + les ailes.
@@ -32,7 +34,7 @@ final class NotchModel {
             return CGRect(x: 32, y: y, width: side, height: side)
         } else {
             let side: CGFloat = 22
-            return CGRect(x: NotchShape.topRadius + 4, y: (closedHeight - side) / 2,
+            return CGRect(x: Self.topCornerRadius + 4, y: (closedHeight - side) / 2,
                           width: side, height: side)
         }
     }
