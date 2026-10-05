@@ -1,0 +1,24 @@
+{
+        "configurations": [
+                {
+                        "type": "swift",
+                        "request": "launch",
+                        "args": [],
+                        "cwd": "${workspaceFolder:zebo}",
+                        "name": "Debug Zebo",
+                        "target": "Zebo",
+                        "configuration": "debug",
+                        "preLaunchTask": "swift: Build Debug Zebo"
+                },
+                {
+                        "type": "swift",
+                        "request": "launch",
+                        "args": [],
+                        "cwd": "${workspaceFolder:zebo}",
+                        "name": "Release Zebo",
+                        "target": "Zebo",
+                        "configuration": "release",
+                        "preLaunchTask": "swift: Build Release Zebo"
+                }
+        ]
+}
