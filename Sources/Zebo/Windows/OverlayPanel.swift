@@ -21,6 +21,9 @@ final class OverlayPanel: NSPanel {
         acceptsMouseMovedEvents = true
         // Au-dessus de la barre des menus.
         level = .mainMenu + 3
+        // Un panneau disparaît d'habitude quand son app passe à l'arrière-plan :
+        // gênant quand Zebo devient une app « normale » le temps de sa configuration.
+        hidesOnDeactivate = false
         // Visible sur tous les bureaux et par-dessus les apps en plein écran.
         collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
 
