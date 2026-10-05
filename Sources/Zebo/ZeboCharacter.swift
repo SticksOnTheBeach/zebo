@@ -18,7 +18,6 @@ struct ZeboCharacter: View {
 
     private static let cloudTop = Color(red: 1.00, green: 0.91, blue: 0.95)
     private static let cloudBottom = Color(red: 0.99, green: 0.78, blue: 0.87)
-    private static let cloudShade = Color(red: 0.93, green: 0.62, blue: 0.75)
     private static let ink = Color(red: 0.24, green: 0.13, blue: 0.20)
 
     var body: some View {
@@ -27,12 +26,6 @@ struct ZeboCharacter: View {
             let u = min(geo.size.width, geo.size.height) / 100
 
             ZStack {
-                // Couche plus foncée derrière : donne du volume, et part un peu
-                // à l'opposé du regard (effet de profondeur).
-                CloudShape()
-                    .fill(Self.cloudShade)
-                    .offset(x: -look.x * 2 * u, y: 3 * u)
-
                 CloudShape()
                     .fill(LinearGradient(colors: [Self.cloudTop, Self.cloudBottom],
                                          startPoint: .top, endPoint: .bottom))
