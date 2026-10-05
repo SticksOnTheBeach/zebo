@@ -49,7 +49,7 @@ public struct SetupView: View {
         switch step {
         case .welcome: WelcomeStep()
         case .name: NameStep(wizard: wizard)
-        case .language: SetupStepLayout(title: "Ton langage préféré") { EmptyView() }
+        case .language: LanguageStep(wizard: wizard)
         case .ide: IDEStep(wizard: wizard)
         case .notch: NotchStep(wizard: wizard)
         case .ready: ReadyStep(wizard: wizard)
