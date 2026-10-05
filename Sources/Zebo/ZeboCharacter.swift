@@ -15,6 +15,8 @@ struct ZeboCharacter: View {
     var dizzySpin: Angle = .zero
     /// Pensif (quand il parle) : sourcils levés, comme l'émoji 🤔.
     var thinking = false
+    /// Temps en secondes, pour faire apparaître et disparaître les bulles de pensée.
+    var thinkingTime: Double = 0
 
     private static let cloudTop = Color(red: 1.00, green: 0.91, blue: 0.95)
     private static let cloudBottom = Color(red: 0.99, green: 0.78, blue: 0.87)
@@ -77,6 +79,8 @@ struct ZeboCharacter: View {
 
                 if dizzy {
                     stars(u)
+                } else if thinking {
+                    thoughtBubbles(u)
                 }
             }
             .frame(width: geo.size.width, height: geo.size.height)
@@ -98,6 +102,36 @@ struct ZeboCharacter: View {
                 .fill(Self.ink)
                 .frame(width: 8 * u, height: max(13 * eyeOpenness, 2.5) * u)
         }
+    }
+
+    /// Bulles de pensée : elles sortent une à une de la tête, vers le haut à gauche,
+    /// puis s'effacent ensemble avant de recommencer.
+    private func thoughtBubbles(_ u: CGFloat) -> some View {
+        let period = 2.4
+        let phase = thinkingTime.truncatingRemainder(dividingBy: period) / period
+        // Disparition commune à la fin du cycle.
+        let fade = 1 - min(max((phase - 0.8) / 0.15, 0), 1)
+        let bubbles: [(x: CGFloat, y: CGFloat, size: CGFloat)] = [(-37, -27, 6), (-47, -39, 9), (-59, -53, 13)]
+
+        return ForEach(bubbles.indices, id: \.self) { i in
+            let bubble = bubbles[i]
+            // Chacune « pop » à son tour, avec un léger rebond.
+            let pop = min(max((phase - 0.1 - Double(i) * 0.18) / 0.12, 0), 1)
+            let float = 1.5 * sin(thinkingTime * 2.2 + Double(i) * 1.1)
+            Circle()
+                .fill(.white)
+                .frame(width: bubble.size * u, height: bubble.size * u)
+                .scaleEffect(Self.easeOutBack(pop))
+                .opacity(fade)
+                .offset(x: bubble.x * u, y: (bubble.y + float) * u)
+        }
+    }
+
+    /// Courbe qui dépasse un peu sa cible avant de s'y poser (effet « pop »).
+    private static func easeOutBack(_ x: Double) -> Double {
+        let c = 1.7
+        let t = x - 1
+        return 1 + (c + 1) * t * t * t + c * t * t
     }
 
     /// Trois étoiles qui tournent en rond au-dessus de la tête.
