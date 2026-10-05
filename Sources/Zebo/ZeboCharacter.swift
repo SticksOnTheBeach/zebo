@@ -66,6 +66,13 @@ struct ZeboCharacter: View {
                             .stroke(Self.ink, lineWidth: 2.5 * u)
                             .frame(width: 7 * u, height: 8 * u)
                             .offset(y: 28 * u)
+                    } else if thinking {
+                        // Moue « hmm » un peu de travers.
+                        Hmm()
+                            .stroke(Self.ink, style: StrokeStyle(lineWidth: 3 * u, lineCap: .round))
+                            .frame(width: 10 * u, height: 3 * u)
+                            .rotationEffect(.degrees(-8))
+                            .offset(x: 2 * u, y: 28 * u)
                     } else {
                         Smile()
                             .stroke(Self.ink, style: StrokeStyle(lineWidth: 3 * u, lineCap: .round))
@@ -196,6 +203,17 @@ private struct Smile: Shape {
         p.move(to: CGPoint(x: rect.minX, y: rect.minY))
         p.addQuadCurve(to: CGPoint(x: rect.maxX, y: rect.minY),
                        control: CGPoint(x: rect.midX, y: rect.maxY * 2))
+        return p
+    }
+}
+
+/// Moue pensive : un arc bombé vers le haut, plus marqué d'un côté.
+private struct Hmm: Shape {
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        p.move(to: CGPoint(x: rect.minX, y: rect.maxY))
+        p.addQuadCurve(to: CGPoint(x: rect.maxX, y: rect.maxY - rect.height * 0.3),
+                       control: CGPoint(x: rect.midX - rect.width * 0.15, y: rect.minY - rect.height * 0.6))
         return p
     }
 }
