@@ -25,8 +25,8 @@ struct SleepingZsFrame: View {
     private static let lifetime = 2.7
     /// Trajet d'un « z » : du haut de la tête vers la droite, en montant un peu.
     /// Il reste sous le haut du cadre : notch fermée, au-dessus c'est le bord de l'écran.
-    private static let start = CGPoint(x: 26, y: -22)
-    private static let end = CGPoint(x: 74, y: -44)
+    private static let start = CGPoint(x: 24, y: -20)
+    private static let end = CGPoint(x: 54, y: -42)
 
     var body: some View {
         GeometryReader { geo in
