@@ -64,7 +64,7 @@ final class SetupWindowController: NSObject, NSWindowDelegate {
         window.appearance = NSAppearance(named: .darkAqua)
         window.isReleasedWhenClosed = false
         // On part des réglages actuels : une reconfiguration les retrouve tels quels.
-        let wizard = SetupWizard(draft: settings.preferences)
+        let wizard = SetupWizard(draft: settings.preferences, locator: WorkspaceApplicationLocator())
         let content = NSHostingView(
             rootView: SetupView(wizard: wizard) { [weak self] in
                 self?.settings.preferences = wizard.preferences
