@@ -52,7 +52,7 @@ struct NotchView: View {
             Text("SOON... In progress…")
                 .fontWidth(Font.Width.expanded)
                 .fontWeight(Font.Weight.bold)
-                .foregroundStyle(.white.opacity(1.5))
+                .foregroundStyle(.white)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         // Le haut est caché par l'encoche physique : on démarre en dessous.
