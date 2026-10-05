@@ -17,9 +17,13 @@ struct ReadyStep: View {
                     1, wizard.draft.personality.symbol, wizard.draft.personality.color, "Ma personnalité",
                     wizard.draft.personality.title)
                 divider
-                row(2, "clock.fill", .teal, "L'heure dans la notch", wizard.draft.showsClock ? "Oui" : "Non")
+                row(
+                    2, "chevron.left.forwardslash.chevron.right", .purple, "Ton éditeur",
+                    wizard.draft.ide?.name ?? "Aucun")
                 divider
-                row(3, "moon.zzz.fill", .indigo, "La sieste", wizard.draft.sleepsWhenClosed ? "Oui" : "Non")
+                row(3, "clock.fill", .teal, "L'heure dans la notch", wizard.draft.showsClock ? "Oui" : "Non")
+                divider
+                row(4, "moon.zzz.fill", .indigo, "La sieste", wizard.draft.sleepsWhenClosed ? "Oui" : "Non")
             }
             .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(.white.opacity(0.07)))
         }
@@ -47,7 +51,7 @@ struct ReadyStep: View {
                 .foregroundStyle(.white)
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 9)
+        .padding(.vertical, 7)
         .appearing(order: 2 + index)
     }
 }
