@@ -30,7 +30,7 @@ struct ZeboSettingsTests {
     @Test("Les préférences enregistrées sont relues au lancement")
     func savedPreferencesAreLoaded() {
         let store = MemoryStore()
-        store.saved = ZeboPreferences(name: "Mael", showsClock: false, sleepsWhenClosed: false)
+        store.saved = ZeboPreferences(name: "Mael", notchWidgets: [], sleepsWhenClosed: false)
         #expect(ZeboSettings(store: store).preferences == store.saved)
     }
 
@@ -41,7 +41,8 @@ struct ZeboSettingsTests {
         defer { defaults.removePersistentDomain(forName: suite) }
 
         let preferences = ZeboPreferences(
-            name: "Mael", showsClock: false, sleepsWhenClosed: true)
+            name: "Mael", notchWidgets: [.clock, .commits], widgetRotationInterval: 5, favoriteLanguage: .swift,
+            projectsFolder: "/Users/me/Dev")
         UserDefaultsPreferencesStore(defaults: defaults).savePreferences(preferences)
         #expect(UserDefaultsPreferencesStore(defaults: defaults).loadPreferences() == preferences)
     }
@@ -59,6 +60,12 @@ struct LegacyPreferencesTests {
         #expect(preferences.name == "Mael")
         #expect(preferences.ides.isEmpty)
         #expect(!preferences.sleepsWhenClosed)
+    }
+
+    @Test("L'ancien réglage de l'heure devient la liste des widgets", arguments: [true, false])
+    func migratesShowsClock(showsClock: Bool) throws {
+        let preferences = try decode(#"{"showsClock":\#(showsClock)}"#)
+        #expect(preferences.notchWidgets == (showsClock ? [.clock] : []))
     }
 
     @Test("Un éditeur unique devient le premier de la liste")

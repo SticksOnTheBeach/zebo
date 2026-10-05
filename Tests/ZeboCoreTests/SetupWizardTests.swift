@@ -57,7 +57,7 @@ struct SetupWizardTests {
 
     @Test("Part des réglages qu'on lui donne")
     func startsFromGivenDraft() {
-        let draft = ZeboPreferences(name: "Mael", showsClock: false, sleepsWhenClosed: true)
+        let draft = ZeboPreferences(name: "Mael", notchWidgets: [.date])
         #expect(SetupWizard(draft: draft).preferences == draft)
     }
 }
