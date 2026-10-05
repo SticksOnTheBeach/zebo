@@ -28,21 +28,24 @@ public struct NotchView: View {
                             .transition(.opacity.combined(with: .offset(x: -12)))
                     }
 
-                    // Un seul Zebo : il glisse et grandit de l'aile gauche jusqu'à sa place.
-                    AnimatedZebo(
-                        mouse: model.mouseLocation, center: model.zeboScreenCenter,
-                        isAwake: model.isOpen, hopTrigger: speech.lineID,
-                        mood: mood
-                    )
+                    // Un seul Zebo : il glisse et grandit de son lit, dans l'aile gauche, jusqu'à sa place.
+                    InBed(isAsleep: mood == .sleeping) {
+                        AnimatedZebo(
+                            mouse: model.mouseLocation, center: model.zeboScreenCenter,
+                            isAwake: model.isOpen, hopTrigger: speech.lineID,
+                            mood: mood
+                        )
+                        // Éjecté : il disparaît de la notch (le lit reste), puis revient avec un « pop ».
+                        .scaleEffect(behavior.isHome ? 1 : 0.01)
+                        .opacity(behavior.isHome ? 1 : 0)
+                        // Il disparaît d'un coup, mais revient avec un rebond.
+                        .animation(
+                            behavior.isHome ? .spring(response: 0.5, dampingFraction: 0.55) : nil,
+                            value: behavior.isHome
+                        )
+                    }
+                    .overlay { SleepingZs(isActive: mood == .sleeping) }
                     .frame(width: zeboFrame.width, height: zeboFrame.height)
-                    // Éjecté : il disparaît de la notch, puis revient avec un « pop ».
-                    .scaleEffect(behavior.isHome ? 1 : 0.01)
-                    .opacity(behavior.isHome ? 1 : 0)
-                    // Il disparaît d'un coup, mais revient avec un rebond.
-                    .animation(
-                        behavior.isHome ? .spring(response: 0.5, dampingFraction: 0.55) : nil,
-                        value: behavior.isHome
-                    )
                     .contentShape(Rectangle())
                     // Un clic sur Zebo : il parle (et trop de clics l'assomment).
                     .onTapGesture { behavior.poke() }
@@ -57,10 +60,12 @@ public struct NotchView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
-    /// Sonné avant tout ; sinon, quand il parle, il prend un air pensif 🤔.
+    /// Sonné avant tout ; sinon, quand il parle, il prend un air pensif 🤔 ;
+    /// et quand la notch est fermée, il dort.
     private var mood: ZeboMood {
         if behavior.state == .dizzy { return .dizzy }
-        return speech.line != nil ? .thinking : .calm
+        if speech.line != nil { return .thinking }
+        return model.isOpen ? .calm : .sleeping
     }
 
     /// Texte provisoire à droite de Zebo : le chat viendra ici.

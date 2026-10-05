@@ -9,7 +9,7 @@ struct AnimatedZebo: View {
     var isAwake: Bool
     /// Chaque changement fait faire un petit saut à Zebo (quand il se met à parler).
     var hopTrigger: Int = 0
-    /// Sonné, il titube ; pensif, il lève les yeux.
+    /// Sonné, il titube ; pensif, il lève les yeux ; endormi, il ne bouge plus.
     var mood: ZeboMood = .calm
 
     @State private var eyeOpenness: CGFloat = 1
@@ -45,6 +45,7 @@ struct AnimatedZebo: View {
 
     private var isDizzy: Bool { mood == .dizzy }
     private var isThinking: Bool { mood == .thinking }
+    private var isSleeping: Bool { mood == .sleeping }
 
     /// Balancement de ±2° avec une période de 5,6 s.
     private func sway(at date: Date) -> Double {
@@ -58,8 +59,9 @@ struct AnimatedZebo: View {
 
     /// Direction du regard : vers la souris, moins appuyée quand elle est tout près.
     private var look: CGPoint {
-        // Pensif, il regarde en l'air, à l'opposé de la bulle.
+        // Pensif, il regarde en l'air, à l'opposé de la bulle ; endormi, il ne suit plus la souris.
         if isThinking { return CGPoint(x: -0.5, y: -0.9) }
+        if isSleeping { return .zero }
         let distance = hypot(delta.dx, delta.dy)
         guard distance > 1 else { return .zero }
         let strength = min(distance / 120, 1)
@@ -71,6 +73,7 @@ struct AnimatedZebo: View {
     /// La tête penche vers le côté où se trouve la souris (10° max).
     private var headTilt: Angle {
         if isThinking { return .degrees(-6) }
+        if isSleeping { return .zero }
         return .degrees(max(-1, min(1, delta.dx / 500)) * 10)
     }
 
