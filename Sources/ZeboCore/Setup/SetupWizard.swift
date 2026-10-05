@@ -10,6 +10,7 @@ public final class SetupWizard {
         case welcome
         case name
         case personality
+        case ide
         case notch
         case ready
 
@@ -25,8 +26,24 @@ public final class SetupWizard {
     /// Réglages en cours de saisie.
     public var draft: ZeboPreferences
 
-    public init(draft: ZeboPreferences = .standard) {
+    /// Résultat de la recherche de l'éditeur de code.
+    public enum IDESearch: Equatable, Sendable {
+        /// Aucun éditeur choisi.
+        case none
+        /// Trouvé (ou choisi à la main) : voici où il est.
+        case found(IDEChoice)
+        /// Introuvable sur ce Mac.
+        case notFound(IDE)
+    }
+
+    public private(set) var ideSearch: IDESearch
+
+    @ObservationIgnored private let locator: any ApplicationLocator
+
+    public init(draft: ZeboPreferences = .standard, locator: any ApplicationLocator = NoApplicationLocator()) {
         self.draft = draft
+        self.locator = locator
+        ideSearch = draft.ide.map(IDESearch.found) ?? .none
     }
 
     /// Prénom sans espaces autour.
@@ -55,6 +72,40 @@ public final class SetupWizard {
         guard let previous = Step(rawValue: step.rawValue - 1) else { return }
         isMovingForward = false
         step = previous
+    }
+
+    // MARK: - Éditeur de code
+
+    /// Où se trouve l'éditeur, s'il est installé (sans le choisir).
+    public func installedLocation(of ide: IDE) -> URL? {
+        locator.locate(ide)
+    }
+
+    /// Choisir un éditeur : Zebo cherche tout seul où il est installé.
+    public func chooseIDE(_ ide: IDE) {
+        guard let url = locator.locate(ide) else {
+            draft.ide = nil
+            ideSearch = .notFound(ide)
+            return
+        }
+        select(IDEChoice(id: ide.id, name: ide.name, path: url.path))
+    }
+
+    /// Une app choisie à la main : l'éditeur introuvable, ou un autre que ceux proposés.
+    public func chooseApplication(at url: URL, as ide: IDE?) {
+        let name = ide?.name ?? url.deletingPathExtension().lastPathComponent
+        select(IDEChoice(id: ide?.id ?? IDEChoice.customID, name: name, path: url.path))
+    }
+
+    /// Ne pas choisir d'éditeur.
+    public func clearIDE() {
+        draft.ide = nil
+        ideSearch = .none
+    }
+
+    private func select(_ choice: IDEChoice) {
+        draft.ide = choice
+        ideSearch = .found(choice)
     }
 
     /// Les réglages à enregistrer, prénom nettoyé.
