@@ -14,7 +14,8 @@ public final class ZeboSpeech {
 
     @ObservationIgnored private var speakingTask: Task<Void, Never>?
 
-    @ObservationIgnored private let lineSource: any SpeechLineSource
+    /// D'où viennent les répliques ; change quand on choisit la personnalité de Zebo.
+    @ObservationIgnored public var lineSource: any SpeechLineSource
 
     public init(lineSource: any SpeechLineSource = CannedLines()) {
         self.lineSource = lineSource
