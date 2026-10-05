@@ -17,7 +17,7 @@ struct ReadyStep: View {
                     1, "chevron.left.forwardslash.chevron.right", .purple, "Tes éditeurs",
                     wizard.draft.ides.isEmpty ? "Aucun" : wizard.draft.ides.map(\.name).joined(separator: ", "))
                 divider
-                row(2, "clock.fill", .teal, "L'heure dans la notch", wizard.draft.showsClock ? "Oui" : "Non")
+                row(2, "clock.fill", .teal, "L'heure dans la notch", wizard.draft.shows(.clock) ? "Oui" : "Non")
                 divider
                 row(3, "moon.zzz.fill", .indigo, "La sieste", wizard.draft.sleepsWhenClosed ? "Oui" : "Non")
             }

@@ -11,14 +11,17 @@ struct NotchStep: View {
             subtitle: "Quand elle est fermée, voici ce qu'on y voit."
         ) {
             VStack(spacing: 16) {
-                NotchPreview(showsClock: wizard.draft.showsClock, sleeps: wizard.draft.sleepsWhenClosed)
+                NotchPreview(showsClock: wizard.draft.shows(.clock), sleeps: wizard.draft.sleepsWhenClosed)
                     .animation(.spring(response: 0.45, dampingFraction: 0.8), value: wizard.draft)
                     .appearing(order: 2)
 
                 VStack(spacing: 0) {
                     ToggleRow(
                         symbol: "clock.fill", color: .blue, title: "Afficher l'heure",
-                        detail: "Dans l'aile droite de la notch.", isOn: $wizard.draft.showsClock)
+                        detail: "Dans l'aile droite de la notch.",
+                        isOn: Binding(
+                            get: { wizard.draft.shows(.clock) },
+                            set: { wizard.draft.setWidget(.clock, shown: $0) }))
                     Divider()
                         .overlay(.white.opacity(0.06))
                         .padding(.leading, 60)

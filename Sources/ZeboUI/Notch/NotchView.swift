@@ -36,7 +36,7 @@ public struct NotchView: View {
                     if model.isOpen {
                         openText
                             .transition(.opacity.combined(with: .offset(x: -12)))
-                    } else if preferences.showsClock {
+                    } else if preferences.shows(.clock) {
                         clock
                             .transition(.opacity)
                     }
