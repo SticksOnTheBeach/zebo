@@ -23,10 +23,10 @@ struct SleepingZsFrame: View {
     private static let count = 3
     /// Durée de vie d'un « z », de son apparition à sa disparition.
     private static let lifetime = 2.7
-    /// Trajet d'un « z » : du haut de la tête vers la droite, en montant un peu.
+    /// Trajet d'un « z » : de son visage (Zebo est couché à gauche du lit) vers la droite, en montant.
     /// Il reste sous le haut du cadre : notch fermée, au-dessus c'est le bord de l'écran.
-    private static let start = CGPoint(x: 24, y: -20)
-    private static let end = CGPoint(x: 54, y: -42)
+    private static let start = CGPoint(x: -12, y: -30)
+    private static let end = CGPoint(x: 26, y: -46)
 
     var body: some View {
         GeometryReader { geo in
