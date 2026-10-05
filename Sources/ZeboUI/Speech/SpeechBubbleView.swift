@@ -11,7 +11,6 @@ public struct SpeechBubbleView: View {
     private let maxTextWidth: CGFloat = 220
     private let model: NotchModel
     private let speech: ZeboSpeech
-    private let ink = Color(red: 0.24, green: 0.13, blue: 0.20)
 
     /// Début de la réplique en cours : les points se mettent à « pop » à partir de là.
     @State private var lineStart = Date()
@@ -76,7 +75,7 @@ public struct SpeechBubbleView: View {
         CappedWidth(maxWidth: maxTextWidth) {
             Text(typed(line))
                 .font(.system(size: 13, weight: .medium, design: .rounded))
-                .foregroundStyle(ink)
+                .foregroundStyle(ZeboPalette.ink)
                 .multilineTextAlignment(.leading)
         }
             .padding(.horizontal, 22)

@@ -13,10 +13,6 @@ struct ZeboCharacter: View {
     /// Rotation des spirales et des étoiles (on la fait avancer pour les animer).
     var dizzySpin: Angle = .zero
 
-    private static let cloudTop = Color(red: 1.00, green: 0.91, blue: 0.95)
-    private static let cloudBottom = Color(red: 0.99, green: 0.78, blue: 0.87)
-    private static let ink = Color(red: 0.24, green: 0.13, blue: 0.20)
-
     var body: some View {
         GeometryReader { geo in
             // 1 unité = 1/100 de la taille disponible.
@@ -24,7 +20,7 @@ struct ZeboCharacter: View {
 
             ZStack {
                 CloudShape()
-                    .fill(LinearGradient(colors: [Self.cloudTop, Self.cloudBottom],
+                    .fill(LinearGradient(colors: [ZeboPalette.cloudTop, ZeboPalette.cloudBottom],
                                          startPoint: .top, endPoint: .bottom))
 
                 // Le visage glisse vers le regard : le nuage a l'air de tourner.
@@ -37,12 +33,12 @@ struct ZeboCharacter: View {
                         if mood == .thinking {
                             // Un sourcil bien haut, l'autre plus bas et penché : il se demande quelque chose.
                             BrowShape()
-                                .stroke(Self.ink, style: StrokeStyle(lineWidth: 2.6 * u, lineCap: .round))
+                                .stroke(ZeboPalette.ink, style: StrokeStyle(lineWidth: 2.6 * u, lineCap: .round))
                                 .frame(width: 10 * u, height: 4 * u)
                                 .rotationEffect(.degrees(-14))
                                 .offset(x: -13 * u, y: -7 * u)
                             BrowShape()
-                                .stroke(Self.ink, style: StrokeStyle(lineWidth: 2.6 * u, lineCap: .round))
+                                .stroke(ZeboPalette.ink, style: StrokeStyle(lineWidth: 2.6 * u, lineCap: .round))
                                 .frame(width: 10 * u, height: 1.5 * u)
                                 .rotationEffect(.degrees(18))
                                 .offset(x: 13 * u, y: 1 * u)
@@ -54,19 +50,19 @@ struct ZeboCharacter: View {
                     case .dizzy:
                         // Bouche en « o » : il est sonné.
                         Ellipse()
-                            .stroke(Self.ink, lineWidth: 2.5 * u)
+                            .stroke(ZeboPalette.ink, lineWidth: 2.5 * u)
                             .frame(width: 7 * u, height: 8 * u)
                             .offset(y: 28 * u)
                     case .thinking:
                         // Moue « hmm » un peu de travers.
                         PensiveMouthShape()
-                            .stroke(Self.ink, style: StrokeStyle(lineWidth: 3 * u, lineCap: .round))
+                            .stroke(ZeboPalette.ink, style: StrokeStyle(lineWidth: 3 * u, lineCap: .round))
                             .frame(width: 10 * u, height: 3 * u)
                             .rotationEffect(.degrees(-8))
                             .offset(x: -1 * u, y: 28 * u)
                     case .calm:
                         SmileShape()
-                            .stroke(Self.ink, style: StrokeStyle(lineWidth: 3 * u, lineCap: .round))
+                            .stroke(ZeboPalette.ink, style: StrokeStyle(lineWidth: 3 * u, lineCap: .round))
                             .frame(width: 10 * u, height: 4 * u)
                             .offset(y: 27 * u)
                     }
@@ -88,12 +84,12 @@ struct ZeboCharacter: View {
     private func eye(_ u: CGFloat) -> some View {
         if mood == .dizzy {
             SpiralShape()
-                .stroke(Self.ink, style: StrokeStyle(lineWidth: 2.2 * u, lineCap: .round))
+                .stroke(ZeboPalette.ink, style: StrokeStyle(lineWidth: 2.2 * u, lineCap: .round))
                 .frame(width: 15 * u, height: 15 * u)
                 .rotationEffect(dizzySpin)
         } else {
             Capsule()
-                .fill(Self.ink)
+                .fill(ZeboPalette.ink)
                 .frame(width: 8 * u, height: max(13 * eyeOpenness, 2.5) * u)
         }
     }
@@ -105,7 +101,7 @@ struct ZeboCharacter: View {
             // Plus petites quand elles passent « derrière » la tête : effet de perspective.
             let depth = 0.75 + 0.25 * sin(angle)
             StarShape()
-                .fill(Color(red: 1.0, green: 0.84, blue: 0.3))
+                .fill(ZeboPalette.star)
                 .frame(width: 11 * u, height: 11 * u)
                 .scaleEffect(depth)
                 .offset(x: cos(angle) * 34 * u, y: (-44 + sin(angle) * 7) * u)
