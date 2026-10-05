@@ -8,14 +8,20 @@ public struct ZeboPreferences: Equatable, Sendable {
     public var sleepsWhenClosed: Bool
     /// Les éditeurs de code choisis, pour pouvoir les lancer.
     public var ides: [IDEChoice]
+    /// Le langage préféré, s'il y en a un.
+    public var favoriteLanguage: Language?
 
     public static let standard = ZeboPreferences(name: "", showsClock: true, sleepsWhenClosed: true)
 
-    public init(name: String, showsClock: Bool, sleepsWhenClosed: Bool, ides: [IDEChoice] = []) {
+    public init(
+        name: String, showsClock: Bool, sleepsWhenClosed: Bool, ides: [IDEChoice] = [],
+        favoriteLanguage: Language? = nil
+    ) {
         self.name = name
         self.showsClock = showsClock
         self.sleepsWhenClosed = sleepsWhenClosed
         self.ides = ides
+        self.favoriteLanguage = favoriteLanguage
     }
 }
 
@@ -23,7 +29,7 @@ public struct ZeboPreferences: Equatable, Sendable {
 /// par une version plus ancienne se relisent toujours.
 extension ZeboPreferences: Codable {
     private enum CodingKeys: String, CodingKey {
-        case name, showsClock, sleepsWhenClosed, ides
+        case name, showsClock, sleepsWhenClosed, ides, favoriteLanguage
         /// Ancienne version : un seul éditeur.
         case ide
     }
@@ -40,6 +46,8 @@ extension ZeboPreferences: Codable {
         } else {
             ides = try container.decodeIfPresent(IDEChoice.self, forKey: .ide).map { [$0] } ?? []
         }
+        // Un langage inconnu (retiré depuis) est simplement oublié.
+        favoriteLanguage = try? container.decodeIfPresent(Language.self, forKey: .favoriteLanguage)
     }
 
     public func encode(to encoder: any Encoder) throws {
@@ -48,5 +56,6 @@ extension ZeboPreferences: Codable {
         try container.encode(showsClock, forKey: .showsClock)
         try container.encode(sleepsWhenClosed, forKey: .sleepsWhenClosed)
         try container.encode(ides, forKey: .ides)
+        try container.encodeIfPresent(favoriteLanguage, forKey: .favoriteLanguage)
     }
 }
