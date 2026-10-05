@@ -1,5 +1,6 @@
-import SwiftUI
 import Observation
+import SwiftUI
+import ZeboCore
 
 /// Ce que Zebo est en train de dire, révélé lettre par lettre.
 @MainActor
@@ -12,26 +13,16 @@ final class ZeboSpeech {
     /// Change à chaque nouvelle réplique (fait sauter Zebo).
     private(set) var lineID = 0
 
-    private var speakingTask: Task<Void, Never>?
+    @ObservationIgnored private var speakingTask: Task<Void, Never>?
 
-    /// Répliques toutes faites, en attendant de brancher l'IA.
-    private static let lines = [
-        "Coucou ! Moi c'est Zebo ☁️",
-        "Je te surveille… gentiment 👀",
-        "Hé, pense à boire un verre d'eau !",
-        "Il fait beau dans ta notch aujourd'hui.",
-        "Pssst… tu codes super bien.",
-        "Si je pleure, c'est juste de la pluie.",
-        "J'adore quand tu cliques sur moi !",
-        "Une petite pause ? Même les nuages se reposent.",
-        "Bientôt on pourra vraiment discuter, promis.",
-        "Un nuage pèse environ 500 tonnes. Moi je me sens léger pourtant.",
-    ]
+    @ObservationIgnored private let lineSource: any SpeechLineSource
+
+    init(lineSource: any SpeechLineSource = CannedLines()) {
+        self.lineSource = lineSource
+    }
 
     func sayRandom() {
-        // Évite de répéter deux fois de suite la même phrase.
-        let next = Self.lines.filter { $0 != line }.randomElement() ?? Self.lines[0]
-        say(next)
+        say(lineSource.line(after: line))
     }
 
     /// Coupe la parole : la bulle disparaît tout de suite.
