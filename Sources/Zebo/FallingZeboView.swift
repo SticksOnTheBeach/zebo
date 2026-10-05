@@ -1,4 +1,5 @@
 import SwiftUI
+import ZeboCore
 
 /// Zebo éjecté de la notch, qui tombe en tournoyant à travers tout l'écran.
 /// Vit dans une fenêtre plein écran transparente, affichée seulement pendant la chute.
