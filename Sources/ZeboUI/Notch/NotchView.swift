@@ -62,6 +62,10 @@ public struct NotchView: View {
             .contextMenu {
                 Button("Quitter Zebo") { NSApp.terminate(nil) }
             }
+            // Pendant la configuration, la notch est devenue la fenêtre : elle n'est plus là.
+            // Elle disparaît d'un coup (l'animation prend sa place) et revient en fondu.
+            .opacity(setup.isNotchAvailable ? 1 : 0)
+            .animation(setup.isNotchAvailable ? .easeOut(duration: 0.35) : nil, value: setup.isNotchAvailable)
             // La fenêtre est plus grande que la notch : on colle le dessin en haut.
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }

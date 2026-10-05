@@ -81,7 +81,9 @@ final class NotchController: NSObject {
         // D'abord l'animation, qui part de la notch encore ouverte…
         setupWindow.phaseDidChange(to: phase)
         guard phase == .detaching else { return }
-        // …puis la notch se referme derrière elle : c'est sa forme qui part vers le centre de l'écran.
+        // …pendant que la notch, masquée, se referme : c'est elle qui part vers le centre de l'écran.
+        // Elle sera fermée quand elle reviendra. Zebo se tait : sa bulle ne reste pas seule à l'écran.
+        speech.silence()
         setOpen(false)
     }
 
