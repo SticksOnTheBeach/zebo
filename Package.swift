@@ -11,5 +11,6 @@ let package = Package(
         // Logique pure et état observable : ni SwiftUI ni AppKit.
         .target(name: "ZeboCore"),
         .executableTarget(name: "Zebo", dependencies: ["ZeboCore"]),
+        .testTarget(name: "ZeboCoreTests", dependencies: ["ZeboCore"]),
     ]
 )
