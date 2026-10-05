@@ -35,7 +35,7 @@ final class NotchController: NSObject {
         fallPanel = OverlayPanel(rootView: FallingZeboView(behavior: behavior))
         // Au-dessus de la notch : Zebo en sort par-dessus.
         fallPanel.level = .mainMenu + 4
-        setupWindow = SetupWindowController(flow: setup, model: model, settings: settings)
+        setupWindow = SetupWindowController(flow: setup, model: model, settings: settings, commits: commits)
         super.init()
 
         setup.onPhaseChange = { [weak self] phase in self?.setupPhaseDidChange(phase) }

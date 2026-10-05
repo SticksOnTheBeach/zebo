@@ -3,7 +3,7 @@ import CoreGraphics
 /// Mise en page de la fenêtre de configuration, partagée par l'animation de détachement
 /// (qui doit arriver pile au même endroit) et par l'app (qui crée la vraie fenêtre).
 public enum SetupWindowLayout {
-    public static let size = CGSize(width: 700, height: 480)
+    public static let size = CGSize(width: 720, height: 560)
     /// Arrondi des coins, proche de celui d'une fenêtre macOS.
     public static let cornerRadius: CGFloat = 16
     /// Place de Zebo, en haut à gauche, sous les boutons de la fenêtre (origine en haut à gauche).

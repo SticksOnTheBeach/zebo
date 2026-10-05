@@ -5,6 +5,7 @@ import ZeboCore
 /// À chaque étape, le contenu part d'un côté et le suivant arrive de l'autre, élément par élément.
 public struct SetupView: View {
     private let wizard: SetupWizard
+    private let commits: CommitActivity
     private let onFinish: () -> Void
 
     /// L'étape affichée suit celle de l'assistant avec un temps de retard,
@@ -12,8 +13,9 @@ public struct SetupView: View {
     @State private var displayedStep: SetupWizard.Step = .welcome
     @State private var isMovingForward = true
 
-    public init(wizard: SetupWizard, onFinish: @escaping () -> Void) {
+    public init(wizard: SetupWizard, commits: CommitActivity, onFinish: @escaping () -> Void) {
         self.wizard = wizard
+        self.commits = commits
         self.onFinish = onFinish
     }
 
@@ -51,7 +53,7 @@ public struct SetupView: View {
         case .name: NameStep(wizard: wizard)
         case .language: LanguageStep(wizard: wizard)
         case .ide: IDEStep(wizard: wizard)
-        case .notch: NotchStep(wizard: wizard)
+        case .notch: NotchStep(wizard: wizard, commits: commits)
         case .ready: ReadyStep(wizard: wizard)
         }
     }

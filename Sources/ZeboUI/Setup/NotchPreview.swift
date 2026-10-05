@@ -1,9 +1,13 @@
 import SwiftUI
+import ZeboCore
 
 /// Aperçu de la notch fermée, vue de près sur un bout d'écran : Zebo (endormi dans son lit
-/// ou éveillé) à gauche, l'heure à droite si elle est affichée.
+/// ou éveillé) à gauche, les widgets choisis à droite (ils défilent comme dans la vraie notch).
 struct NotchPreview: View {
-    var showsClock: Bool
+    var widgets: [NotchWidget]
+    var interval: TimeInterval
+    var language: Language?
+    var commitCount: Int?
     var sleeps: Bool
 
     var body: some View {
@@ -17,7 +21,7 @@ struct NotchPreview: View {
                 .frame(height: 44)
             notch
         }
-        .frame(height: 96)
+        .frame(height: 62)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -37,14 +41,11 @@ struct NotchPreview: View {
                 .padding(.leading, 12)
             }
             .overlay(alignment: .trailing) {
-                if showsClock {
-                    Text("09:41")
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
-                        .monospacedDigit()
-                        .foregroundStyle(.white)
-                        .padding(.trailing, 18)
-                        .transition(.opacity)
-                }
+                // Les mêmes widgets que dans la notch, en un peu plus grand.
+                NotchWidgetsView(widgets: widgets, interval: interval, language: language, commitCount: commitCount)
+                    .scaleEffect(1.25)
+                    .frame(width: 70, height: 30)
+                    .padding(.trailing, 10)
             }
     }
 }

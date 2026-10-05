@@ -11,14 +11,16 @@ final class SetupWindowController: NSObject, NSWindowDelegate {
     private let flow: SetupFlow
     private let model: NotchModel
     private let settings: ZeboSettings
+    private let commits: CommitActivity
     /// Fenêtre plein écran transparente, le temps de l'animation.
     private var transitionPanel: OverlayPanel?
     private var window: NSWindow?
 
-    init(flow: SetupFlow, model: NotchModel, settings: ZeboSettings) {
+    init(flow: SetupFlow, model: NotchModel, settings: ZeboSettings, commits: CommitActivity) {
         self.flow = flow
         self.model = model
         self.settings = settings
+        self.commits = commits
     }
 
     func phaseDidChange(to phase: SetupFlow.Phase) {
@@ -65,8 +67,15 @@ final class SetupWindowController: NSObject, NSWindowDelegate {
         window.isReleasedWhenClosed = false
         // On part des réglages actuels : une reconfiguration les retrouve tels quels.
         let wizard = SetupWizard(draft: settings.preferences, locator: WorkspaceApplicationLocator())
+        // Le dossier de projets est deviné, et les commits du jour comptés pour l'aperçu.
+        if wizard.draft.projectsFolder == nil {
+            wizard.draft.projectsFolder = ProjectsFolder.guessOnThisMac()?.path
+        }
+        if let folder = wizard.draft.projectsFolder {
+            Task { await commits.refresh(in: URL(fileURLWithPath: folder)) }
+        }
         let content = NSHostingView(
-            rootView: SetupView(wizard: wizard) { [weak self] in
+            rootView: SetupView(wizard: wizard, commits: commits) { [weak self] in
                 self?.settings.preferences = wizard.preferences
                 self?.flow.complete()
             })
