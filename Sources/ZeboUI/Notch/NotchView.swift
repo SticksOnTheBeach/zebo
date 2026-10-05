@@ -26,6 +26,9 @@ public struct NotchView: View {
                     if model.isOpen {
                         openText
                             .transition(.opacity.combined(with: .offset(x: -12)))
+                    } else {
+                        clock
+                            .transition(.opacity)
                     }
 
                     // Un seul Zebo : il glisse et grandit de son lit, dans l'aile gauche, jusqu'à sa place.
@@ -66,6 +69,13 @@ public struct NotchView: View {
         if behavior.state == .dizzy { return .dizzy }
         if speech.line != nil { return .thinking }
         return model.isOpen ? .calm : .sleeping
+    }
+
+    /// L'heure, centrée dans l'aile droite de la notch fermée.
+    private var clock: some View {
+        NotchClock()
+            .frame(width: NotchModel.wingWidth - NotchModel.topCornerRadius, height: model.closedSize.height)
+            .offset(x: size.width - NotchModel.wingWidth)
     }
 
     /// Texte provisoire à droite de Zebo : le chat viendra ici.
