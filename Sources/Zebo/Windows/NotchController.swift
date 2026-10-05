@@ -10,6 +10,7 @@ final class NotchController: NSObject {
     private let model = NotchModel()
     private let speech = ZeboSpeech()
     private let behavior: ZeboBehavior
+    private let setup = SetupFlow(store: UserDefaultsSetupStore())
     private let panel: OverlayPanel
     /// Fenêtre de la bulle : juste sous la notch, ne capte jamais les clics.
     private let bubblePanel: OverlayPanel
@@ -19,7 +20,7 @@ final class NotchController: NSObject {
 
     override init() {
         behavior = ZeboBehavior(placement: model, speech: speech)
-        panel = OverlayPanel(rootView: NotchView(model: model, speech: speech, behavior: behavior))
+        panel = OverlayPanel(rootView: NotchView(model: model, speech: speech, behavior: behavior, setup: setup))
         bubblePanel = OverlayPanel(rootView: SpeechBubbleView(model: model, speech: speech))
         // Sous la notch : les points qui dépassent vers Zebo passent derrière elle.
         bubblePanel.level = .mainMenu + 2

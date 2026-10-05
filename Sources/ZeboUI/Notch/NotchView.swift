@@ -6,11 +6,13 @@ public struct NotchView: View {
     private let model: NotchModel
     private let speech: ZeboSpeech
     private let behavior: ZeboBehavior
+    private let setup: SetupFlow
 
-    public init(model: NotchModel, speech: ZeboSpeech, behavior: ZeboBehavior) {
+    public init(model: NotchModel, speech: ZeboSpeech, behavior: ZeboBehavior, setup: SetupFlow) {
         self.model = model
         self.speech = speech
         self.behavior = behavior
+        self.setup = setup
     }
 
     private var size: CGSize { model.notchSize }
@@ -78,8 +80,23 @@ public struct NotchView: View {
             .offset(x: size.width - NotchModel.wingWidth)
     }
 
-    /// Texte provisoire à droite de Zebo : le chat viendra ici.
+    /// À droite de Zebo : le bouton de configuration tant qu'il n'est pas configuré,
+    /// sinon un texte provisoire (le chat viendra ici).
     private var openText: some View {
+        Group {
+            if setup.needsSetup {
+                SetupPrompt { setup.start() }
+            } else {
+                comingSoon
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        // Le haut est caché par l'encoche physique : on démarre en dessous.
+        .padding(.top, model.hardwareNotchSize.height)
+        .padding(.leading, 32 + 96 + 20)
+    }
+
+    private var comingSoon: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Salut, moi c'est Zebo !")
                 .font(.headline)
@@ -89,9 +106,5 @@ public struct NotchView: View {
                 .fontWeight(Font.Weight.bold)
                 .foregroundStyle(.white)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-        // Le haut est caché par l'encoche physique : on démarre en dessous.
-        .padding(.top, model.hardwareNotchSize.height)
-        .padding(.leading, 32 + 96 + 20)
     }
 }
