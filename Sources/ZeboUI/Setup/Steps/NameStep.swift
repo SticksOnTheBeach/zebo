@@ -40,6 +40,8 @@ struct NameStep: View {
         .font(.system(size: 24, weight: .semibold, design: .rounded))
         .foregroundStyle(.white)
         .focused($isFocused)
+        // Entrée passe à l'étape suivante (si le prénom est rempli).
+        .onSubmit(wizard.advance)
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
         .frame(width: 380)

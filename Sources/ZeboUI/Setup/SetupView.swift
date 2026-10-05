@@ -1,54 +1,125 @@
 import SwiftUI
+import ZeboCore
 
-/// Contenu de la fenêtre de configuration : Zebo en haut à gauche, et son message d'accueil.
+/// La fenêtre de configuration : Zebo en haut à gauche, l'étape en cours, et la navigation en bas.
+/// À chaque étape, le contenu part d'un côté et le suivant arrive de l'autre, élément par élément.
 public struct SetupView: View {
-    @State private var showsGreeting = false
+    private let wizard: SetupWizard
+    private let onFinish: () -> Void
 
-    public init() {}
+    /// L'étape affichée suit celle de l'assistant avec un temps de retard,
+    /// pour que l'étape qui s'en va connaisse déjà le sens du déplacement.
+    @State private var displayedStep: SetupWizard.Step = .welcome
+    @State private var isMovingForward = true
+
+    public init(wizard: SetupWizard, onFinish: @escaping () -> Void) {
+        self.wizard = wizard
+        self.onFinish = onFinish
+    }
 
     public var body: some View {
         ZStack(alignment: .topLeading) {
             Color.black
 
-            // Il regarde droit devant, cligne des yeux et se balance doucement.
-            AnimatedZebo(mouse: .zero, center: .zero, isAwake: true)
-                .frame(width: zebo.width, height: zebo.height)
-                .offset(x: zebo.minX, y: zebo.minY)
+            zebo
 
-            greeting
-                .opacity(showsGreeting ? 1 : 0)
-                .offset(y: showsGreeting ? 0 : 8)
+            ZStack {
+                step(displayedStep)
+                    .id(displayedStep)
+                    .transition(stepTransition)
+            }
+
+            footer
         }
         .frame(width: SetupWindowLayout.size.width, height: SetupWindowLayout.size.height)
-        .onAppear {
-            withAnimation(.easeOut(duration: 0.4).delay(0.15)) { showsGreeting = true }
+        .onChange(of: wizard.step) { _, newStep in
+            isMovingForward = wizard.isMovingForward
+            DispatchQueue.main.async {
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.86)) {
+                    displayedStep = newStep
+                }
+            }
         }
     }
 
-    private var zebo: CGRect { SetupWindowLayout.zeboFrame }
+    // MARK: - Étapes
 
-    private var greeting: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Le titre, à droite de Zebo et centré sur lui.
-            Text("Salut ! Moi c'est Zebo.")
-                .font(.system(size: 30, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
-                .frame(height: zebo.height)
-                .padding(.leading, zebo.maxX + 20)
-                .padding(.top, zebo.minY)
-
-            Text(
-                """
-                Je vais m'installer dans ta notch et te tenir compagnie pendant que tu travailles.
-                Avant ça, j'aimerais apprendre à te connaître : quelques questions, et c'est parti !
-                """
-            )
-            .font(.system(size: 15, design: .rounded))
-            .lineSpacing(4)
-            .foregroundStyle(.white.opacity(0.75))
-            .frame(maxWidth: SetupWindowLayout.size.width - zebo.minX * 2, alignment: .leading)
-            .padding(.leading, zebo.minX)
-            .padding(.top, 28)
+    @ViewBuilder
+    private func step(_ step: SetupWizard.Step) -> some View {
+        switch step {
+        case .welcome: WelcomeStep()
+        case .name: NameStep(wizard: wizard)
+        case .personality: PersonalityStep(wizard: wizard)
+        case .notch: NotchStep(wizard: wizard)
+        case .ready: ReadyStep(wizard: wizard)
         }
+    }
+
+    /// En avant, l'étape arrive de la droite et la précédente part vers la gauche ; en arrière, l'inverse.
+    private var stepTransition: AnyTransition {
+        let shift: CGFloat = isMovingForward ? 60 : -60
+        return .asymmetric(
+            insertion: .offset(x: shift).combined(with: .opacity),
+            removal: .offset(x: -shift).combined(with: .opacity))
+    }
+
+    // MARK: - Zebo
+
+    /// Il saute à chaque étape et regarde ce qui l'intéresse.
+    private var zebo: some View {
+        AnimatedZebo(mouse: gaze, center: .zero, isAwake: true, hopTrigger: displayedStep.rawValue)
+            .frame(width: SetupWindowLayout.zeboFrame.width, height: SetupWindowLayout.zeboFrame.height)
+            .offset(x: SetupWindowLayout.zeboFrame.minX, y: SetupWindowLayout.zeboFrame.minY)
+    }
+
+    /// Où regarde Zebo (y vers le haut, comme à l'écran) : vers le champ du prénom, vers les cartes,
+    /// vers la notch… ou droit devant.
+    private var gaze: CGPoint {
+        switch displayedStep {
+        case .welcome, .ready: .zero
+        case .name: CGPoint(x: 70, y: -90)
+        case .personality: CGPoint(x: 20, y: -120)
+        case .notch: CGPoint(x: 30, y: 120)
+        }
+    }
+
+    // MARK: - Navigation
+
+    private var footer: some View {
+        ZStack {
+            PageDots(count: SetupWizard.Step.allCases.count, current: wizard.step.rawValue)
+
+            HStack {
+                Button(action: wizard.goBack) {
+                    Image(systemName: "chevron.left")
+                }
+                .buttonStyle(ZeboButtonStyle(shape: .icon))
+                .opacity(wizard.canGoBack ? 1 : 0)
+                .disabled(!wizard.canGoBack)
+
+                Spacer()
+
+                if wizard.isLastStep {
+                    Button("C'est parti", action: onFinish)
+                        .buttonStyle(ZeboButtonStyle(kind: .primary))
+                        .keyboardShortcut(.defaultAction)
+                        .transition(.opacity.combined(with: .scale(scale: 0.9)))
+                } else {
+                    Button(action: wizard.advance) {
+                        Image(systemName: "arrow.right")
+                    }
+                    .buttonStyle(ZeboButtonStyle(kind: .primary, shape: .icon))
+                    .disabled(!wizard.canAdvance)
+                    // Dans le champ du prénom, Entrée est gérée par le champ lui-même.
+                    .keyboardShortcut(wizard.step == .name ? nil : .defaultAction)
+                    .transition(.opacity.combined(with: .scale(scale: 0.9)))
+                }
+            }
+        }
+        .padding(.horizontal, 28)
+        .padding(.bottom, 24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: wizard.step)
+        .appearing(order: 3)
     }
 }

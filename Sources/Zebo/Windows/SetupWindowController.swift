@@ -60,7 +60,8 @@ final class SetupWindowController: NSObject, NSWindowDelegate {
         window.backgroundColor = .black
         window.appearance = NSAppearance(named: .darkAqua)
         window.isReleasedWhenClosed = false
-        let content = NSHostingView(rootView: SetupView())
+        let wizard = SetupWizard()
+        let content = NSHostingView(rootView: SetupView(wizard: wizard) { [weak self] in self?.flow.complete() })
         // La fenêtre garde la taille prévue, sans s'ajuster au contenu.
         content.sizingOptions = []
         window.contentView = content
