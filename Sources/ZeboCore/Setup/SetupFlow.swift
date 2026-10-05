@@ -1,7 +1,7 @@
 import Observation
 
 /// Le parcours de configuration de Zebo : la notch se détache pour devenir une fenêtre,
-/// puis la configuration commence dans cette fenêtre.
+/// la configuration se fait dans cette fenêtre, puis la fenêtre retourne dans la notch.
 @MainActor
 @Observable
 public final class SetupFlow {
@@ -12,6 +12,8 @@ public final class SetupFlow {
         case detaching
         /// La fenêtre de configuration est ouverte.
         case configuring
+        /// Configuration terminée : la fenêtre se rétracte dans la notch.
+        case returning
     }
 
     public private(set) var phase: Phase = .idle
@@ -35,7 +37,13 @@ public final class SetupFlow {
 
     /// Le bouton « Configurer » a été cliqué : la notch se détache.
     public func start() {
-        guard phase == .idle, needsSetup else { return }
+        guard needsSetup else { return }
+        reconfigure()
+    }
+
+    /// Refaire la configuration, même si elle a déjà été faite.
+    public func reconfigure() {
+        guard phase == .idle else { return }
         setPhase(.detaching)
     }
 
@@ -51,10 +59,17 @@ public final class SetupFlow {
         setPhase(.idle)
     }
 
-    /// Configuration terminée : elle ne sera plus proposée.
+    /// Configuration terminée : elle ne sera plus proposée, et la fenêtre retourne dans la notch.
     public func complete() {
+        guard phase == .configuring else { return }
         store.isSetupComplete = true
         isComplete = true
+        setPhase(.returning)
+    }
+
+    /// La fenêtre est rentrée dans la notch : elle reprend sa place.
+    public func finishReturning() {
+        guard phase == .returning else { return }
         setPhase(.idle)
     }
 

@@ -23,7 +23,7 @@ final class SetupWindowController: NSObject, NSWindowDelegate {
         switch phase {
         case .detaching: showTransition()
         case .configuring: showWindow()
-        case .idle: tearDown()
+        case .returning, .idle: tearDown()
         }
     }
 

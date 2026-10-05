@@ -75,14 +75,33 @@ struct SetupFlowTests {
         #expect(!store.isSetupComplete)
     }
 
-    @Test("Terminer la configuration la mémorise")
-    func completingIsRemembered() {
+    @Test("Terminer la configuration la mémorise, puis la fenêtre retourne dans la notch")
+    func completingIsRememberedThenReturns() {
         flow.start()
         flow.finishDetaching()
         flow.complete()
-        #expect(flow.phase == .idle)
+        #expect(flow.phase == .returning)
+        #expect(!flow.isNotchAvailable)
         #expect(!flow.needsSetup)
         #expect(store.isSetupComplete)
+
+        flow.finishReturning()
+        #expect(flow.phase == .idle)
+        #expect(flow.isNotchAvailable)
+    }
+
+    @Test("On ne termine que depuis la fenêtre de configuration")
+    func completeRequiresConfiguring() {
+        flow.complete()
+        #expect(flow.phase == .idle)
+        #expect(!store.isSetupComplete)
+    }
+
+    @Test("Déjà configuré, on peut quand même tout refaire")
+    func reconfigureAfterCompletion() {
+        let flow = SetupFlow(store: MemoryStore(isSetupComplete: true))
+        flow.reconfigure()
+        #expect(flow.phase == .detaching)
     }
 
     @Test("Les préférences retiennent la configuration d'un lancement à l'autre")
