@@ -8,10 +8,16 @@ Un petit nuage rose qui vit dans la notch du Mac. Il dort quand on ne s'occupe p
 
 ## Ce que fait Zebo
 
-- **Il se configure.** Au premier lancement, la notch ouverte propose « Configurer Zebo ». Au clic, la notch se détache : sa forme glisse jusqu'au centre de l'écran et devient une fenêtre d'application, où Zebo (en haut à gauche) se présente. Le temps de la configuration, Zebo a une icône dans le Dock.
-- **Il dort.** Notch fermée, il est allongé dans son lit dans l'aile gauche, avec un bonnet de nuit, sous sa couette ; des « z » s'échappent de sa tête. L'heure s'affiche dans l'aile droite.
+- **Il se configure.** Au premier lancement, la notch ouverte propose « Configurer Zebo ». Au clic, la notch se détache : sa forme glisse jusqu'au centre de l'écran et devient une fenêtre d'application. Zebo s'y présente, puis on règle en quelques étapes animées :
+  1. **Ton prénom** : Zebo t'appellera comme ça (« Enchanté, … ! »).
+  2. **Sa personnalité** : Doux, Taquin ou Zen, avec un exemple de ce qu'il dirait.
+  3. **Sa notch** : afficher l'heure, faire la sieste, avec un aperçu en direct.
+  4. **Le récapitulatif**, puis « C'est parti » : la fenêtre se rétracte dans la notch.
+
+  Le temps de la configuration, Zebo a une icône dans le Dock. Pour la refaire : clic droit sur la notch, **Reconfigurer Zebo…**
+- **Il dort.** Notch fermée, il est allongé dans son lit dans l'aile gauche, avec un bonnet de nuit, sous sa couette ; des « z » s'échappent de sa tête. L'heure s'affiche dans l'aile droite. Les deux se désactivent dans la configuration.
 - **Il se réveille.** Quand la souris passe sur la notch, elle s'ouvre : le lit s'efface, Zebo se redresse, suit la souris des yeux, cligne des yeux et se balance doucement.
-- **Il parle.** Un clic sur lui affiche une réplique dans une bulle en forme de nuage, lettre par lettre, reliée à lui par des points qui apparaissent un à un. Pendant qu'il parle, il prend un air pensif 🤔 (sourcils levés, moue, regard en l'air). Un nouveau message ne peut partir qu'au bout de 4 s.
+- **Il parle.** Un clic sur lui affiche une réplique (selon sa personnalité, avec ton prénom) dans une bulle en forme de nuage, lettre par lettre, reliée à lui par des points qui apparaissent un à un. Pendant qu'il parle, il prend un air pensif 🤔 (sourcils levés, moue, regard en l'air). Un nouveau message ne peut partir qu'au bout de 4 s.
 - **Il s'évanouit.** Trois clics en moins de 1,5 s l'assomment : yeux en spirale, étoiles autour de la tête, il gigote… puis il est catapulté hors de la notch, traverse l'écran en tournoyant et revient avec un « pop » quelques secondes plus tard.
 
 Pour quitter Zebo : clic droit sur la notch, puis **Quitter Zebo**. En dehors de sa configuration, il n'a pas d'icône dans le Dock.
@@ -49,7 +55,7 @@ Le paquet est découpé en trois modules, chacun ne dépendant que des précéde
 
 | Module | Rôle | Dépend de |
 | --- | --- | --- |
-| `ZeboCore` | Logique pure et état observable : règles des clics, trajectoire de chute, répliques, modèle de la notch, parcours de configuration. Ni SwiftUI ni AppKit. | — |
+| `ZeboCore` | Logique pure et état observable : règles des clics, trajectoire de chute, répliques et personnalités, modèle de la notch, préférences, parcours et assistant de configuration. Ni SwiftUI ni AppKit. | — |
 | `ZeboUI` | Vues SwiftUI : le personnage, la notch, l'heure, la bulle de dialogue, le lit, la chute, la configuration. | `ZeboCore` |
 | `Zebo` | L'app : point d'entrée AppKit, fenêtres, suivi de la souris, détection de l'écran à encoche. | `ZeboCore`, `ZeboUI` |
 
@@ -59,14 +65,17 @@ Sources/
 │   ├── Behavior/   ZeboBehavior (réactions aux clics), PokeTracker (règles)
 │   ├── Notch/      NotchModel (géométrie et état de la notch), ZeboPlacement
 │   ├── Physics/    Flight (trajectoire de la chute)
-│   ├── Setup/      SetupFlow (étapes de la configuration), SetupStore (mémorisation)
-│   └── Speech/     ZeboSpeech (machine à écrire), SpeechLineSource (répliques), ZeboSpeaking
+│   ├── Preferences/ ZeboPreferences, ZeboSettings (préférences et leur mémorisation)
+│   ├── Setup/      SetupFlow (notch → fenêtre → notch), SetupWizard (étapes), SetupStore
+│   └── Speech/     ZeboSpeech (machine à écrire), SpeechLineSource et PersonalityLines (répliques), ZeboSpeaking
 ├── ZeboUI/
 │   ├── Character/  ZeboCharacter (dessin), AnimatedZebo (vie), ZeboMood, Shapes/
 │   ├── Notch/      NotchView, NotchShape, NotchClock
 │   ├── Speech/     SpeechBubbleView, CloudBubbleShape, CappedWidth
 │   ├── Sleep/      InBed (le lit), SleepingZs (les « z »)
-│   ├── Setup/      SetupPrompt (bouton), SetupTransitionView et NotchToWindowShape (animation), SetupView
+│   ├── Setup/      SetupView (fenêtre), Steps/ (une vue par étape), SetupTransitionView et
+│   │               NotchToWindowShape (animation), NotchPreview, SetupPrompt (bouton de la notch)
+│   ├── Components/ ZeboButtonStyle, PageDots, .appearing (apparition décalée)
 │   ├── Fall/       FallingZeboView
 │   └── ZeboPalette
 └── Zebo/
@@ -91,9 +100,9 @@ Quelques choix :
 
 ## Tests
 
-Les tests couvrent `ZeboCore` avec [Swift Testing](https://developer.apple.com/documentation/testing) : règles des clics, trajectoire et éjection, répliques, parole (machine à écrire, silence), comportement face aux clics jusqu'à l'éjection, géométrie de la notch, et parcours de configuration (avec sa mémorisation dans les préférences).
+Les tests couvrent `ZeboCore` avec [Swift Testing](https://developer.apple.com/documentation/testing) : règles des clics, trajectoire et éjection, répliques et personnalités, parole (machine à écrire, silence), comportement face aux clics jusqu'à l'éjection, géométrie de la notch, préférences, et configuration (parcours, assistant, mémorisation).
 
-Les vues de `ZeboUI` n'ont pas de logique isolée : elles se vérifient à l'œil, en lançant l'app.
+Les vues de `ZeboUI` n'ont pas de logique isolée : elles se vérifient à l'œil, en lançant l'app. Pour une capture ou un aperçu sans animations d'apparition : `.environment(\.showsFinalAppearance, true)`.
 
 Les tests qui dépendent du temps n'attendent pas une durée fixe : `waitUntil` (dans `Tests/ZeboCoreTests/Support/`) vérifie la condition toutes les 10 ms jusqu'à un délai maximal.
 
@@ -107,7 +116,6 @@ Les tests qui dépendent du temps n'attendent pas une durée fixe : `waitUntil` 
 
 ## La suite
 
-- Les étapes de la configuration, dans la fenêtre ouverte par « Configurer Zebo ».
 - Une fois configuré, la notch ouverte annonce « SOON… In progress… » : la place à droite de Zebo est réservée à une vraie discussion avec lui.
 
-Pour revoir la configuration depuis le début : `defaults delete com.sticksonthebeach.zebo isSetupComplete`.
+Pour repartir de zéro (configuration et préférences) : `defaults delete com.sticksonthebeach.zebo`.
