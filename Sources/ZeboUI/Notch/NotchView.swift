@@ -40,16 +40,17 @@ public struct NotchView: View {
                             isAwake: model.isOpen, hopTrigger: speech.lineID,
                             mood: mood
                         )
-                        // Éjecté : il disparaît de la notch (le lit reste), puis revient avec un « pop ».
-                        .scaleEffect(behavior.isHome ? 1 : 0.01)
-                        .opacity(behavior.isHome ? 1 : 0)
+                        // Éjecté ou parti dans la fenêtre de configuration : il disparaît de la notch
+                        // (le lit reste), puis revient avec un « pop ».
+                        .scaleEffect(isZeboHere ? 1 : 0.01)
+                        .opacity(isZeboHere ? 1 : 0)
                         // Il disparaît d'un coup, mais revient avec un rebond.
                         .animation(
-                            behavior.isHome ? .spring(response: 0.5, dampingFraction: 0.55) : nil,
-                            value: behavior.isHome
+                            isZeboHere ? .spring(response: 0.5, dampingFraction: 0.55) : nil,
+                            value: isZeboHere
                         )
                     }
-                    .overlay { SleepingZs(isActive: mood == .sleeping) }
+                    .overlay { SleepingZs(isActive: mood == .sleeping && isZeboHere) }
                     .frame(width: zeboFrame.width, height: zeboFrame.height)
                     .contentShape(Rectangle())
                     // Un clic sur Zebo : il parle (et trop de clics l'assomment).
@@ -64,6 +65,9 @@ public struct NotchView: View {
             // La fenêtre est plus grande que la notch : on colle le dessin en haut.
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
+
+    /// Zebo est dans la notch : ni éjecté, ni parti dans la fenêtre de configuration.
+    private var isZeboHere: Bool { behavior.isHome && setup.isNotchAvailable }
 
     /// Sonné avant tout ; sinon, quand il parle, il prend un air pensif 🤔 ;
     /// et quand la notch est fermée, il dort.

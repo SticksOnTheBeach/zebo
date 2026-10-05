@@ -9,9 +9,9 @@ public protocol SpeechLineSource: Sendable {
 public struct CannedLines: SpeechLineSource {
     public static let defaultLines = [
         "Coucou ! Moi c'est Zebo ☁️",
-        "Je te surveille… gentiment 👀",
+        "Je te surveille… gentiment mon gars fais beleck",
         "Hé, pense à boire un verre d'eau !",
-        "Il fait beau dans ta notch aujourd'hui.",
+        "Il fait beau dans ta notch aujourd'hui enculé",
         "Pssst… tu codes super bien.",
         "Si je pleure, c'est juste de la pluie.",
         "J'adore quand tu cliques sur moi !",
