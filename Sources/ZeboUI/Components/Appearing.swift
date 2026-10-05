@@ -1,5 +1,10 @@
 import SwiftUI
 
+extension EnvironmentValues {
+    /// Tout s'affiche directement, sans animation d'apparition (aperçus, captures).
+    @Entry var showsFinalAppearance = false
+}
+
 extension View {
     /// L'élément arrive en fondu en remontant un peu, après ceux d'avant :
     /// `order` 0 en premier, puis chaque rang un peu plus tard.
@@ -11,7 +16,10 @@ extension View {
 private struct Appearing: ViewModifier {
     let order: Int
 
-    @State private var isVisible = false
+    @Environment(\.showsFinalAppearance) private var showsFinalAppearance
+    @State private var hasAppeared = false
+
+    private var isVisible: Bool { hasAppeared || showsFinalAppearance }
 
     /// Délai entre deux rangs.
     private static let stagger = 0.06
@@ -25,7 +33,7 @@ private struct Appearing: ViewModifier {
             .onAppear {
                 let delay = Self.initialDelay + Double(order) * Self.stagger
                 withAnimation(.spring(response: 0.5, dampingFraction: 0.85).delay(delay)) {
-                    isVisible = true
+                    hasAppeared = true
                 }
             }
     }
