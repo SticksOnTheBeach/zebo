@@ -77,6 +77,10 @@ struct ZeboCharacter: View {
                 }
                 .offset(x: look.x * 4 * u, y: look.y * 3 * u)
 
+                if mood == .sleeping {
+                    nightcap(u)
+                }
+
                 if mood == .dizzy {
                     stars(u)
                 }
@@ -103,6 +107,20 @@ struct ZeboCharacter: View {
             Capsule()
                 .fill(ZeboPalette.ink)
                 .frame(width: 8 * u, height: max(13 * eyeOpenness, 2.5) * u)
+        }
+    }
+
+    /// Bonnet de nuit avec son revers et son pompon.
+    private func nightcap(_ u: CGFloat) -> some View {
+        ZStack {
+            NightcapShape()
+                .fill(ZeboPalette.nightcap)
+            NightcapBrimShape()
+                .stroke(ZeboPalette.nightcapTrim, style: StrokeStyle(lineWidth: 9 * u, lineCap: .round))
+            Circle()
+                .fill(ZeboPalette.nightcapTrim)
+                .frame(width: 13 * u, height: 13 * u)
+                .offset(x: NightcapShape.tip.x * u, y: NightcapShape.tip.y * u)
         }
     }
 
