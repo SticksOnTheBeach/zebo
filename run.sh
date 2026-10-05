@@ -11,7 +11,14 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS"
 cp "$BIN_DIR/Zebo" "$APP/Contents/MacOS/Zebo"
 cp Info.plist "$APP/Contents/Info.plist"
-codesign --force --sign - "$APP" >/dev/null 2>&1
+# Ressources des modules (logos des langages…), là où l'app les cherche.
+mkdir -p "$APP/Contents/Resources"
+for bundle in "$BIN_DIR"/*.bundle; do
+    [ -e "$bundle" ] && cp -R "$bundle" "$APP/Contents/Resources/"
+done
+# iCloud (~/Documents) ajoute des attributs Finder qui empêchent la signature : on les retire.
+xattr -cr "$APP"
+codesign --force --deep --sign - "$APP" >/dev/null 2>&1
 
 pkill -x Zebo || true
 open "$APP"
