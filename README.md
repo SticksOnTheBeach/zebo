@@ -1,32 +1,34 @@
 # Zebo
 
-Un petit nuage rose qui vit dans la notch du Mac. Il dort quand on ne s'occupe pas de lui, se réveille quand la souris passe, parle quand on clique dessus… et tombe dans les pommes si on insiste trop.
+A little pink cloud that lives in your Mac's notch. It sleeps when you leave it alone, wakes up when your mouse comes by, talks when you click on it… and faints if you insist too much.
 
-| Notch fermée : Zebo dort, l'heure à droite | Notch ouverte : Zebo est réveillé |
+| Closed notch: Zebo sleeps, widgets on the right | Open notch: Zebo is awake |
 | --- | --- |
-| ![Notch fermée](docs/notch-fermee.png) | ![Notch ouverte](docs/notch-ouverte.png) |
+| ![Closed notch](docs/notch-closed.png) | ![Open notch](docs/notch-open.png) |
 
-## Ce que fait Zebo
+The app's interface is in French.
 
-- **Il se configure.** Au premier lancement, la notch ouverte propose « Configurer Zebo ». Au clic, la notch se détache : sa forme glisse jusqu'au centre de l'écran et devient une fenêtre d'application. Zebo s'y présente, puis on règle en quelques étapes animées :
-  1. **Ton prénom** : Zebo t'appellera comme ça (« Enchanté, … ! »).
-  2. **Ton langage préféré**, parmi une douzaine.
-  3. **Tes éditeurs de code** (un ou plusieurs) : VS Code, Cursor, Xcode, les IDE JetBrains… Au clic, Zebo retrouve tout seul où chacun est installé (ou on le lui indique), pour pouvoir les lancer plus tard.
-  4. **Sa notch** : ce qu'affiche l'aile droite (l'heure, la date, tes commits du jour, ton langage) et la sieste, avec un aperçu en direct.
-  5. **Le récapitulatif**, puis « C'est parti » : la fenêtre se rétracte dans la notch.
+## What Zebo does
 
-  Le temps de la configuration, Zebo a une icône dans le Dock. Pour la refaire : clic droit sur la notch, **Reconfigurer Zebo…**
-- **Il dort.** Notch fermée, il est allongé dans son lit dans l'aile gauche, avec un bonnet de nuit, sous sa couette ; des « z » s'échappent de sa tête.
-- **Il t'informe.** L'aile droite de la notch fermée affiche les widgets choisis : l'heure, la date, tes commits du jour, ton langage préféré. S'il y en a plusieurs, ils défilent toutes les 5, 10 ou 30 secondes. Les commits du jour sont comptés avec Git dans les dépôts de ton dossier de projets (deviné, `~/Documents/Dev` par exemple), d'après ton adresse `git config user.email`, toutes les 5 minutes.
-- **Il se réveille.** Quand la souris passe sur la notch, elle s'ouvre : le lit s'efface, Zebo se redresse, suit la souris des yeux, cligne des yeux et se balance doucement.
-- **Il parle.** Un clic sur lui affiche une réplique (avec ton prénom) dans une bulle en forme de nuage, lettre par lettre, reliée à lui par des points qui apparaissent un à un. Pendant qu'il parle, il prend un air pensif 🤔 (sourcils levés, moue, regard en l'air). Un nouveau message ne peut partir qu'au bout de 4 s.
-- **Il s'évanouit.** Trois clics en moins de 1,5 s l'assomment : yeux en spirale, étoiles autour de la tête, il gigote… puis il est catapulté hors de la notch, traverse l'écran en tournoyant et revient avec un « pop » quelques secondes plus tard.
+- **It gets set up.** On first launch, the open notch offers "Configurer Zebo". Click it and the notch detaches: its shape glides to the center of the screen and turns into an app window. Zebo introduces itself, then a few animated steps follow:
+  1. **Your first name**: what Zebo will call you ("Enchanté, … !").
+  2. **Your favorite language**, among a dozen.
+  3. **Your code editors** (one or more): VS Code, Cursor, Xcode, the JetBrains IDEs… Click one and Zebo finds where it is installed on its own (or you point to it), so it can launch it later.
+  4. **Its notch**: what the right wing shows (time, date, today's commits, your language) and whether Zebo naps, with a live preview.
+  5. **A summary**, then "C'est parti": the window shrinks back into the notch.
 
-Pour quitter Zebo : clic droit sur la notch, puis **Quitter Zebo**. En dehors de sa configuration, il n'a pas d'icône dans le Dock.
+  While being set up, Zebo has a Dock icon. To run the setup again: right-click the notch, **Reconfigurer Zebo…**
+- **It sleeps.** When the notch is closed, it lies in its bed in the left wing, wearing a nightcap, under its blanket; little "z"s float away from its head.
+- **It keeps you posted.** The right wing of the closed notch shows the widgets you picked: the time, the date, today's commits, your favorite language. With several of them, they take turns every 5, 10 or 30 seconds. Today's commits are counted with Git in the repositories of your projects folder (guessed, e.g. `~/Documents/Dev`), using your `git config user.email`, every 5 minutes.
+- **It wakes up.** When the mouse hovers the notch, it opens: the bed fades away, Zebo stands up, follows the mouse with its eyes, blinks and sways gently.
+- **It talks.** Clicking on it shows a line (with your first name) in a cloud-shaped bubble, typed letter by letter, linked to Zebo by dots that pop in one by one. While talking, it looks thoughtful 🤔 (raised eyebrows, pout, eyes up). A new message can only start after 4 s.
+- **It faints.** Three clicks within 1.5 s knock it out: spiral eyes, stars around its head, it wobbles… then it gets catapulted out of the notch, spins across the screen and pops back a few seconds later.
+
+To quit Zebo: right-click the notch, then **Quitter Zebo**. Outside of setup, it has no Dock icon.
 
 ## Installation
 
-Prérequis : macOS 14 ou plus récent, Xcode 16 ou plus récent (Swift 6).
+Requirements: macOS 14 or later, Xcode 16 or later (Swift 6).
 
 ```sh
 git clone https://github.com/SticksOnTheBeach/zebo.git
@@ -34,94 +36,95 @@ cd zebo
 make run
 ```
 
-`make run` compile le projet, assemble `build/Zebo.app` et le lance (en remplaçant une instance déjà ouverte). Aucune permission n'est demandée : suivre la souris n'en nécessite pas.
+`make run` builds the project, assembles `build/Zebo.app` and launches it (replacing a running instance). No permission is requested: following the mouse doesn't need any.
 
-Sur un écran sans encoche, Zebo dessine une fausse notch au centre de la barre des menus.
+On a screen without a notch, Zebo draws a fake notch in the middle of the menu bar.
 
-## Commandes
+## Commands
 
 ```sh
-make run      # compile, assemble Zebo.app et le lance
-make build    # compile seulement
-make test     # tests unitaires
-make lint     # vérifie le style sans rien modifier
-make format   # formate le code
-make help     # liste les commandes
+make run      # build, assemble Zebo.app and launch it
+make build    # build only
+make test     # unit tests
+make lint     # check the style without changing anything
+make format   # format the code
+make help     # list the commands
 ```
 
-`make test` compile dans `~/Library/Caches/zebo-build` : si le dépôt est dans un dossier synchronisé par iCloud (comme `~/Documents`), iCloud ajoute des attributs Finder aux bundles compilés et la signature du bundle de tests échoue. Un `swift test` direct marche si le dépôt est ailleurs.
+`make test` builds in `~/Library/Caches/zebo-build`: when the repository lives in an iCloud-synced folder (like `~/Documents`), iCloud adds Finder attributes to built bundles and code signing of the test bundle fails. A plain `swift test` works if the repository is elsewhere.
+
+To start over from scratch (setup and preferences): `defaults delete com.sticksonthebeach.zebo`, or, in a debug build, right-click the notch and pick **Réinitialiser Zebo**.
 
 ## Architecture
 
-Le paquet est découpé en trois modules, chacun ne dépendant que des précédents :
+The package is split into three modules, each depending only on the previous ones:
 
-| Module | Rôle | Dépend de |
+| Module | Role | Depends on |
 | --- | --- | --- |
-| `ZeboCore` | Logique pure et état observable : règles des clics, trajectoire de chute, répliques, modèle de la notch, widgets, préférences, éditeurs et commits, parcours et assistant de configuration. Ni SwiftUI ni AppKit. | — |
-| `ZeboUI` | Vues SwiftUI : le personnage, la notch, l'heure, la bulle de dialogue, le lit, la chute, la configuration. | `ZeboCore` |
-| `Zebo` | L'app : point d'entrée AppKit, fenêtres, suivi de la souris, détection de l'écran à encoche. | `ZeboCore`, `ZeboUI` |
+| `ZeboCore` | Pure logic and observable state: click rules, fall trajectory, lines, notch model, widgets, preferences, editors and commits, setup flow and wizard. No SwiftUI, no AppKit. | — |
+| `ZeboUI` | SwiftUI views: the character, the notch and its widgets, the speech bubble, the bed, the fall, the setup. | `ZeboCore` |
+| `Zebo` | The app: AppKit entry point, windows, mouse tracking, notched screen detection, Git and editor lookup. | `ZeboCore`, `ZeboUI` |
 
 ```
 Sources/
 ├── ZeboCore/
-│   ├── Behavior/   ZeboBehavior (réactions aux clics), PokeTracker (règles)
-│   ├── Notch/      NotchModel (géométrie et état de la notch), ZeboPlacement
-│   ├── Code/       IDE (catalogue d'éditeurs), Language, CommitActivity (commits du jour), ProjectsFolder
-│   ├── Physics/    Flight (trajectoire de la chute)
-│   ├── Preferences/ ZeboPreferences, ZeboSettings (préférences et leur mémorisation)
-│   ├── Setup/      SetupFlow (notch → fenêtre → notch), SetupWizard (étapes), SetupStore
-│   ├── Widgets/    NotchWidget, NotchWidgetRotation (qui s'affiche quand)
-│   └── Speech/     ZeboSpeech (machine à écrire), SpeechLineSource et PersonalizedLines (répliques), ZeboSpeaking
+│   ├── Behavior/    ZeboBehavior (reactions to clicks), PokeTracker (rules)
+│   ├── Code/        IDE (editor catalog), Language, CommitActivity (today's commits), ProjectsFolder
+│   ├── Notch/       NotchModel (notch geometry and state), ZeboPlacement
+│   ├── Physics/     Flight (fall trajectory)
+│   ├── Preferences/ ZeboPreferences, ZeboSettings (preferences and their storage)
+│   ├── Setup/       SetupFlow (notch → window → notch), SetupWizard (steps), SetupStore
+│   ├── Speech/      ZeboSpeech (typewriter), SpeechLineSource and PersonalizedLines (lines), ZeboSpeaking
+│   └── Widgets/     NotchWidget, NotchWidgetRotation (what shows when)
 ├── ZeboUI/
-│   ├── Character/  ZeboCharacter (dessin), AnimatedZebo (vie), ZeboMood, Shapes/
-│   ├── Notch/      NotchView, NotchShape, NotchWidgetsView (widgets qui défilent), NotchClock
-│   ├── Speech/     SpeechBubbleView, CloudBubbleShape, CappedWidth
-│   ├── Sleep/      InBed (le lit), SleepingZs (les « z »)
-│   ├── Setup/      SetupView (fenêtre), Steps/ (une vue par étape), SetupTransitionView et
-│   │               NotchToWindowShape (animation), NotchPreview, SetupPrompt (bouton de la notch)
-│   ├── Components/ ZeboButtonStyle, PageDots, .appearing (apparition décalée)
-│   ├── Fall/       FallingZeboView
+│   ├── Character/   ZeboCharacter (drawing), AnimatedZebo (life), ZeboMood, Shapes/
+│   ├── Components/  ZeboButtonStyle, PageDots, .appearing (staggered appearance)
+│   ├── Fall/        FallingZeboView
+│   ├── Notch/       NotchView, NotchShape, NotchWidgetsView (rotating widgets), NotchClock
+│   ├── Setup/       SetupView (window), Steps/ (one view per step), SetupTransitionView and
+│   │                NotchToWindowShape (animation), NotchPreview, SetupPrompt (notch button)
+│   ├── Sleep/       InBed (the bed), SleepingZs (the "z"s)
+│   ├── Speech/      SpeechBubbleView, CloudBubbleShape, CappedWidth
 │   └── ZeboPalette
 └── Zebo/
-    ├── App/        ZeboApp (point d'entrée), AppDelegate, MainMenu
-    ├── Windows/    NotchController, OverlayPanel, SetupWindowController
-    ├── Code/       WorkspaceApplicationLocator (retrouve les éditeurs), GitCommitCounter (compte les commits)
-    ├── Input/      MouseMonitor
-    └── Extensions/ NSScreen+Notch
+    ├── App/         ZeboApp (entry point), AppDelegate, MainMenu, DevReset
+    ├── Code/        WorkspaceApplicationLocator (finds editors), GitCommitCounter (counts commits)
+    ├── Extensions/  NSScreen+Notch
+    ├── Input/       MouseMonitor
+    └── Windows/     NotchController, OverlayPanel, SetupWindowController
 Tests/
 └── ZeboCoreTests/
 ```
 
-L'app utilise trois fenêtres transparentes posées au-dessus de la barre des menus : la notch elle-même, la bulle de dialogue juste en dessous, et une fenêtre plein écran affichée seulement pendant la chute de Zebo. La configuration ajoute une fenêtre plein écran le temps de l'animation, puis une vraie fenêtre d'application ; Zebo passe alors en app « normale » (icône dans le Dock, menu), et redevient discret quand elle se ferme.
+The app uses three transparent windows above the menu bar: the notch itself, the speech bubble right below it, and a full-screen window shown only while Zebo falls. Setup adds a full-screen window for the animation, then a regular app window; Zebo then becomes a "normal" app (Dock icon, menu bar) and goes back to being discreet when the window closes.
 
-Quelques choix :
+A few design choices:
 
-- **Les règles sont pures.** `PokeTracker` et `Flight` reçoivent la date et le générateur aléatoire en paramètres, ce qui les rend testables.
-- **Les dépendances passent par des protocoles.** `ZeboBehavior` ne connaît que `ZeboSpeaking` et `ZeboPlacement`, pas les classes concrètes ; les tests utilisent de faux objets.
-- **Les répliques sont interchangeables.** `ZeboSpeech` reçoit un `SpeechLineSource` : pour brancher une IA, il suffit d'écrire une nouvelle source.
-- **Les animations restent dans les vues.** Les modèles changent l'état, les vues décident comment l'animer (`.animation(_:value:)`).
-- **Une humeur à la fois.** `ZeboMood` (calme, pensif, sonné, endormi) décide de l'expression de Zebo, sans booléens qui pourraient se contredire.
-- **Le personnage se dessine sur une grille de 100 × 100.** Il s'adapte à n'importe quelle taille, de la notch fermée à la notch ouverte.
+- **Rules are pure.** `PokeTracker` and `Flight` take the date and the random generator as parameters, which makes them testable.
+- **Dependencies go through protocols.** `ZeboBehavior` only knows `ZeboSpeaking` and `ZeboPlacement`, not the concrete classes; tests use fakes. The same goes for `ApplicationLocator` and `CommitCounter`.
+- **Lines are swappable.** `ZeboSpeech` takes a `SpeechLineSource`: plugging in an AI only means writing a new source.
+- **Animations stay in the views.** Models change state, views decide how to animate it (`.animation(_:value:)`).
+- **One mood at a time.** `ZeboMood` (calm, thinking, dizzy, sleeping) drives Zebo's expression, with no booleans that could contradict each other.
+- **The character is drawn on a 100 × 100 grid.** It adapts to any size, from the closed notch to the open one.
+- **Old preferences keep working.** `ZeboPreferences` decodes missing settings with their defaults and migrates older formats (single editor, clock-only notch).
 
 ## Tests
 
-Les tests couvrent `ZeboCore` avec [Swift Testing](https://developer.apple.com/documentation/testing) : règles des clics, trajectoire et éjection, répliques, parole (machine à écrire, silence), comportement face aux clics jusqu'à l'éjection, géométrie de la notch, widgets et leur rotation, préférences (et reprise des anciennes), éditeurs, commits du jour, et configuration (parcours, assistant, mémorisation).
+Tests cover `ZeboCore` with [Swift Testing](https://developer.apple.com/documentation/testing): click rules, trajectory and ejection, lines, speech (typewriter, silence), behavior from clicks to ejection, notch geometry, widgets and their rotation, preferences (and migration of old ones), editors, today's commits, and setup (flow, wizard, storage).
 
-Les vues de `ZeboUI` n'ont pas de logique isolée : elles se vérifient à l'œil, en lançant l'app. Pour une capture ou un aperçu sans animations d'apparition : `.environment(\.showsFinalAppearance, true)`.
+`ZeboUI` views have no isolated logic: they are checked by eye, by running the app. For a screenshot or a preview without appearance animations: `.environment(\.showsFinalAppearance, true)`.
 
-Les tests qui dépendent du temps n'attendent pas une durée fixe : `waitUntil` (dans `Tests/ZeboCoreTests/Support/`) vérifie la condition toutes les 10 ms jusqu'à un délai maximal.
+Time-dependent tests don't wait for a fixed duration: `waitUntil` (in `Tests/ZeboCoreTests/Support/`) checks the condition every 10 ms up to a timeout.
 
 ## Conventions
 
-- Code (types, fonctions, variables) en anglais ; commentaires, messages de commit et tests en français.
-- Style vérifié par [swift-format](https://github.com/swiftlang/swift-format) (`.swift-format` : 4 espaces, 120 colonnes). Lancer `make format` avant de committer.
-- Un fichier par type. Les formes SwiftUI se terminent par `Shape`.
-- Petits commits, un par étape logique, au format [Conventional Commits](https://www.conventionalcommits.org/fr/) avec un scope : `feat(behavior): …`, `tweak(fall): …`, `refactor(speech): …`.
-- Tests avec Swift Testing, une suite par type, chaque test décrit en une phrase.
+- Code (types, functions, variables), commit messages and this README in English; code comments, tests and the app's interface in French.
+- Style checked by [swift-format](https://github.com/swiftlang/swift-format) (`.swift-format`: 4 spaces, 120 columns). Run `make format` before committing.
+- One file per type. SwiftUI shapes end with `Shape`.
+- Small commits, one per logical step, following [Conventional Commits](https://www.conventionalcommits.org/) with a scope: `feat(behavior): …`, `tweak(fall): …`, `refactor(speech): …`.
+- Tests with Swift Testing, one suite per type, each test described in one sentence.
 
-## La suite
+## What's next
 
-- Un onglet de raccourcis dans la notch, pour lancer les éditeurs choisis pendant la configuration.
-- Une fois configuré, la notch ouverte annonce « SOON… In progress… » : la place à droite de Zebo est réservée à une vraie discussion avec lui.
-
-Pour repartir de zéro (configuration et préférences) : `defaults delete com.sticksonthebeach.zebo`.
+- A shortcuts tab in the notch, to launch the editors picked during setup.
+- Once set up, the open notch says "SOON… In progress…": the space next to Zebo is reserved for a real conversation with it.
