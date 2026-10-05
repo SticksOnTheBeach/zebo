@@ -11,8 +11,9 @@ Un petit nuage rose qui vit dans la notch du Mac. Il dort quand on ne s'occupe p
 - **Il se configure.** Au premier lancement, la notch ouverte propose « Configurer Zebo ». Au clic, la notch se détache : sa forme glisse jusqu'au centre de l'écran et devient une fenêtre d'application. Zebo s'y présente, puis on règle en quelques étapes animées :
   1. **Ton prénom** : Zebo t'appellera comme ça (« Enchanté, … ! »).
   2. **Sa personnalité** : Doux, Taquin ou Zen, avec un exemple de ce qu'il dirait.
-  3. **Sa notch** : afficher l'heure, faire la sieste, avec un aperçu en direct.
-  4. **Le récapitulatif**, puis « C'est parti » : la fenêtre se rétracte dans la notch.
+  3. **Ton éditeur de code** : VS Code, Cursor, Xcode, les IDE JetBrains… Au clic, Zebo retrouve tout seul où il est installé (ou on le lui indique), pour pouvoir le lancer plus tard.
+  4. **Sa notch** : afficher l'heure, faire la sieste, avec un aperçu en direct.
+  5. **Le récapitulatif**, puis « C'est parti » : la fenêtre se rétracte dans la notch.
 
   Le temps de la configuration, Zebo a une icône dans le Dock. Pour la refaire : clic droit sur la notch, **Reconfigurer Zebo…**
 - **Il dort.** Notch fermée, il est allongé dans son lit dans l'aile gauche, avec un bonnet de nuit, sous sa couette ; des « z » s'échappent de sa tête. L'heure s'affiche dans l'aile droite. Les deux se désactivent dans la configuration.
@@ -64,6 +65,7 @@ Sources/
 ├── ZeboCore/
 │   ├── Behavior/   ZeboBehavior (réactions aux clics), PokeTracker (règles)
 │   ├── Notch/      NotchModel (géométrie et état de la notch), ZeboPlacement
+│   ├── Code/       IDE (catalogue d'éditeurs), IDEChoice, ApplicationLocator
 │   ├── Physics/    Flight (trajectoire de la chute)
 │   ├── Preferences/ ZeboPreferences, ZeboSettings (préférences et leur mémorisation)
 │   ├── Setup/      SetupFlow (notch → fenêtre → notch), SetupWizard (étapes), SetupStore
@@ -81,6 +83,7 @@ Sources/
 └── Zebo/
     ├── App/        ZeboApp (point d'entrée), AppDelegate, MainMenu
     ├── Windows/    NotchController, OverlayPanel, SetupWindowController
+    ├── Code/       WorkspaceApplicationLocator (retrouve les éditeurs installés)
     ├── Input/      MouseMonitor
     └── Extensions/ NSScreen+Notch
 Tests/
@@ -116,6 +119,7 @@ Les tests qui dépendent du temps n'attendent pas une durée fixe : `waitUntil` 
 
 ## La suite
 
+- Un onglet de raccourcis dans la notch, pour lancer l'éditeur choisi pendant la configuration.
 - Une fois configuré, la notch ouverte annonce « SOON… In progress… » : la place à droite de Zebo est réservée à une vraie discussion avec lui.
 
 Pour repartir de zéro (configuration et préférences) : `defaults delete com.sticksonthebeach.zebo`.
