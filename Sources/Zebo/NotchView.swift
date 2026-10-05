@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import ZeboCore
 
 struct NotchView: View {
     let model: NotchModel

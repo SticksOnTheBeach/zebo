@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 
 /// Trajectoire de Zebo éjecté : un lancer avec gravité, qui tourne sur lui-même.

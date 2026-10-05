@@ -1,32 +1,35 @@
+import CoreGraphics
 import Foundation
 import Observation
 
 /// État partagé entre AppKit (les fenêtres) et SwiftUI (le dessin).
 @MainActor
 @Observable
-final class NotchModel {
+public final class NotchModel {
     /// Largeur ajoutée de chaque côté de l'encoche pour que la notch de Zebo dépasse un peu.
-    static let wingWidth: CGFloat = 36
+    public static let wingWidth: CGFloat = 36
     /// Rayon des petits arrondis concaves en haut de la notch.
-    nonisolated static let topCornerRadius: CGFloat = 6
+    public nonisolated static let topCornerRadius: CGFloat = 6
 
-    var isOpen = false
+    public var isOpen = false
     /// Taille de la notch fermée : l'encoche physique + les ailes.
-    var closedSize: CGSize = .zero
-    let openSize = CGSize(width: 480, height: 180)
+    public var closedSize: CGSize = .zero
+    public let openSize = CGSize(width: 480, height: 180)
 
     /// Cadre de la fenêtre de la notch et position de la souris, en coordonnées écran.
-    var panelFrame: CGRect = .zero
-    var mouseLocation: CGPoint = .zero
+    public var panelFrame: CGRect = .zero
+    public var mouseLocation: CGPoint = .zero
     /// Écran qui porte la notch (là où Zebo peut tomber).
-    var screenFrame: CGRect = .zero
+    public var screenFrame: CGRect = .zero
+
+    public init() {}
 
     /// Taille visible de la notch.
-    var notchSize: CGSize { isOpen ? openSize : closedSize }
+    public var notchSize: CGSize { isOpen ? openSize : closedSize }
 
     /// Place de Zebo dans la notch (origine en haut à gauche de la notch) :
     /// petit dans l'aile gauche, grand à gauche une fois ouverte.
-    var zeboFrame: CGRect {
+    public var zeboFrame: CGRect {
         let closedHeight = closedSize.height
         if isOpen {
             let side: CGFloat = 96
@@ -40,7 +43,7 @@ final class NotchModel {
     }
 
     /// Centre de Zebo en coordonnées écran, pour savoir dans quelle direction regarder.
-    var zeboScreenCenter: CGPoint {
+    public var zeboScreenCenter: CGPoint {
         // La notch est centrée en haut de la fenêtre.
         let notchMinX = panelFrame.midX - notchSize.width / 2
         return CGPoint(x: notchMinX + zeboFrame.midX,

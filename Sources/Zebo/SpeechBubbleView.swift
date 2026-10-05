@@ -1,4 +1,5 @@
 import SwiftUI
+import ZeboCore
 
 /// Bulle de dialogue en forme de nuage qui flotte sous la notch, reliée à Zebo par des points (comme en BD).
 /// Elle vit dans sa propre fenêtre transparente, centrée sur la notch et collée en haut de l'écran.

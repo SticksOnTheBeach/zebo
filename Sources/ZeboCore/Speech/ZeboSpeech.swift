@@ -1,37 +1,36 @@
 import Foundation
 import Observation
-import ZeboCore
 
 /// Ce que Zebo est en train de dire, révélé lettre par lettre.
 @MainActor
 @Observable
-final class ZeboSpeech {
+public final class ZeboSpeech {
     /// Réplique en cours (nil = Zebo ne parle pas).
-    private(set) var line: String?
+    public private(set) var line: String?
     /// Nombre de caractères déjà affichés (effet machine à écrire).
-    private(set) var revealedCount = 0
+    public private(set) var revealedCount = 0
     /// Change à chaque nouvelle réplique (fait sauter Zebo).
-    private(set) var lineID = 0
+    public private(set) var lineID = 0
 
     @ObservationIgnored private var speakingTask: Task<Void, Never>?
 
     @ObservationIgnored private let lineSource: any SpeechLineSource
 
-    init(lineSource: any SpeechLineSource = CannedLines()) {
+    public init(lineSource: any SpeechLineSource = CannedLines()) {
         self.lineSource = lineSource
     }
 
-    func sayRandom() {
+    public func sayRandom() {
         say(lineSource.line(after: line))
     }
 
     /// Coupe la parole : la bulle disparaît tout de suite.
-    func silence() {
+    public func silence() {
         speakingTask?.cancel()
         line = nil
     }
 
-    func say(_ text: String) {
+    public func say(_ text: String) {
         speakingTask?.cancel()
         lineID += 1
         revealedCount = 0

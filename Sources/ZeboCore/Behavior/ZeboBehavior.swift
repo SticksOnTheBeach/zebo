@@ -1,13 +1,13 @@
+import CoreGraphics
 import Foundation
 import Observation
-import ZeboCore
 
 /// Ce que fait Zebo quand on clique dessus : il parle… et si on insiste trop,
 /// il tombe dans les pommes, est éjecté de la notch et tombe en bas de l'écran.
 @MainActor
 @Observable
-final class ZeboBehavior {
-    enum State {
+public final class ZeboBehavior {
+    public enum State: Sendable {
         /// Dans la notch, tout va bien.
         case normal
         /// Sonné : yeux en spirale, étoiles autour de la tête.
@@ -18,26 +18,26 @@ final class ZeboBehavior {
         case gone
     }
 
-    private(set) var state: State = .normal
+    public private(set) var state: State = .normal
     /// Trajectoire de la chute en cours.
-    private(set) var flight: Flight?
+    public private(set) var flight: Flight?
 
     /// Prévient le contrôleur pour afficher/masquer la fenêtre de chute.
-    @ObservationIgnored var onFlightChange: ((Bool) -> Void)?
+    @ObservationIgnored public var onFlightChange: ((Bool) -> Void)?
 
     /// Zebo est dans la notch (même sonné).
-    var isHome: Bool { state == .normal || state == .dizzy }
+    public var isHome: Bool { state == .normal || state == .dizzy }
 
     @ObservationIgnored private var pokes = PokeTracker()
     @ObservationIgnored private let model: NotchModel
     @ObservationIgnored private let speech: ZeboSpeech
 
-    init(model: NotchModel, speech: ZeboSpeech) {
+    public init(model: NotchModel, speech: ZeboSpeech) {
         self.model = model
         self.speech = speech
     }
 
-    func poke() {
+    public func poke() {
         guard state == .normal else { return }
 
         switch pokes.registerPoke(at: Date()) {
