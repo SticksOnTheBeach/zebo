@@ -12,7 +12,7 @@ The app's interface is in French.
 
 - **It gets set up.** On first launch, the open notch offers "Configurer Zebo". Click it and the notch detaches: its shape glides to the center of the screen and turns into an app window. Zebo introduces itself, then a few animated steps follow:
   1. **Your first name**: what Zebo will call you ("Enchanté, … !").
-  2. **Your favorite language**, among a dozen.
+  2. **Your favorite language**, among a dozen, each with its real logo.
   3. **Your code editors** (one or more): VS Code, Cursor, Xcode, the JetBrains IDEs… Click one and Zebo finds where it is installed on its own (or you point to it), so it can launch it later.
   4. **Its notch**: what the right wing shows (time, date, today's commits, your language) and whether Zebo naps, with a live preview.
   5. **A summary**, then "C'est parti": the window shrinks back into the notch.
@@ -81,6 +81,7 @@ Sources/
 │   ├── Components/  ZeboButtonStyle, PageDots, .appearing (staggered appearance)
 │   ├── Fall/        FallingZeboView
 │   ├── Notch/       NotchView, NotchShape, NotchWidgetsView (rotating widgets), NotchClock
+│   ├── Resources/   Languages/ (language logos, SVG)
 │   ├── Setup/       SetupView (window), Steps/ (one view per step), SetupTransitionView and
 │   │                NotchToWindowShape (animation), NotchPreview, SetupPrompt (notch button)
 │   ├── Sleep/       InBed (the bed), SleepingZs (the "z"s)
@@ -123,6 +124,10 @@ Time-dependent tests don't wait for a fixed duration: `waitUntil` (in `Tests/Zeb
 - One file per type. SwiftUI shapes end with `Shape`.
 - Small commits, one per logical step, following [Conventional Commits](https://www.conventionalcommits.org/) with a scope: `feat(behavior): …`, `tweak(fall): …`, `refactor(speech): …`.
 - Tests with Swift Testing, one suite per type, each test described in one sentence.
+
+## Credits
+
+Language logos come from [Devicon](https://devicon.dev) (MIT license, see `Sources/ZeboUI/Resources/Languages/LICENSE-devicon.txt`). The Swift logo's path data was rewritten to the standard SVG arc syntax so macOS can draw it; the drawing is unchanged. Logos are trademarks of their respective owners.
 
 ## What's next
 
