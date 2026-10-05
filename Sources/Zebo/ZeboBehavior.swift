@@ -28,18 +28,9 @@ final class ZeboBehavior {
     /// Zebo est dans la notch (même sonné).
     var isHome: Bool { state == .normal || state == .dizzy }
 
-    @ObservationIgnored private var recentClicks: [Date] = []
-    /// Moment où un clic a fait parler Zebo pour la dernière fois (pour le cooldown).
-    @ObservationIgnored private var lastMessageDate: Date?
+    @ObservationIgnored private var pokes = PokeTracker()
     @ObservationIgnored private let model: NotchModel
     @ObservationIgnored private let speech: ZeboSpeech
-
-    /// Clics d'affilée qui le font tomber dans les pommes…
-    private static let clicksToFaint = 3
-    /// …s'ils tiennent tous dans cette durée.
-    private static let clickWindow: TimeInterval = 1.5
-    /// Après un message, un clic ne peut en lancer un nouveau qu'au bout de ce délai.
-    private static let messageCooldown: TimeInterval = 4
 
     init(model: NotchModel, speech: ZeboSpeech) {
         self.model = model
@@ -49,25 +40,14 @@ final class ZeboBehavior {
     func poke() {
         guard state == .normal else { return }
 
-        let now = Date()
-        recentClicks = recentClicks.filter { now.timeIntervalSince($0) < Self.clickWindow } + [now]
-
-        // Les clics comptent toujours pour l'évanouissement, même pendant le cooldown.
-        if recentClicks.count >= Self.clicksToFaint {
-            faint()
-            return
+        switch pokes.registerPoke(at: Date()) {
+        case .speak: speech.sayRandom()
+        case .ignore: break
+        case .faint: faint()
         }
-
-        // Cooldown : pas de nouveau message tant que le précédent est trop récent.
-        if let last = lastMessageDate, now.timeIntervalSince(last) < Self.messageCooldown {
-            return
-        }
-        lastMessageDate = now
-        speech.sayRandom()
     }
 
     private func faint() {
-        recentClicks = []
         state = .dizzy
         speech.say("Ouuuh… je vois des étoiles…")
 
@@ -121,6 +101,6 @@ final class ZeboBehavior {
         }
         speech.say("Me revoilà ! 😤")
         // « Me revoilà » compte comme un message : pas de spam juste après son retour.
-        lastMessageDate = Date()
+        pokes.noteMessage(at: Date())
     }
 }
