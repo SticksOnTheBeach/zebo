@@ -73,4 +73,13 @@ struct LegacyPreferencesTests {
     func emptyPreferencesUseDefaults() throws {
         #expect(try decode("{}") == .standard)
     }
+
+    @Test("Le langage préféré est enregistré, et un langage inconnu est oublié")
+    func favoriteLanguageRoundTrips() throws {
+        var preferences = ZeboPreferences.standard
+        preferences.favoriteLanguage = .rust
+        let data = try JSONEncoder().encode(preferences)
+        #expect(try JSONDecoder().decode(ZeboPreferences.self, from: data).favoriteLanguage == .rust)
+        #expect(try decode(#"{"favoriteLanguage":"cobol"}"#).favoriteLanguage == nil)
+    }
 }

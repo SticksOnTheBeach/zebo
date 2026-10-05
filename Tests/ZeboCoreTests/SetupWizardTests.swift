@@ -26,7 +26,7 @@ struct SetupWizardTests {
 
         wizard.draft.name = "Mael"
         wizard.advance()
-        #expect(wizard.step == .ide)
+        #expect(wizard.step == .language)
     }
 
     @Test("Revenir en arrière change le sens du déplacement")
