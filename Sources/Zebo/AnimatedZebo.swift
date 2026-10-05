@@ -11,6 +11,8 @@ struct AnimatedZebo: View {
     var hopTrigger: Int = 0
     /// Sonné : yeux en spirale, étoiles, et il titube.
     var isDizzy = false
+    /// Pensif (pendant qu'il parle) : il lève les yeux, la main sous le menton.
+    var isThinking = false
 
     @State private var eyeOpenness: CGFloat = 1
 
@@ -23,9 +25,11 @@ struct AnimatedZebo: View {
                           eyeOpenness: isDizzy ? 1 : eyeOpenness,
                           headTilt: isDizzy ? .zero : headTilt,
                           dizzy: isDizzy,
-                          dizzySpin: .degrees(t * 300))
+                          dizzySpin: .degrees(t * 300),
+                          thinking: isThinking)
                 // Le regard rattrape la souris avec un petit ressort.
                 .animation(.spring(response: 0.3, dampingFraction: 0.65), value: look)
+                .animation(.spring(response: 0.35, dampingFraction: 0.7), value: isThinking)
                 .rotationEffect(.degrees(isAwake && !isDizzy ? sway(at: timeline.date) : 0), anchor: .bottom)
                 // Sonné, il gigote vite de gauche à droite (environ 6 fois par seconde).
                 .rotationEffect(.degrees(isDizzy ? sin(t * 38) * 14 : 0), anchor: .bottom)
@@ -52,6 +56,8 @@ struct AnimatedZebo: View {
 
     /// Direction du regard : vers la souris, moins appuyée quand elle est tout près.
     private var look: CGPoint {
+        // Pensif, il regarde en l'air, à l'opposé de la bulle.
+        if isThinking { return CGPoint(x: -0.5, y: -0.9) }
         let distance = hypot(delta.dx, delta.dy)
         guard distance > 1 else { return .zero }
         let strength = min(distance / 120, 1)
@@ -61,7 +67,8 @@ struct AnimatedZebo: View {
 
     /// La tête penche vers le côté où se trouve la souris (10° max).
     private var headTilt: Angle {
-        .degrees(max(-1, min(1, delta.dx / 500)) * 10)
+        if isThinking { return .degrees(-6) }
+        return .degrees(max(-1, min(1, delta.dx / 500)) * 10)
     }
 
     private func blinkForever() async {
