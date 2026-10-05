@@ -111,13 +111,14 @@ struct ZeboCharacter: View {
         let phase = thinkingTime.truncatingRemainder(dividingBy: period) / period
         // Disparition commune à la fin du cycle.
         let fade = 1 - min(max((phase - 0.8) / 0.15, 0), 1)
-        let bubbles: [(x: CGFloat, y: CGFloat, size: CGFloat)] = [(-37, -27, 6), (-47, -39, 9), (-59, -53, 13)]
+        let bubbles: [(x: CGFloat, y: CGFloat, size: CGFloat)] = [(-37, -27, 6), (-43, -34.5, 9), (-51, -44.5, 13)]
 
         return ForEach(bubbles.indices, id: \.self) { i in
             let bubble = bubbles[i]
-            // Chacune « pop » à son tour, avec un léger rebond.
+            // Chacune « pop » à son tour, avec un léger rebond ; elles flottent presque ensemble
+            // pour rester collées.
             let pop = min(max((phase - 0.1 - Double(i) * 0.18) / 0.12, 0), 1)
-            let float = 1.5 * sin(thinkingTime * 2.2 + Double(i) * 1.1)
+            let float = 1.2 * sin(thinkingTime * 2.2 + Double(i) * 0.4)
             Circle()
                 .fill(.white)
                 .frame(width: bubble.size * u, height: bubble.size * u)
