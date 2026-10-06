@@ -44,6 +44,19 @@ private func quoted(_ text: String) -> String {
     String(data: try! JSONEncoder().encode(text), encoding: .utf8)!
 }
 
+extension AIClient {
+    /// Raccourci : la question des workspaces, posée à ce client.
+    fileprivate func adviseWorkspaces(for kind: ProjectKind, among folders: [FolderSummary]) async throws
+        -> WorkspaceAdvice
+    {
+        try await AIWorkspaceAdvisor(client: self).adviseWorkspaces(for: kind, among: folders)
+    }
+}
+
+/// Une petite discussion : une question, une réponse, une autre question.
+private let chat = AIPrompt(
+    instructions: "Tu es Zebo.", messages: [.user("Salut"), .assistant("Coucou !"), .user("Ça va ?")])
+
 private let cppAnswer = #"{"workspaces":[{"path":"/Dev/C++","reason":"Il range tes projets C++."}]}"#
 
 @Suite("Question commune aux IA")
@@ -67,8 +80,8 @@ struct WorkspaceQuestionTests {
     @Test("Une erreur HTTP garde le message de l'API")
     func httpErrorKeepsMessage() async {
         let transport = FakeTransport(status: 401, body: #"{"error":{"message":"invalid api key"}}"#)
-        await #expect(throws: WorkspaceQuestion.Failure.http(status: 401, message: "invalid api key")) {
-            try await OpenAIWorkspaceAdvisor(apiKey: "k", transport: transport).adviseWorkspaces(
+        await #expect(throws: AIFailure.http(status: 401, message: "invalid api key")) {
+            try await OpenAIClient(apiKey: "k", transport: transport).adviseWorkspaces(
                 for: .c, among: folders)
         }
     }
@@ -83,7 +96,7 @@ struct ClaudeAdvisorTests {
     @Test("Claude Opus 5.5, effort bas, réponse au format JSON et repli en cas de refus")
     func requestShape() async throws {
         let transport = FakeTransport(body: response(#"{"workspaces":[]}"#))
-        _ = try await ClaudeWorkspaceAdvisor(apiKey: "sk-test", transport: transport)
+        _ = try await ClaudeClient(apiKey: "sk-test", transport: transport)
             .adviseWorkspaces(for: .cpp, among: folders)
         let request = try #require(transport.lastRequest)
         #expect(request.value(forHTTPHeaderField: "x-api-key") == "sk-test")
@@ -97,9 +110,22 @@ struct ClaudeAdvisorTests {
         #expect((config["format"] as? [String: Any])?["type"] as? String == "json_schema")
     }
 
+    @Test("En discussion : la conversation entière, sans format imposé")
+    func chatRequest() async throws {
+        let transport = FakeTransport(body: response("Super !"))
+        let reply = try await ClaudeClient(apiKey: "k", transport: transport).answer(chat)
+        #expect(reply == "Super !")
+        let body = try transport.lastBody()
+        #expect(body["system"] as? String == "Tu es Zebo.")
+        let messages = try #require(body["messages"] as? [[String: String]])
+        #expect(messages.map { $0["role"] } == ["user", "assistant", "user"])
+        let config = try #require(body["output_config"] as? [String: Any])
+        #expect(config["format"] == nil)
+    }
+
     @Test("La réponse est lue dans le bloc de texte")
     func parsesAnswer() async throws {
-        let advice = try await ClaudeWorkspaceAdvisor(apiKey: "k", transport: FakeTransport(body: response(cppAnswer)))
+        let advice = try await ClaudeClient(apiKey: "k", transport: FakeTransport(body: response(cppAnswer)))
             .adviseWorkspaces(for: .cpp, among: folders)
         #expect(advice.workspaces == [WorkspaceSuggestion(path: "/Dev/C++", reason: "Il range tes projets C++.")])
         #expect(advice.source == .ai(.claude))
@@ -107,14 +133,14 @@ struct ClaudeAdvisorTests {
 
     @Test("Un refus ou une réponse coupée deviennent des erreurs claires")
     func failures() async {
-        await #expect(throws: WorkspaceQuestion.Failure.refused) {
-            try await ClaudeWorkspaceAdvisor(
+        await #expect(throws: AIFailure.refused) {
+            try await ClaudeClient(
                 apiKey: "k", transport: FakeTransport(body: response("", stopReason: "refusal"))
             )
             .adviseWorkspaces(for: .c, among: folders)
         }
-        await #expect(throws: WorkspaceQuestion.Failure.truncated) {
-            try await ClaudeWorkspaceAdvisor(
+        await #expect(throws: AIFailure.truncated) {
+            try await ClaudeClient(
                 apiKey: "k", transport: FakeTransport(body: response("{", stopReason: "max_tokens"))
             )
             .adviseWorkspaces(for: .c, among: folders)
@@ -131,7 +157,7 @@ struct OpenAIAdvisorTests {
     @Test("Responses API, clé en Bearer, schéma JSON strict")
     func requestShape() async throws {
         let transport = FakeTransport(body: response(#"{"type":"output_text","text":\#(quoted(cppAnswer))}"#))
-        let advice = try await OpenAIWorkspaceAdvisor(apiKey: "sk-oa", model: "gpt-test", transport: transport)
+        let advice = try await OpenAIClient(apiKey: "sk-oa", model: "gpt-test", transport: transport)
             .adviseWorkspaces(for: .cpp, among: folders)
         let request = try #require(transport.lastRequest)
         #expect(request.url?.absoluteString == "https://api.openai.com/v1/responses")
@@ -145,15 +171,25 @@ struct OpenAIAdvisorTests {
         #expect(advice.source == .ai(.openAI))
     }
 
+    @Test("En discussion : la conversation en entrée, sans format imposé")
+    func chatRequest() async throws {
+        let transport = FakeTransport(body: response(#"{"type":"output_text","text":"Super !"}"#))
+        #expect(try await OpenAIClient(apiKey: "k", transport: transport).answer(chat) == "Super !")
+        let body = try transport.lastBody()
+        #expect(body["instructions"] as? String == "Tu es Zebo.")
+        #expect((body["input"] as? [[String: String]])?.count == 3)
+        #expect(body["text"] == nil)
+    }
+
     @Test("Un refus ou une réponse incomplète deviennent des erreurs claires")
     func failures() async {
         let refusal = FakeTransport(body: response(#"{"type":"refusal","refusal":"Non."}"#))
-        await #expect(throws: WorkspaceQuestion.Failure.refused) {
-            try await OpenAIWorkspaceAdvisor(apiKey: "k", transport: refusal).adviseWorkspaces(for: .c, among: folders)
+        await #expect(throws: AIFailure.refused) {
+            try await OpenAIClient(apiKey: "k", transport: refusal).adviseWorkspaces(for: .c, among: folders)
         }
         let incomplete = FakeTransport(body: response(#"{"type":"output_text","text":"{"}"#, status: "incomplete"))
-        await #expect(throws: WorkspaceQuestion.Failure.truncated) {
-            try await OpenAIWorkspaceAdvisor(apiKey: "k", transport: incomplete).adviseWorkspaces(
+        await #expect(throws: AIFailure.truncated) {
+            try await OpenAIClient(apiKey: "k", transport: incomplete).adviseWorkspaces(
                 for: .c, among: folders)
         }
     }
@@ -168,7 +204,7 @@ struct GeminiAdvisorTests {
     @Test("generateContent du modèle choisi, clé en en-tête, réponse JSON avec schéma")
     func requestShape() async throws {
         let transport = FakeTransport(body: response(cppAnswer))
-        let advice = try await GeminiWorkspaceAdvisor(apiKey: "AIza-test", model: "gemini-test", transport: transport)
+        let advice = try await GeminiClient(apiKey: "AIza-test", model: "gemini-test", transport: transport)
             .adviseWorkspaces(for: .cpp, among: folders)
         let request = try #require(transport.lastRequest)
         #expect(
@@ -181,22 +217,32 @@ struct GeminiAdvisorTests {
         #expect(advice.source == .ai(.gemini))
     }
 
+    @Test("En discussion : les réponses de l'IA sont celles du « model », sans format imposé")
+    func chatRequest() async throws {
+        let transport = FakeTransport(body: response("Super !"))
+        #expect(try await GeminiClient(apiKey: "k", transport: transport).answer(chat) == "Super !")
+        let body = try transport.lastBody()
+        let contents = try #require(body["contents"] as? [[String: Any]])
+        #expect(contents.map { $0["role"] as? String } == ["user", "model", "user"])
+        #expect(body["generationConfig"] == nil)
+    }
+
     @Test("Un blocage ou une réponse coupée deviennent des erreurs claires")
     func failures() async {
-        await #expect(throws: WorkspaceQuestion.Failure.refused) {
-            try await GeminiWorkspaceAdvisor(
+        await #expect(throws: AIFailure.refused) {
+            try await GeminiClient(
                 apiKey: "k", transport: FakeTransport(body: response("", finishReason: "SAFETY"))
             )
             .adviseWorkspaces(for: .c, among: folders)
         }
-        await #expect(throws: WorkspaceQuestion.Failure.refused) {
-            try await GeminiWorkspaceAdvisor(
+        await #expect(throws: AIFailure.refused) {
+            try await GeminiClient(
                 apiKey: "k", transport: FakeTransport(body: #"{"promptFeedback":{"blockReason":"SAFETY"}}"#)
             )
             .adviseWorkspaces(for: .c, among: folders)
         }
-        await #expect(throws: WorkspaceQuestion.Failure.truncated) {
-            try await GeminiWorkspaceAdvisor(
+        await #expect(throws: AIFailure.truncated) {
+            try await GeminiClient(
                 apiKey: "k", transport: FakeTransport(body: response("{", finishReason: "MAX_TOKENS"))
             )
             .adviseWorkspaces(for: .c, among: folders)
@@ -213,7 +259,7 @@ struct MistralAdvisorTests {
     @Test("Chat completions, clé en Bearer, schéma JSON")
     func requestShape() async throws {
         let transport = FakeTransport(body: response(cppAnswer))
-        let advice = try await MistralWorkspaceAdvisor(apiKey: "ms-key", transport: transport)
+        let advice = try await MistralClient(apiKey: "ms-key", transport: transport)
             .adviseWorkspaces(for: .cpp, among: folders)
         let request = try #require(transport.lastRequest)
         #expect(request.url?.absoluteString == "https://api.mistral.ai/v1/chat/completions")
@@ -224,10 +270,20 @@ struct MistralAdvisorTests {
         #expect(advice.source == .ai(.mistral))
     }
 
+    @Test("En discussion : les consignes en premier message système, sans format imposé")
+    func chatRequest() async throws {
+        let transport = FakeTransport(body: response("Super !"))
+        #expect(try await MistralClient(apiKey: "k", transport: transport).answer(chat) == "Super !")
+        let body = try transport.lastBody()
+        let messages = try #require(body["messages"] as? [[String: String]])
+        #expect(messages.map { $0["role"] } == ["system", "user", "assistant", "user"])
+        #expect(body["response_format"] == nil)
+    }
+
     @Test("Une réponse coupée devient une erreur claire")
     func truncated() async {
-        await #expect(throws: WorkspaceQuestion.Failure.truncated) {
-            try await MistralWorkspaceAdvisor(
+        await #expect(throws: AIFailure.truncated) {
+            try await MistralClient(
                 apiKey: "k", transport: FakeTransport(body: response("{", finishReason: "length"))
             )
             .adviseWorkspaces(for: .c, among: folders)

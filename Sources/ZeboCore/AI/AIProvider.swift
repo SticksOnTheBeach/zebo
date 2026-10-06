@@ -55,14 +55,14 @@ public enum AIProvider: String, Codable, CaseIterable, Sendable {
         }
     }
 
-    /// Le conseiller qui pose la question à cette IA.
-    public func makeAdvisor(apiKey: String, model: String?, transport: any HTTPTransport) -> any WorkspaceAdvisor {
+    /// Le client qui parle à cette IA, avec le modèle choisi (ou celui par défaut).
+    public func makeClient(apiKey: String, model: String?, transport: any HTTPTransport) -> any AIClient {
         let model = model?.isEmpty == false ? model ?? defaultModel : defaultModel
         return switch self {
-        case .claude: ClaudeWorkspaceAdvisor(apiKey: apiKey, model: model, transport: transport)
-        case .openAI: OpenAIWorkspaceAdvisor(apiKey: apiKey, model: model, transport: transport)
-        case .gemini: GeminiWorkspaceAdvisor(apiKey: apiKey, model: model, transport: transport)
-        case .mistral: MistralWorkspaceAdvisor(apiKey: apiKey, model: model, transport: transport)
+        case .claude: ClaudeClient(apiKey: apiKey, model: model, transport: transport)
+        case .openAI: OpenAIClient(apiKey: apiKey, model: model, transport: transport)
+        case .gemini: GeminiClient(apiKey: apiKey, model: model, transport: transport)
+        case .mistral: MistralClient(apiKey: apiKey, model: model, transport: transport)
         }
     }
 }

@@ -20,7 +20,8 @@ public struct SmartWorkspaceAdvisor: WorkspaceAdvisor {
 
     public func adviseWorkspaces(for kind: ProjectKind, among folders: [FolderSummary]) async -> WorkspaceAdvice {
         if let provider, let key = keyStore.readKey(for: provider), !key.isEmpty {
-            let advisor = provider.makeAdvisor(apiKey: key, model: model, transport: transport)
+            let advisor = AIWorkspaceAdvisor(
+                client: provider.makeClient(apiKey: key, model: model, transport: transport))
             if let advice = try? await advisor.adviseWorkspaces(for: kind, among: folders) {
                 return advice
             }
