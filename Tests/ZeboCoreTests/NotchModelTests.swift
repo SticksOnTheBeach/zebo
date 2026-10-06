@@ -62,4 +62,16 @@ struct NotchModelTests {
         model.isOpen = true
         #expect(model.notchSize == model.openSize)
     }
+
+    @Test("L'onglet IA agrandit la notch ouverte, sans dépasser sa fenêtre")
+    func aiTabIsBigger() {
+        let model = makeModel(isOpen: true)
+        let standard = model.notchSize
+        model.selectedTab = .ai
+        #expect(model.notchSize.width > standard.width)
+        #expect(model.notchSize.height > standard.height)
+        #expect(model.notchSize.width <= NotchModel.largestOpenSize.width)
+        #expect(model.notchSize.height <= NotchModel.largestOpenSize.height)
+        #expect(model.zeboFrame.maxY <= model.openSize.height)
+    }
 }

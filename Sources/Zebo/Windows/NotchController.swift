@@ -17,6 +17,8 @@ final class NotchController: NSObject {
     /// La fenêtre « Nouveau projet », et les projets créés avec Zebo.
     private let newProject = DetachedWindowFlow()
     private let projects = ProjectsLibrary(store: UserDefaultsProjectsStore())
+    /// La discussion avec Zebo (onglet IA), qui dure tant que l'app tourne.
+    private let chat = ZeboChat()
     private let projectWindow: ProjectWindowController
     private let settingsWindow: SettingsWindowController
     /// Recompte les commits du jour de temps en temps.
@@ -43,7 +45,7 @@ final class NotchController: NSObject {
         panel = OverlayPanel(
             rootView: NotchView(
                 model: model, speech: speech, behavior: behavior, setup: setup, settings: settings,
-                commits: commits, newProject: newProject, projects: projects,
+                commits: commits, newProject: newProject, projects: projects, chat: chat,
                 onOpenProject: openProject, onOpenSettings: { settingsWindow.show() }, onReset: Self.devReset))
         bubblePanel = OverlayPanel(rootView: SpeechBubbleView(model: model, speech: speech))
         // Sous la notch : les points qui dépassent vers Zebo passent derrière elle.
@@ -89,6 +91,13 @@ final class NotchController: NSObject {
             name: NSApplication.didChangeScreenParametersNotification,
             object: nil
         )
+        // On a cliqué ailleurs pendant qu'on écrivait à Zebo.
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(panelDidResignKey),
+            name: NSWindow.didResignKeyNotification,
+            object: panel
+        )
     }
 
     @objc private func reposition() {
@@ -102,7 +111,7 @@ final class NotchController: NSObject {
                 x: screen.frame.midX - size.width / 2, y: screen.frame.maxY - size.height,
                 width: size.width, height: size.height)
         }
-        panel.setFrame(topCentered(model.openSize), display: true)
+        panel.setFrame(topCentered(NotchModel.largestOpenSize), display: true)
         bubblePanel.setFrame(topCentered(SpeechBubbleView.windowSize), display: true)
         model.panelFrame = panel.frame
         model.screenFrame = screen.frame
@@ -151,10 +160,19 @@ final class NotchController: NSObject {
         settingsWindow.show()
     }
 
-    /// Une fois configuré, Zebo t'appelle par ton prénom et compte tes commits du jour.
+    /// Une fois configuré, Zebo t'appelle par ton prénom, compte tes commits du jour
+    /// et discute grâce à l'IA choisie (s'il a sa clé).
     private func applyPreferences() {
         guard setup.isComplete else { return }
-        speech.lineSource = CannedLines(preferences: settings.preferences)
+        let preferences = settings.preferences
+        speech.lineSource = CannedLines(preferences: preferences)
+        chat.userName = preferences.name
+        chat.client = preferences.aiProvider.flatMap { provider in
+            keyStore.readKey(for: provider).map { key in
+                provider.makeClient(
+                    apiKey: key, model: preferences.model(for: provider), transport: URLSessionTransport())
+            }
+        }
         refreshCommits()
     }
 
@@ -180,14 +198,15 @@ final class NotchController: NSObject {
             area.insetBy(dx: 0, dy: -1).contains(NSEvent.mouseLocation)
         }
 
-        // Ouverte, elle se referme quand la souris s'en va.
+        // Ouverte, elle se referme quand la souris s'en va, sauf si l'on est en train d'écrire.
+        // La fenêtre est taillée pour le plus grand onglet : seule la notch visible compte.
         if model.isOpen {
-            if !contains(panel.frame) { setOpen(false) }
+            if !contains(notchFrame(size: model.openSize)), !model.isTyping { setOpen(false) }
             return
         }
         // Fermée, elle grandit un peu au survol ; un clic l'ouvrira (voir NotchView).
         // Une fois survolée, on garde sa taille agrandie comme zone, pour ne pas clignoter au bord.
-        setPeeking(contains(closedFrame(size: model.isPeeking ? model.peekSize : model.closedSize)))
+        setPeeking(contains(notchFrame(size: model.isPeeking ? model.peekSize : model.closedSize)))
     }
 
     private func setPeeking(_ isPeeking: Bool) {
@@ -206,10 +225,24 @@ final class NotchController: NSObject {
         }
         // Fermée, la fenêtre laisse passer les clics vers la barre des menus.
         panel.ignoresMouseEvents = !isOpen
+        // …et rend le clavier à l'app de devant, s'il était resté dans la notch.
+        if !isOpen, panel.isKeyWindow {
+            model.isTyping = false
+            panel.orderOut(nil)
+            panel.orderFrontRegardless()
+        }
     }
 
-    /// La notch fermée (ou survolée), en coordonnées écran.
-    private func closedFrame(size: CGSize) -> CGRect {
+    /// Un clic ailleurs : on n'écrit plus à Zebo, et la notch se ferme si la souris n'y est pas.
+    @objc private func panelDidResignKey() {
+        model.isTyping = false
+        if model.isOpen, !notchFrame(size: model.openSize).insetBy(dx: 0, dy: -1).contains(NSEvent.mouseLocation) {
+            setOpen(false)
+        }
+    }
+
+    /// La notch visible (fermée, survolée ou ouverte), en coordonnées écran.
+    private func notchFrame(size: CGSize) -> CGRect {
         CGRect(
             x: panel.frame.midX - size.width / 2,
             y: panel.frame.maxY - size.height,

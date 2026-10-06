@@ -6,6 +6,8 @@ import Observation
 public enum NotchTab: String, CaseIterable, Sendable {
     case home
     case projects
+    /// La discussion avec Zebo (et l'IA choisie).
+    case ai
 }
 
 /// État partagé entre AppKit (les fenêtres) et SwiftUI (le dessin).
@@ -26,7 +28,21 @@ public final class NotchModel {
     public static let peekGrowth = CGSize(width: 16, height: 6)
     /// Taille de l'encoche physique (ou de la fausse notch si l'écran n'en a pas).
     public var hardwareNotchSize: CGSize = .zero
-    public let openSize = CGSize(width: 480, height: 180)
+    /// On écrit dans la notch : elle reste ouverte même si la souris s'en va.
+    public var isTyping = false
+    /// Taille de la notch ouverte.
+    public static let standardOpenSize = CGSize(width: 480, height: 180)
+    /// Plus grande sur l'onglet IA, pour la discussion.
+    public static let chatOpenSize = CGSize(width: 580, height: 240)
+    /// La plus grande taille ouverte : celle de la fenêtre de la notch.
+    public static var largestOpenSize: CGSize {
+        CGSize(
+            width: max(standardOpenSize.width, chatOpenSize.width),
+            height: max(standardOpenSize.height, chatOpenSize.height))
+    }
+
+    /// Taille de la notch ouverte, selon l'onglet.
+    public var openSize: CGSize { selectedTab == .ai ? Self.chatOpenSize : Self.standardOpenSize }
 
     /// Cadre de la fenêtre de la notch et position de la souris, en coordonnées écran.
     public var panelFrame: CGRect = .zero

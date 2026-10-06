@@ -12,6 +12,8 @@ public struct NotchView: View {
     /// La fenêtre « Nouveau projet », qui naît de la notch.
     private let newProject: DetachedWindowFlow
     private let projects: ProjectsLibrary
+    /// La discussion avec Zebo, dans l'onglet IA.
+    private let chat: ZeboChat
     /// Ouvre un projet avec un éditeur, le Finder ou le Terminal.
     private let onOpenProject: (ZeboProject, ProjectOpenTarget) -> Void
     /// Ouvre la fenêtre de paramètres.
@@ -21,7 +23,7 @@ public struct NotchView: View {
 
     public init(
         model: NotchModel, speech: ZeboSpeech, behavior: ZeboBehavior, setup: SetupFlow, settings: ZeboSettings,
-        commits: CommitActivity, newProject: DetachedWindowFlow, projects: ProjectsLibrary,
+        commits: CommitActivity, newProject: DetachedWindowFlow, projects: ProjectsLibrary, chat: ZeboChat,
         onOpenProject: @escaping (ZeboProject, ProjectOpenTarget) -> Void,
         onOpenSettings: @escaping () -> Void = {}, onReset: (() -> Void)? = nil
     ) {
@@ -33,6 +35,7 @@ public struct NotchView: View {
         self.commits = commits
         self.newProject = newProject
         self.projects = projects
+        self.chat = chat
         self.onOpenProject = onOpenProject
         self.onOpenSettings = onOpenSettings
         self.onReset = onReset
@@ -123,11 +126,11 @@ public struct NotchView: View {
     /// Aucune fenêtre n'est née de la notch (configuration, nouveau projet) : elle est là.
     private var isAvailable: Bool { setup.isNotchAvailable && newProject.isIdle }
 
-    /// Sonné avant tout ; sinon, quand il parle, il prend un air pensif 🤔 ;
+    /// Sonné avant tout ; sinon, quand il parle ou cherche une réponse, il prend un air pensif 🤔 ;
     /// et quand la notch est fermée, il dort (s'il fait la sieste).
     private var mood: ZeboMood {
         if behavior.state == .dizzy { return .dizzy }
-        if speech.line != nil { return .thinking }
+        if speech.line != nil || (model.isOpen && chat.isWaiting) { return .thinking }
         if model.isOpen || !preferences.sleepsWhenClosed { return .calm }
         return .sleeping
     }
@@ -143,7 +146,7 @@ public struct NotchView: View {
     }
 
     /// À droite de Zebo : le bouton de configuration tant qu'il n'est pas configuré,
-    /// sinon les onglets (Accueil, Projets).
+    /// sinon les onglets (Accueil, Projets, IA).
     private var openText: some View {
         Group {
             if setup.needsSetup {
@@ -157,6 +160,9 @@ public struct NotchView: View {
                             ProjectsTabView(library: projects, editors: preferences.ides, onOpen: onOpenProject) {
                                 newProject.open()
                             }
+                        case .ai:
+                            AITabView(
+                                chat: chat, isTyping: Bindable(model).isTyping, onOpenSettings: onOpenSettings)
                         }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

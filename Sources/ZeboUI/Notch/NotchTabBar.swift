@@ -47,6 +47,7 @@ extension NotchTab {
         switch self {
         case .home: "Accueil"
         case .projects: "Projets"
+        case .ai: "IA"
         }
     }
 
@@ -54,6 +55,7 @@ extension NotchTab {
         switch self {
         case .home: "house.fill"
         case .projects: "folder.fill"
+        case .ai: "sparkles"
         }
     }
 }
