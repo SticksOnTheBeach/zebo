@@ -63,12 +63,20 @@ public struct NotchView: View {
                     .overlay { SleepingZs(isActive: mood == .sleeping && isZeboHere) }
                     .frame(width: zeboFrame.width, height: zeboFrame.height)
                     .contentShape(Rectangle())
-                    // Un clic sur Zebo : il parle (et trop de clics l'assomment).
-                    .onTapGesture { behavior.poke() }
+                    // Notch ouverte, un clic sur Zebo le fait parler (et trop de clics l'assomment) ;
+                    // fermée, il ouvre la notch, comme partout ailleurs sur elle.
+                    .onTapGesture {
+                        if model.isOpen { behavior.poke() } else { open() }
+                    }
                     .offset(x: zeboFrame.minX, y: zeboFrame.minY)
                 }
             }
             .clipShape(NotchShape(bottomRadius: bottomRadius))
+            // Comme Alcove : la notch survolée grandit un peu, et s'ouvre au clic.
+            .contentShape(NotchShape(bottomRadius: bottomRadius))
+            .onTapGesture {
+                if !model.isOpen { open() }
+            }
             .contextMenu {
                 Button("Reconfigurer Zebo…") { setup.reconfigure() }
                 if let onReset {
@@ -86,6 +94,14 @@ public struct NotchView: View {
     }
 
     private var preferences: ZeboPreferences { settings.preferences }
+
+    /// Ouvre la notch (elle se refermera quand la souris s'en ira).
+    private func open() {
+        withAnimation(.spring(response: 0.38, dampingFraction: 0.78)) {
+            model.isOpen = true
+            model.isPeeking = false
+        }
+    }
 
     /// Zebo est dans la notch : ni éjecté, ni parti dans la fenêtre de configuration.
     private var isZeboHere: Bool { behavior.isHome && setup.isNotchAvailable }

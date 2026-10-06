@@ -133,25 +133,42 @@ final class NotchController: NSObject {
         // Pendant la configuration, la notch reste fermée.
         guard setup.isNotchAvailable else { return }
 
-        // Fermée, seule la petite notch réagit ; ouverte, toute la fenêtre compte.
-        let activeArea = model.isOpen ? panel.frame : closedFrame
         // +1 en haut : la souris collée au bord de l'écran est pile sur maxY.
-        let isInside = activeArea.insetBy(dx: 0, dy: -1).contains(NSEvent.mouseLocation)
-        guard isInside != model.isOpen else { return }
-        setOpen(isInside)
+        func contains(_ area: CGRect) -> Bool {
+            area.insetBy(dx: 0, dy: -1).contains(NSEvent.mouseLocation)
+        }
+
+        // Ouverte, elle se referme quand la souris s'en va.
+        if model.isOpen {
+            if !contains(panel.frame) { setOpen(false) }
+            return
+        }
+        // Fermée, elle grandit un peu au survol ; un clic l'ouvrira (voir NotchView).
+        // Une fois survolée, on garde sa taille agrandie comme zone, pour ne pas clignoter au bord.
+        setPeeking(contains(closedFrame(size: model.isPeeking ? model.peekSize : model.closedSize)))
+    }
+
+    private func setPeeking(_ isPeeking: Bool) {
+        guard isPeeking != model.isPeeking else { return }
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            model.isPeeking = isPeeking
+        }
+        // Survolée, elle capte les clics (pour s'ouvrir) ; sinon ils vont à la barre des menus.
+        panel.ignoresMouseEvents = !isPeeking
     }
 
     private func setOpen(_ isOpen: Bool) {
         withAnimation(.spring(response: 0.38, dampingFraction: 0.78)) {
             model.isOpen = isOpen
+            model.isPeeking = false
         }
         // Fermée, la fenêtre laisse passer les clics vers la barre des menus.
         panel.ignoresMouseEvents = !isOpen
     }
 
-    private var closedFrame: CGRect {
-        let size = model.closedSize
-        return CGRect(
+    /// La notch fermée (ou survolée), en coordonnées écran.
+    private func closedFrame(size: CGSize) -> CGRect {
+        CGRect(
             x: panel.frame.midX - size.width / 2,
             y: panel.frame.maxY - size.height,
             width: size.width,
