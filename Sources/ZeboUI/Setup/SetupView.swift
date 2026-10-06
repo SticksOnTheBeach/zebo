@@ -21,7 +21,8 @@ public struct SetupView: View {
 
     public var body: some View {
         ZStack(alignment: .topLeading) {
-            Color.black
+            SetupBackground(
+                glowCenter: CGPoint(x: zeboFrame.midX, y: zeboFrame.midY), glowSize: zeboFrame.width * 2.6)
 
             zebo
 
@@ -71,8 +72,13 @@ public struct SetupView: View {
     /// Il saute à chaque étape et regarde ce qui l'intéresse.
     private var zebo: some View {
         AnimatedZebo(mouse: gaze, center: .zero, isAwake: true, hopTrigger: displayedStep.rawValue)
-            .frame(width: SetupWindowLayout.zeboFrame.width, height: SetupWindowLayout.zeboFrame.height)
-            .offset(x: SetupWindowLayout.zeboFrame.minX, y: SetupWindowLayout.zeboFrame.minY)
+            .frame(width: zeboFrame.width, height: zeboFrame.height)
+            .offset(x: zeboFrame.minX, y: zeboFrame.minY)
+    }
+
+    /// Où est Zebo : il a sa place en haut à gauche (pour l'instant, sur toutes les étapes).
+    private var zeboFrame: CGRect {
+        SetupWindowLayout.zeboFrame
     }
 
     /// Où regarde Zebo (y vers le haut, comme à l'écran) : vers le champ du prénom, vers les cartes,
