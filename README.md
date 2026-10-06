@@ -22,7 +22,9 @@ The app's interface is in French.
 - **It helps with your projects.** The open notch has its tabs in a column on the right: **Accueil**, **Projets**, **IA**, and **Paramètres** at the bottom. The Projects tab lists the recent projects created with Zebo: click one and it unfolds into an "Ouvrir avec" row (your editors, the usual one first, then the Finder and the Terminal). Its **Nouveau** button: the notch detaches into a window where you pick the kind (Web, C, C++, Python, Rust, Java, Swift, Kotlin, Go, C#), name the project, then Zebo looks for an existing workspace for that kind in your projects folder and asks whether to use it or create a new one. Finally it creates the project (starter files, a Git repository), opens it in the editor you chose, and flips back into the notch.
 - **It chats.** The **IA** tab is a conversation with Zebo himself: the AI you picked lends him its powers, but he answers as Zebo (a warm, slightly cheeky little cloud who calls you by your first name), in two or three sentences. The notch grows on this tab and stays open while you type; while he looks for an answer, he looks thoughtful. The last 20 messages are sent with each question; "recommencer" starts over.
 
-  Zebo can also **act on your Mac** from the chat: "ouvre Cursor", "ouvre Mon jeu dans le Terminal", "crée-moi un projet en Rust". The AI answers with a sentence and one action from a closed list (open an editor, open a project with an editor, the Finder or the Terminal, create a project), choosing only among your editors (the ones picked during setup, then the ones installed on the Mac) and your projects; it never runs a command. When something is missing, like which editor or the project's name, Zebo asks first. A new project goes to the workspace of its kind, gets its starter files and a Git repository, and opens right away in the editor. What he does shows under his answer (running, done, failed), and he remembers it in the conversation.
+  Zebo can also **act on your Mac** from the chat: "ouvre Cursor", "ouvre Mon jeu dans le Terminal", "crée-moi un projet en Rust". The AI answers with a sentence and one action from a closed list (open an editor, open a project with an editor, the Finder or the Terminal, create a project), choosing only among your editors (the ones picked during setup, then the ones installed on the Mac) and your projects; it never runs a command. When something is missing, like which kind of project, Zebo asks first. To create a project, a card springs up in the notch (which opens on the IA tab if needed): the name Zebo suggests, to keep or rewrite, and your editors to pick from, the one he suggests already selected; Return creates, Escape cancels. The project goes to the workspace of its kind, gets its starter files and a Git repository, and opens right away in the editor.
+
+  Zebo can also **take initiatives**: one extra action he proposes on his own, like opening the Terminal in the project he just created. It drops from under the notch in a small notch-wide window with **N Refuser** and **Y Accepter**: click, or hold the key, and an outline draws itself around the button until it is decided (a quick tap does nothing, so typing elsewhere can't accept by accident; Escape refuses). Accepted, he does it; refused, he remembers that too. What he does shows under his answer (running, done, failed), and he remembers it in the conversation.
 - **It asks an AI where your projects belong.** With an API key, Zebo sends the AI you picked the names of the folders in your projects folder and their file counts per extension, never file contents, and gets back which folders are workspaces for the chosen kind, with a reason. Each provider is called over plain HTTPS with a JSON schema for the answer:
 
   | AI | API | Default model |
@@ -88,7 +90,8 @@ Sources/
 │   │                AIWorkspaceAdvisor + WorkspaceQuestion, SmartWorkspaceAdvisor (the chosen AI, then local),
 │   │                HTTPTransport
 │   ├── Chat/        ZeboChat (a conversation with Zebo, answered by the chosen AI), ZeboAction (what he can
-│   │                do on the Mac), ActionQuestion (JSON answer, from the AI's request to a real action)
+│   │                do on the Mac), ActionQuestion (JSON answer, from the AI's request to a real action),
+│   │                ProjectDraft (the new project card), ZeboInitiatives (proposals, held Y or N)
 │   ├── Behavior/    ZeboBehavior (reactions to clicks), PokeTracker (rules)
 │   ├── Code/        IDE (editor catalog), Language, CommitActivity (today's commits), ProjectsFolder
 │   ├── Notch/       NotchModel (notch geometry, tabs), ZeboPlacement, DetachedWindowFlow (notch → window → notch)
@@ -104,8 +107,9 @@ Sources/
 │   ├── Components/  ZeboButtonStyle, PageDots, .appearing (staggered appearance), VisualEffectBackground,
 │   │                SparkleField, AIProviderBadge
 │   ├── Fall/        FallingZeboView
+│   ├── Initiatives/ InitiativeView (Zebo's proposal), HoldToConfirmButton (outline drawn while held)
 │   ├── Notch/       NotchView, NotchShape, NotchWidgetsView (rotating widgets), NotchClock, NotchTabBar,
-│   │                ProjectsTabView, AITabView (the chat)
+│   │                ProjectsTabView, AITabView (the chat), ProjectDraftCard
 │   ├── Projects/    NewProjectView (window), Steps/ (kind, name, workspace, editor)
 │   ├── Resources/   Languages/ (language and project kind logos, SVG)
 │   ├── Setup/       SetupView (window), SetupBackground (glass), Steps/ (one view per step), SetupTransitionView and
@@ -124,7 +128,8 @@ Sources/
     ├── Extensions/  NSScreen+Notch
     ├── Input/       MouseMonitor
     └── Windows/     NotchController, OverlayPanel, DetachedWindowController (windows born from the notch),
-                     SetupWindowController, ProjectWindowController, SettingsWindowController
+                     SetupWindowController, ProjectWindowController, SettingsWindowController,
+                     InitiativeWindowController (proposals under the notch, Y and N keys)
 Tests/
 └── ZeboCoreTests/
 ```
@@ -144,7 +149,7 @@ A few design choices:
 
 ## Tests
 
-Tests cover `ZeboCore` with [Swift Testing](https://developer.apple.com/documentation/testing): click rules, trajectory and ejection, lines, speech (typewriter, silence), behavior from clicks to ejection, notch geometry, widgets and their rotation, preferences (and migration of old ones), editors, today's commits, setup (flow, wizard, storage), workspace detection (local and with every AI, with a fake transport), the chat with Zebo and the actions he takes from it, the AI and model preferences, project templates and creation, the new project wizard and the projects library.
+Tests cover `ZeboCore` with [Swift Testing](https://developer.apple.com/documentation/testing): click rules, trajectory and ejection, lines, speech (typewriter, silence), behavior from clicks to ejection, notch geometry, widgets and their rotation, preferences (and migration of old ones), editors, today's commits, setup (flow, wizard, storage), workspace detection (local and with every AI, with a fake transport), the chat with Zebo, the actions he takes from it, the new project card and his initiatives (held keys included), the AI and model preferences, project templates and creation, the new project wizard and the projects library.
 
 `ZeboUI` views have no isolated logic: they are checked by eye, by running the app. For a screenshot or a preview without appearance animations: `.environment(\.showsFinalAppearance, true)`.
 
