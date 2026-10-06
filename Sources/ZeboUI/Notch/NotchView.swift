@@ -9,12 +9,18 @@ public struct NotchView: View {
     private let setup: SetupFlow
     private let settings: ZeboSettings
     private let commits: CommitActivity
+    /// La fenêtre « Nouveau projet », qui naît de la notch.
+    private let newProject: DetachedWindowFlow
+    private let projects: ProjectsLibrary
+    /// Ouvre un projet (dans son éditeur, ou dans le Finder).
+    private let onOpenProject: (ZeboProject) -> Void
     /// Remise à zéro complète, proposée au clic droit (versions de développement seulement).
     private let onReset: (() -> Void)?
 
     public init(
         model: NotchModel, speech: ZeboSpeech, behavior: ZeboBehavior, setup: SetupFlow, settings: ZeboSettings,
-        commits: CommitActivity, onReset: (() -> Void)? = nil
+        commits: CommitActivity, newProject: DetachedWindowFlow, projects: ProjectsLibrary,
+        onOpenProject: @escaping (ZeboProject) -> Void, onReset: (() -> Void)? = nil
     ) {
         self.model = model
         self.speech = speech
@@ -22,6 +28,9 @@ public struct NotchView: View {
         self.setup = setup
         self.settings = settings
         self.commits = commits
+        self.newProject = newProject
+        self.projects = projects
+        self.onOpenProject = onOpenProject
         self.onReset = onReset
     }
 
@@ -87,8 +96,8 @@ public struct NotchView: View {
             }
             // Pendant la configuration, la notch est devenue la fenêtre : elle n'est plus là.
             // Elle disparaît d'un coup (l'animation prend sa place) et revient en fondu.
-            .opacity(setup.isNotchAvailable ? 1 : 0)
-            .animation(setup.isNotchAvailable ? .easeOut(duration: 0.35) : nil, value: setup.isNotchAvailable)
+            .opacity(isAvailable ? 1 : 0)
+            .animation(isAvailable ? .easeOut(duration: 0.35) : nil, value: isAvailable)
             // La fenêtre est plus grande que la notch : on colle le dessin en haut.
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
@@ -104,7 +113,10 @@ public struct NotchView: View {
     }
 
     /// Zebo est dans la notch : ni éjecté, ni parti dans la fenêtre de configuration.
-    private var isZeboHere: Bool { behavior.isHome && setup.isNotchAvailable }
+    private var isZeboHere: Bool { behavior.isHome && isAvailable }
+
+    /// Aucune fenêtre n'est née de la notch (configuration, nouveau projet) : elle est là.
+    private var isAvailable: Bool { setup.isNotchAvailable && newProject.isIdle }
 
     /// Sonné avant tout ; sinon, quand il parle, il prend un air pensif 🤔 ;
     /// et quand la notch est fermée, il dort (s'il fait la sieste).
@@ -126,13 +138,27 @@ public struct NotchView: View {
     }
 
     /// À droite de Zebo : le bouton de configuration tant qu'il n'est pas configuré,
-    /// sinon un texte provisoire (le chat viendra ici).
+    /// sinon les onglets (Accueil, Projets).
     private var openText: some View {
         Group {
             if setup.needsSetup {
                 SetupPrompt { setup.start() }
             } else {
-                comingSoon
+                VStack(alignment: .leading, spacing: 10) {
+                    NotchTabBar(selection: Bindable(model).selectedTab)
+                    Group {
+                        switch model.selectedTab {
+                        case .home: comingSoon
+                        case .projects:
+                            ProjectsTabView(library: projects, onOpen: onOpenProject) { newProject.open() }
+                        }
+                    }
+                    .transition(.opacity.combined(with: .offset(y: 6)))
+                    .id(model.selectedTab)
+                }
+                .padding(.top, 8)
+                .frame(maxHeight: .infinity, alignment: .top)
+                .padding(.trailing, 24)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)

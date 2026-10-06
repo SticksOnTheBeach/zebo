@@ -14,6 +14,10 @@ final class NotchController: NSObject {
     private let settings = ZeboSettings(store: UserDefaultsPreferencesStore())
     private let commits = CommitActivity(counter: GitCommitCounter())
     private let keyStore = KeychainAPIKeyStore()
+    /// La fenêtre « Nouveau projet », et les projets créés avec Zebo.
+    private let newProject = DetachedWindowFlow()
+    private let projects = ProjectsLibrary(store: UserDefaultsProjectsStore())
+    private let projectWindow: ProjectWindowController
     /// Recompte les commits du jour de temps en temps.
     private var commitsTimer: Timer?
     private let panel: OverlayPanel
@@ -29,7 +33,8 @@ final class NotchController: NSObject {
         panel = OverlayPanel(
             rootView: NotchView(
                 model: model, speech: speech, behavior: behavior, setup: setup, settings: settings,
-                commits: commits, onReset: Self.devReset))
+                commits: commits, newProject: newProject, projects: projects,
+                onOpenProject: ProjectOpener.open, onReset: Self.devReset))
         bubblePanel = OverlayPanel(rootView: SpeechBubbleView(model: model, speech: speech))
         // Sous la notch : les points qui dépassent vers Zebo passent derrière elle.
         bubblePanel.level = .mainMenu + 2
@@ -38,9 +43,14 @@ final class NotchController: NSObject {
         fallPanel.level = .mainMenu + 4
         setupWindow = SetupWindowController(
             flow: setup, model: model, settings: settings, commits: commits, keyStore: keyStore)
+        projectWindow = ProjectWindowController(
+            flow: newProject, model: model, settings: settings, library: projects, keyStore: keyStore)
         super.init()
 
         setup.onPhaseChange = { [weak self] phase in self?.setupPhaseDidChange(phase) }
+        newProject.onPhaseChange = { [weak self] phase in self?.projectPhaseDidChange(phase) }
+        // Les projets supprimés ou déplacés depuis la dernière fois sont oubliés.
+        projects.forgetMissing()
         applyPreferences()
         commitsTimer = Timer.scheduledTimer(withTimeInterval: 5 * 60, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.refreshCommits() }
@@ -104,11 +114,25 @@ final class NotchController: NSObject {
         setupWindow.phaseDidChange(to: phase)
         // Configuration terminée : Zebo parle désormais selon ses nouveaux réglages.
         if phase == .returning { applyPreferences() }
-        guard phase == .detaching else { return }
-        // …pendant que la notch, masquée, se referme : c'est elle qui part vers le centre de l'écran.
-        // Elle sera fermée quand elle reviendra. Zebo se tait : sa bulle ne reste pas seule à l'écran.
+        if phase == .detaching { notchDidDetach() }
+    }
+
+    private func projectPhaseDidChange(_ phase: DetachedWindowFlow.Phase) {
+        // D'abord l'animation, qui part de la notch encore ouverte…
+        projectWindow.phaseDidChange(to: phase)
+        if phase == .detaching { notchDidDetach() }
+    }
+
+    /// …pendant que la notch, masquée, se referme : c'est elle qui part vers le centre de l'écran.
+    /// Elle sera fermée quand elle reviendra. Zebo se tait : sa bulle ne reste pas seule à l'écran.
+    private func notchDidDetach() {
         speech.silence()
         setOpen(false)
+    }
+
+    /// Aucune fenêtre n'est née de la notch (configuration, nouveau projet).
+    private var isNotchAvailable: Bool {
+        setup.isNotchAvailable && newProject.isIdle
     }
 
     /// Une fois configuré, Zebo t'appelle par ton prénom et compte tes commits du jour.
@@ -133,7 +157,7 @@ final class NotchController: NSObject {
         // Zebo suit la souris des yeux, notch ouverte ou fermée.
         model.mouseLocation = NSEvent.mouseLocation
         // Pendant la configuration, la notch reste fermée.
-        guard setup.isNotchAvailable else { return }
+        guard isNotchAvailable else { return }
 
         // +1 en haut : la souris collée au bord de l'écran est pile sur maxY.
         func contains(_ area: CGRect) -> Bool {
