@@ -73,15 +73,20 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
                 self?.settings.preferences = preferences
                 self?.onPreferencesChange?()
             },
-            saveKey: { [keyStore] key, provider in
+            saveKey: { [weak self, keyStore] key, provider in
                 do {
                     try keyStore.saveKey(key, for: provider)
+                    // Zebo peut discuter tout de suite avec la nouvelle clé.
+                    self?.onPreferencesChange?()
                     return nil
                 } catch {
                     return "Je n'ai pas pu ranger la clé dans le trousseau."
                 }
             },
-            deleteKey: { [keyStore] provider in keyStore.deleteKey(for: provider) },
+            deleteKey: { [weak self, keyStore] provider in
+                keyStore.deleteKey(for: provider)
+                self?.onPreferencesChange?()
+            },
             reconfigure: { [weak self, weak window] in
                 window?.close()
                 self?.setup.reconfigure()
