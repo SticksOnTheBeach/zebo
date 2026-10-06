@@ -1,7 +1,8 @@
 import SwiftUI
 import ZeboCore
 
-/// La fenêtre de configuration : Zebo en haut à gauche, l'étape en cours, et la navigation en bas.
+/// La fenêtre de configuration : Zebo (en grand sur l'accueil, puis en haut à gauche),
+/// l'étape en cours, et la navigation en bas.
 /// À chaque étape, le contenu part d'un côté et le suivant arrive de l'autre, élément par élément.
 public struct SetupView: View {
     private let wizard: SetupWizard
@@ -76,9 +77,9 @@ public struct SetupView: View {
             .offset(x: zeboFrame.minX, y: zeboFrame.minY)
     }
 
-    /// Où est Zebo : il a sa place en haut à gauche (pour l'instant, sur toutes les étapes).
+    /// Où est Zebo : en grand au centre pour l'accueillir, puis à sa place en haut à gauche.
     private var zeboFrame: CGRect {
-        SetupWindowLayout.zeboFrame
+        displayedStep == .welcome ? SetupWindowLayout.welcomeZeboFrame : SetupWindowLayout.zeboFrame
     }
 
     /// Où regarde Zebo (y vers le haut, comme à l'écran) : vers le champ du prénom, vers les cartes,

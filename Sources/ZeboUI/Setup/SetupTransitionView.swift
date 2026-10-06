@@ -61,9 +61,11 @@ public struct SetupTransitionView: View {
         }
     }
 
-    /// Zebo glisse de sa place dans la notch à sa place dans la fenêtre.
+    /// Zebo glisse de sa place dans la notch à sa place dans la fenêtre : en grand au centre
+    /// quand elle s'ouvre (l'accueil), en haut à gauche quand elle se referme (le récapitulatif).
     private func zeboFrame(at p: CGFloat) -> CGRect {
-        let end = SetupWindowLayout.zeboFrame.offsetBy(dx: windowFrame.minX, dy: windowFrame.minY)
+        let inWindow = isReversed ? SetupWindowLayout.zeboFrame : SetupWindowLayout.welcomeZeboFrame
+        let end = inWindow.offsetBy(dx: windowFrame.minX, dy: windowFrame.minY)
         return CGRect(
             x: lerp(zeboStart.minX, end.minX, p), y: lerp(zeboStart.minY, end.minY, p),
             width: lerp(zeboStart.width, end.width, p), height: lerp(zeboStart.height, end.height, p))

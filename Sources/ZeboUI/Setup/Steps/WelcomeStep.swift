@@ -1,44 +1,85 @@
 import SwiftUI
 
-/// Première étape : Zebo se présente.
+/// Première étape : Zebo, en grand au centre, se présente en trois cartes.
 struct WelcomeStep: View {
     var body: some View {
-        SetupStepLayout(
-            title: "Salut ! Moi c'est Zebo.",
-            subtitle: "Un petit nuage qui vient habiter ta notch."
-        ) {
-            VStack(alignment: .leading, spacing: 18) {
-                feature(
-                    "rectangle.topthird.inset.filled", .blue, "Je vis dans ta notch",
-                    "Passe la souris dessus : elle s'ouvre et je me réveille.", order: 2)
-                feature(
-                    "bubble.left.and.bubble.right.fill", .pink, "Je te tiens compagnie",
-                    "Clique sur moi et je te dirai un petit mot.", order: 3)
-                feature(
-                    "moon.zzz.fill", .indigo, "Je fais la sieste",
-                    "Quand tu travailles, je dors dans mon lit, sans te déranger.", order: 4)
-            }
-        }
-    }
+        VStack(spacing: 0) {
+            // La place de Zebo, dessiné par la fenêtre au-dessus des étapes.
+            Color.clear
+                .frame(height: SetupWindowLayout.welcomeZeboFrame.maxY + 20)
 
-    private func feature(
-        _ symbol: String, _ color: Color, _ title: String, _ detail: String, order: Int
-    ) -> some View {
-        HStack(alignment: .top, spacing: 14) {
+            Text("Salut ! Moi c'est Zebo.")
+                .font(.system(size: 34, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+                .appearing(order: 0)
+
+            Text("Un petit nuage qui vient habiter ta notch.")
+                .font(.system(size: 16, design: .rounded))
+                .foregroundStyle(.white.opacity(0.65))
+                .padding(.top, 8)
+                .appearing(order: 1)
+
+            HStack(alignment: .top, spacing: 12) {
+                FeatureCard(
+                    symbol: "rectangle.topthird.inset.filled", color: .blue, title: "Je vis dans ta notch",
+                    detail: "Passe la souris dessus : elle s'ouvre et je me réveille."
+                )
+                .appearing(order: 2)
+                FeatureCard(
+                    symbol: "bubble.left.and.bubble.right.fill", color: .pink, title: "Je te tiens compagnie",
+                    detail: "Clique sur moi et je te dirai un petit mot."
+                )
+                .appearing(order: 3)
+                FeatureCard(
+                    symbol: "moon.zzz.fill", color: .indigo, title: "Je fais la sieste",
+                    detail: "Quand tu travailles, je dors dans mon lit, sans te déranger."
+                )
+                .appearing(order: 4)
+            }
+            .padding(.horizontal, SetupWindowLayout.zeboFrame.minX)
+            .padding(.top, 30)
+
+            Spacer(minLength: 0)
+        }
+        .multilineTextAlignment(.center)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+}
+
+/// Une carte de présentation, translucide, avec une touche de lumière en haut.
+private struct FeatureCard: View {
+    let symbol: String
+    let color: Color
+    let title: String
+    let detail: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
             Image(systemName: symbol)
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(.white)
-                .frame(width: 34, height: 34)
-                .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(color.gradient))
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white)
-                Text(detail)
-                    .font(.system(size: 13, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.6))
-            }
+                .frame(width: 36, height: 36)
+                .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(color.gradient))
+                .shadow(color: color.opacity(0.5), radius: 10, y: 3)
+            Text(title)
+                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white)
+            Text(detail)
+                .font(.system(size: 12.5, design: .rounded))
+                .foregroundStyle(.white.opacity(0.6))
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .appearing(order: order)
+        .multilineTextAlignment(.leading)
+        .padding(16)
+        .frame(maxWidth: .infinity, minHeight: 150, alignment: .topLeading)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [.white.opacity(0.09), .white.opacity(0.03)], startPoint: .top, endPoint: .bottom))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(.white.opacity(0.09)))
     }
 }
