@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import ZeboCore
 
@@ -73,17 +74,33 @@ struct AIStep: View {
     }
 
     private func field(for provider: AIProvider) -> some View {
-        SecureField(
-            "", text: $wizard.apiKey,
-            prompt: Text(wizard.hasStoredAPIKey ? "Remplacer la clé (facultatif)" : provider.keyPlaceholder)
-                .foregroundStyle(.white.opacity(0.3))
-        )
-        .textFieldStyle(.plain)
-        .font(.system(size: 18, weight: .medium, design: .monospaced))
-        .foregroundStyle(.white)
-        .focused($isFocused)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        HStack(spacing: 10) {
+            SecureField(
+                "", text: $wizard.apiKey,
+                prompt: Text(wizard.hasStoredAPIKey ? "Remplacer la clé (facultatif)" : provider.keyPlaceholder)
+                    .foregroundStyle(.white.opacity(0.3))
+            )
+            .textFieldStyle(.plain)
+            .font(.system(size: 18, weight: .medium, design: .monospaced))
+            .foregroundStyle(.white)
+            .focused($isFocused)
+
+            Button(action: pasteKey) {
+                Label("Coller", systemImage: "doc.on.clipboard")
+                    .labelStyle(.iconOnly)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.75))
+                    .frame(width: 30, height: 30)
+                    .background(Circle().fill(.white.opacity(0.1)))
+                    .contentShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .help("Coller la clé copiée")
+        }
+        .padding(.leading, 16)
+        .padding(.trailing, 10)
+        // Le bouton est plus haut que le texte : le champ garde la même hauteur qu'avant.
+        .padding(.vertical, 8)
         .frame(width: 460)
         .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(.black.opacity(0.25)))
         .overlay(
@@ -92,6 +109,12 @@ struct AIStep: View {
                     isFocused ? ZeboPalette.cloudBottom : .white.opacity(0.1), lineWidth: isFocused ? 2 : 1)
         )
         .animation(.easeOut(duration: 0.2), value: isFocused)
+    }
+
+    /// Colle la clé copiée depuis la page du fournisseur, sans les espaces ni retours à la ligne autour.
+    private func pasteKey() {
+        guard let copied = NSPasteboard.general.string(forType: .string) else { return }
+        wizard.apiKey = copied.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     /// Ce que Zebo envoie, et ce qu'il garde pour lui.
