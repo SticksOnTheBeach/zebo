@@ -52,7 +52,7 @@ struct NotchWidgetsView: View {
             case .language:
                 if let language {
                     HStack(spacing: 3) {
-                        LanguageLogo(language: language, size: 11)
+                        CodeLogo(language: language, size: 11)
                         Text(language.shortName)
                     }
                 }
