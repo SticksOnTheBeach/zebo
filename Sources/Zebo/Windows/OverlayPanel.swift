@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Fenêtre sans bordure et transparente, posée par-dessus la barre des menus.
 /// Sert à la notch et à la bulle de dialogue ; le dessin SwiftUI gère ce qui est visible.
-final class OverlayPanel: NSPanel {
+class OverlayPanel: NSPanel {
     init<Content: View>(rootView: Content) {
         super.init(
             contentRect: .zero,

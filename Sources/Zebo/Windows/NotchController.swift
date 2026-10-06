@@ -30,6 +30,8 @@ final class NotchController: NSObject {
     private let fallPanel: OverlayPanel
     private let mouse = MouseMonitor()
     private let setupWindow: SetupWindowController
+    /// Les initiatives de Zebo, proposées sous la notch.
+    private let initiativeWindow: InitiativeWindowController
 
     override init() {
         behavior = ZeboBehavior(placement: model, speech: speech)
@@ -57,10 +59,18 @@ final class NotchController: NSObject {
             flow: setup, model: model, settings: settings, commits: commits, keyStore: keyStore)
         projectWindow = ProjectWindowController(
             flow: newProject, model: model, settings: settings, library: projects, keyStore: keyStore)
+        initiativeWindow = InitiativeWindowController(initiatives: chat.initiatives, model: model)
         super.init()
 
         // Dans la discussion, Zebo peut ouvrir des éditeurs et des projets, et en créer.
         chat.actions = MacActions(settings: settings, library: projects)
+        // Zebo veut créer un projet : la notch s'ouvre sur sa fiche, prête à recevoir le nom.
+        chat.onProjectDraftChange = { [weak self] draft in
+            guard let self, draft != nil, isNotchAvailable else { return }
+            model.selectedTab = .ai
+            setOpen(true)
+            panel.makeKey()
+        }
 
         setup.onPhaseChange = { [weak self] phase in self?.setupPhaseDidChange(phase) }
         newProject.onPhaseChange = { [weak self] phase in self?.projectPhaseDidChange(phase) }
@@ -118,6 +128,7 @@ final class NotchController: NSObject {
         bubblePanel.setFrame(topCentered(SpeechBubbleView.windowSize), display: true)
         model.panelFrame = panel.frame
         model.screenFrame = screen.frame
+        initiativeWindow.reposition()
         model.mouseLocation = NSEvent.mouseLocation
     }
 
@@ -204,7 +215,9 @@ final class NotchController: NSObject {
         // Ouverte, elle se referme quand la souris s'en va, sauf si l'on est en train d'écrire.
         // La fenêtre est taillée pour le plus grand onglet : seule la notch visible compte.
         if model.isOpen {
-            if !contains(notchFrame(size: model.openSize)), !model.isTyping { setOpen(false) }
+            if !contains(notchFrame(size: model.openSize)), !model.isTyping, chat.projectDraft == nil {
+                setOpen(false)
+            }
             return
         }
         // Fermée, elle grandit un peu au survol ; un clic l'ouvrira (voir NotchView).
@@ -228,6 +241,8 @@ final class NotchController: NSObject {
         }
         // Fermée, la fenêtre laisse passer les clics vers la barre des menus.
         panel.ignoresMouseEvents = !isOpen
+        // Une initiative affichée suit le bas de la notch.
+        initiativeWindow.reposition()
         // …et rend le clavier à l'app de devant, s'il était resté dans la notch.
         if !isOpen, panel.isKeyWindow {
             model.isTyping = false
@@ -239,7 +254,9 @@ final class NotchController: NSObject {
     /// Un clic ailleurs : on n'écrit plus à Zebo, et la notch se ferme si la souris n'y est pas.
     @objc private func panelDidResignKey() {
         model.isTyping = false
-        if model.isOpen, !notchFrame(size: model.openSize).insetBy(dx: 0, dy: -1).contains(NSEvent.mouseLocation) {
+        if model.isOpen, chat.projectDraft == nil,
+            !notchFrame(size: model.openSize).insetBy(dx: 0, dy: -1).contains(NSEvent.mouseLocation)
+        {
             setOpen(false)
         }
     }
