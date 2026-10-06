@@ -1,6 +1,6 @@
 import AppKit
 
-/// Barre des menus, visible quand Zebo est une app « normale » (pendant sa configuration).
+/// Barre des menus, visible quand Zebo est une app « normale » (quand une de ses fenêtres est ouverte).
 @MainActor
 enum MainMenu {
     static func make() -> NSMenu {
@@ -12,6 +12,8 @@ enum MainMenu {
 
     private static func appMenu() -> NSMenu {
         let menu = NSMenu(title: "Zebo")
+        menu.addItem(withTitle: "Réglages…", action: #selector(AppDelegate.showSettings(_:)), keyEquivalent: ",")
+        menu.addItem(.separator())
         menu.addItem(withTitle: "Masquer Zebo", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quitter Zebo", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")

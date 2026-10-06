@@ -14,13 +14,16 @@ public struct NotchView: View {
     private let projects: ProjectsLibrary
     /// Ouvre un projet avec un éditeur, le Finder ou le Terminal.
     private let onOpenProject: (ZeboProject, ProjectOpenTarget) -> Void
+    /// Ouvre la fenêtre de paramètres.
+    private let onOpenSettings: () -> Void
     /// Remise à zéro complète, proposée au clic droit (versions de développement seulement).
     private let onReset: (() -> Void)?
 
     public init(
         model: NotchModel, speech: ZeboSpeech, behavior: ZeboBehavior, setup: SetupFlow, settings: ZeboSettings,
         commits: CommitActivity, newProject: DetachedWindowFlow, projects: ProjectsLibrary,
-        onOpenProject: @escaping (ZeboProject, ProjectOpenTarget) -> Void, onReset: (() -> Void)? = nil
+        onOpenProject: @escaping (ZeboProject, ProjectOpenTarget) -> Void,
+        onOpenSettings: @escaping () -> Void = {}, onReset: (() -> Void)? = nil
     ) {
         self.model = model
         self.speech = speech
@@ -31,6 +34,7 @@ public struct NotchView: View {
         self.newProject = newProject
         self.projects = projects
         self.onOpenProject = onOpenProject
+        self.onOpenSettings = onOpenSettings
         self.onReset = onReset
     }
 
@@ -87,6 +91,7 @@ public struct NotchView: View {
                 if !model.isOpen { open() }
             }
             .contextMenu {
+                Button("Paramètres…", action: onOpenSettings)
                 Button("Reconfigurer Zebo…") { setup.reconfigure() }
                 if let onReset {
                     Button("Réinitialiser Zebo", action: onReset)
@@ -144,8 +149,7 @@ public struct NotchView: View {
             if setup.needsSetup {
                 SetupPrompt { setup.start() }
             } else {
-                VStack(alignment: .leading, spacing: 10) {
-                    NotchTabBar(selection: Bindable(model).selectedTab)
+                HStack(alignment: .top, spacing: 14) {
                     Group {
                         switch model.selectedTab {
                         case .home: comingSoon
@@ -155,12 +159,17 @@ public struct NotchView: View {
                             }
                         }
                     }
-                    .transition(.opacity.combined(with: .offset(y: 6)))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    .transition(.opacity.combined(with: .offset(x: -8)))
                     .id(model.selectedTab)
+
+                    // Les onglets, en colonne sur la droite.
+                    NotchTabBar(selection: Bindable(model).selectedTab, onOpenSettings: onOpenSettings)
+                        .frame(width: 112)
                 }
-                .padding(.top, 8)
-                .frame(maxHeight: .infinity, alignment: .top)
-                .padding(.trailing, 24)
+                .padding(.top, 10)
+                .padding(.bottom, 16)
+                .padding(.trailing, 18)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)

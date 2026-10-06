@@ -18,6 +18,7 @@ final class NotchController: NSObject {
     private let newProject = DetachedWindowFlow()
     private let projects = ProjectsLibrary(store: UserDefaultsProjectsStore())
     private let projectWindow: ProjectWindowController
+    private let settingsWindow: SettingsWindowController
     /// Recompte les commits du jour de temps en temps.
     private var commitsTimer: Timer?
     private let panel: OverlayPanel
@@ -30,6 +31,9 @@ final class NotchController: NSObject {
 
     override init() {
         behavior = ZeboBehavior(placement: model, speech: speech)
+        let settingsWindow = SettingsWindowController(
+            settings: settings, commits: commits, keyStore: keyStore, setup: setup, reset: Self.devReset)
+        self.settingsWindow = settingsWindow
         // Ouvrir un projet retient l'éditeur choisi pour la prochaine fois.
         let library = projects
         let openProject: (ZeboProject, ProjectOpenTarget) -> Void = { project, target in
@@ -40,7 +44,7 @@ final class NotchController: NSObject {
             rootView: NotchView(
                 model: model, speech: speech, behavior: behavior, setup: setup, settings: settings,
                 commits: commits, newProject: newProject, projects: projects,
-                onOpenProject: openProject, onReset: Self.devReset))
+                onOpenProject: openProject, onOpenSettings: { settingsWindow.show() }, onReset: Self.devReset))
         bubblePanel = OverlayPanel(rootView: SpeechBubbleView(model: model, speech: speech))
         // Sous la notch : les points qui dépassent vers Zebo passent derrière elle.
         bubblePanel.level = .mainMenu + 2
@@ -55,6 +59,7 @@ final class NotchController: NSObject {
 
         setup.onPhaseChange = { [weak self] phase in self?.setupPhaseDidChange(phase) }
         newProject.onPhaseChange = { [weak self] phase in self?.projectPhaseDidChange(phase) }
+        settingsWindow.onPreferencesChange = { [weak self] in self?.applyPreferences() }
         // Les projets supprimés ou déplacés depuis la dernière fois sont oubliés.
         projects.forgetMissing()
         applyPreferences()
@@ -139,6 +144,11 @@ final class NotchController: NSObject {
     /// Aucune fenêtre n'est née de la notch (configuration, nouveau projet).
     private var isNotchAvailable: Bool {
         setup.isNotchAvailable && newProject.isIdle
+    }
+
+    /// Ouvre la fenêtre de paramètres (ou la ramène devant).
+    func showSettings() {
+        settingsWindow.show()
     }
 
     /// Une fois configuré, Zebo t'appelle par ton prénom et compte tes commits du jour.
