@@ -17,12 +17,14 @@ struct WelcomeStep: View {
                 .shadow(color: .black.opacity(0.25), radius: 12, y: 4)
                 .appearing(order: 0)
 
-            Text("Un petit nuage qui s'installe dans ta notch :\nil dort, te tient compagnie et t'affiche tes infos.")
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white.opacity(0.85))
-                .lineSpacing(3)
-                .padding(.top, 10)
-                .appearing(order: 1)
+            Text(
+                "Un petit nuage qui s'installe dans ta notch\net qui t'aide dans tous tes projets, du premier fichier au dernier commit."
+            )
+            .font(.system(size: 15, weight: .semibold, design: .rounded))
+            .foregroundStyle(.white.opacity(0.85))
+            .lineSpacing(3)
+            .padding(.top, 10)
+            .appearing(order: 1)
 
             tips
                 .padding(.top, 26)
@@ -53,7 +55,7 @@ struct WelcomeStep: View {
             divider
             tip("cursorarrow.click.2", .pink, "Clique dessus\npour l'ouvrir")
             divider
-            tip("moon.zzz.fill", .indigo, "Je fais la sieste\npendant que tu bosses")
+            tip("folder.badge.plus", .indigo, "Je crée tes projets\net je les range pour toi")
         }
         .padding(.vertical, 18)
         .frame(width: 470)
