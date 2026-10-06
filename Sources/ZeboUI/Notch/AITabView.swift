@@ -174,14 +174,19 @@ private struct ChatBubble: View {
                 ActionStatusView(status: action)
                     .transition(.opacity)
             }
+            if let initiative = message.initiative {
+                ActionStatusView(status: initiative)
+                    .transition(.opacity)
+            }
         }
         .frame(maxWidth: 230, alignment: message.isFromZebo ? .leading : .trailing)
         .frame(maxWidth: .infinity, alignment: message.isFromZebo ? .leading : .trailing)
         .animation(.easeOut(duration: 0.2), value: message.action)
+        .animation(.easeOut(duration: 0.2), value: message.initiative)
     }
 }
 
-/// Ce que Zebo fait sur le Mac : en cours, fait, ou impossible.
+/// Ce que Zebo fait sur le Mac : proposé, en attente de la fiche, en cours, fait, impossible ou refusé.
 private struct ActionStatusView: View {
     let status: ZeboChat.ActionStatus
 
@@ -202,29 +207,37 @@ private struct ActionStatusView: View {
     }
 
     private var isRunning: Bool {
-        if case .running = status { return true }
-        return false
+        switch status {
+        case .proposed, .waiting, .running: true
+        case .done, .failed, .declined: false
+        }
     }
 
     private var text: String {
         switch status {
-        case .running(let text), .done(let text), .failed(let text): text
+        case .proposed(let text), .waiting(let text), .running(let text), .done(let text), .failed(let text),
+            .declined(let text):
+            text
         }
     }
 
     private var symbol: String {
         switch status {
+        case .proposed: "sparkles"
+        case .waiting: "pencil"
         case .running: "bolt.fill"
         case .done: "checkmark.circle.fill"
         case .failed: "exclamationmark.triangle.fill"
+        case .declined: "xmark.circle.fill"
         }
     }
 
     private var color: Color {
         switch status {
-        case .running: ZeboPalette.cloudBottom
+        case .proposed, .waiting, .running: ZeboPalette.cloudBottom
         case .done: .green
         case .failed: .orange
+        case .declined: .gray
         }
     }
 }

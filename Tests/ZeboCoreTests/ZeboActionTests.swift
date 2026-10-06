@@ -55,7 +55,7 @@ struct ActionQuestionTests {
         #expect(throws: ZeboActionError.self) { try resolve(request("open_project", project: "Inconnu")) }
     }
 
-    @Test("Un projet se crée avec un genre connu et un nom de dossier valable")
+    @Test("Un projet se crée avec un genre connu ; le nom et l'éditeur ne sont que des propositions")
     func createsProjects() throws {
         #expect(
             try resolve(request("create_project", editor: "RustRover", kind: "rust", name: " Mon outil "))
@@ -63,8 +63,18 @@ struct ActionQuestionTests {
         #expect(
             try resolve(request("create_project", kind: "Python", name: "Script"))
                 == .createProject(name: "Script", kind: .python, editor: nil))
+        #expect(
+            try resolve(request("create_project", editor: "Emacs", kind: "rust"))
+                == .createProject(name: "", kind: .rust, editor: nil))
         #expect(throws: ZeboActionError.self) { try resolve(request("create_project", kind: "cobol", name: "X")) }
-        #expect(throws: ZeboActionError.self) { try resolve(request("create_project", kind: "rust", name: "a/b")) }
+    }
+
+    @Test("Une initiative se lit avec la réponse ; les anciennes réponses, sans initiative, aussi")
+    func parsesInitiative() {
+        let json =
+            #"{"reply":"Voilà !","action":{"type":"none","editor":"","project":"","kind":"","name":""},"initiative":{"text":"Je t'ouvre le Terminal ?","action":{"type":"open_project","editor":"Terminal","project":"Mon jeu","kind":"","name":""}}}"#
+        #expect(ActionQuestion.answer(fromJSON: json)?.initiative?.text == "Je t'ouvre le Terminal ?")
+        #expect(ActionQuestion.format.schema["required"] as? [String] == ["action", "initiative", "reply"])
     }
 
     @Test("« none » : Zebo répond sans rien faire")
@@ -93,7 +103,7 @@ private final class ScriptedAI: AIClient, @unchecked Sendable {
 @MainActor
 private final class RecordingPerformer: ZeboActionPerformer {
     let editors = [vscode, rustRover]
-    let projects = [game]
+    private(set) var projects = [game]
     let failure: ZeboActionError?
     private(set) var performed: [ZeboAction] = []
 
@@ -104,6 +114,10 @@ private final class RecordingPerformer: ZeboActionPerformer {
     func perform(_ action: ZeboAction) async throws -> String {
         performed.append(action)
         if let failure { throw failure }
+        if case .createProject(let name, let kind, let editor) = action {
+            projects.append(ZeboProject(name: name, kind: kind, path: "/Dev/\(name)", editor: editor))
+            return "« \(name) » est créé."
+        }
         return "RustRover est ouvert."
     }
 }
@@ -116,7 +130,7 @@ struct ZeboChatActionTests {
 
     private func chat(replying reply: String, performer: RecordingPerformer) -> (ZeboChat, ScriptedAI) {
         let ai = ScriptedAI(reply: reply)
-        let chat = ZeboChat()
+        let chat = ZeboChat(initiatives: ZeboInitiatives(holdDuration: .milliseconds(50)))
         chat.client = ai
         chat.actions = performer
         return (chat, ai)
@@ -167,5 +181,139 @@ struct ZeboChatActionTests {
         chat.send()
         #expect(await waitUntil { !chat.isWaiting })
         #expect(chat.messages.last?.text == "Coucou !")
+    }
+
+    private static let createRust =
+        #"{"reply":"Je te prépare ça !","action":{"type":"create_project","editor":"RustRover","project":"","kind":"rust","name":"mon-outil"},"initiative":{"text":"Je t'ouvre aussi le Terminal dedans ?","action":{"type":"open_project","editor":"Terminal","project":"Mon outil","kind":"","name":""}}}"#
+
+    @Test("Créer un projet ouvre la fiche, avec le nom et l'éditeur proposés par Zebo")
+    func createGoesThroughTheDraft() async throws {
+        let performer = RecordingPerformer()
+        let (chat, _) = chat(replying: Self.createRust, performer: performer)
+        chat.draft = "Crée-moi un projet Rust"
+        chat.send()
+        #expect(await waitUntil { chat.projectDraft != nil })
+        let draft = try #require(chat.projectDraft)
+        #expect(draft.name == "mon-outil")
+        #expect(draft.editor == rustRover)
+        #expect(chat.messages.last?.action == .waiting("Choisis son nom et son éditeur…"))
+        #expect(performer.performed.isEmpty)
+
+        // Un nom invalide ne part pas ; on le corrige, on change d'éditeur, et on crée.
+        draft.name = "a/b"
+        chat.confirmProjectDraft()
+        #expect(chat.projectDraft != nil)
+        draft.name = "Mon outil"
+        draft.editor = vscode
+        chat.confirmProjectDraft()
+        #expect(chat.projectDraft == nil)
+        #expect(await waitUntil { chat.messages.last?.action == .done("« Mon outil » est créé.") })
+        #expect(performer.performed.first == .createProject(name: "Mon outil", kind: .rust, editor: vscode))
+    }
+
+    @Test("Annuler la fiche annule la création, sans proposer d'initiative sur un projet qui n'existe pas")
+    func cancellingTheDraft() async {
+        let performer = RecordingPerformer()
+        let (chat, _) = chat(replying: Self.createRust, performer: performer)
+        chat.draft = "Crée-moi un projet Rust"
+        chat.send()
+        #expect(await waitUntil { chat.projectDraft != nil })
+        chat.cancelProjectDraft()
+        #expect(await waitUntil { chat.messages.last?.action == .declined("Création annulée.") })
+        try? await Task.sleep(for: .milliseconds(50))
+        #expect(chat.initiatives.current == nil)
+        #expect(performer.performed.isEmpty)
+    }
+
+    @Test("Après la création, Zebo propose son initiative ; acceptée, il la fait")
+    func acceptedInitiative() async throws {
+        let performer = RecordingPerformer()
+        let (chat, _) = chat(replying: Self.createRust, performer: performer)
+        chat.draft = "Crée-moi un projet Rust"
+        chat.send()
+        #expect(await waitUntil { chat.projectDraft != nil })
+        try #require(chat.projectDraft).name = "Mon outil"
+        chat.confirmProjectDraft()
+
+        #expect(await waitUntil { chat.initiatives.current?.text == "Je t'ouvre aussi le Terminal dedans ?" })
+        #expect(chat.messages.last?.initiative == .proposed("Je t'ouvre aussi le Terminal dedans ?"))
+        chat.initiatives.choose(.accept)
+        #expect(await waitUntil { chat.messages.last?.initiative == .done("RustRover est ouvert.") })
+        guard case .openProject(let project, with: .terminal) = performer.performed.last else {
+            Issue.record("Le Terminal n'a pas été ouvert dans le nouveau projet.")
+            return
+        }
+        #expect(project.name == "Mon outil")
+        #expect(chat.conversation.last?.text.contains("Initiative — Fait") == true)
+    }
+
+    @Test("Refusée, l'initiative n'est pas faite, et l'IA s'en souviendra")
+    func declinedInitiative() async throws {
+        let performer = RecordingPerformer()
+        let json =
+            #"{"reply":"Bonne idée !","action":{"type":"none","editor":"","project":"","kind":"","name":""},"initiative":{"text":"J'ouvre Mon jeu ?","action":{"type":"open_project","editor":"","project":"Mon jeu","kind":"","name":""}}}"#
+        let (chat, _) = chat(replying: json, performer: performer)
+        chat.draft = "Je vais bosser sur mon jeu"
+        chat.send()
+        #expect(await waitUntil { chat.initiatives.current != nil })
+        chat.initiatives.choose(.refuse)
+        #expect(await waitUntil { chat.messages.last?.initiative == .declined("J'ouvre Mon jeu ?") })
+        #expect(performer.performed.isEmpty)
+        #expect(chat.conversation.last?.text.contains("Initiative — Refusé") == true)
+    }
+
+    @Test("Recommencer la discussion ferme la fiche et retire les propositions")
+    func resetClearsEverything() async {
+        let (chat, _) = chat(replying: Self.createRust, performer: RecordingPerformer())
+        chat.draft = "Crée-moi un projet Rust"
+        chat.send()
+        #expect(await waitUntil { chat.projectDraft != nil })
+        chat.reset()
+        #expect(chat.projectDraft == nil)
+        #expect(chat.messages.isEmpty)
+    }
+}
+
+@MainActor
+@Suite("Initiatives : maintenir Y ou N")
+struct ZeboInitiativesTests {
+    @Test("Maintenue assez longtemps, la touche décide")
+    func holdDecides() async {
+        let initiatives = ZeboInitiatives(holdDuration: .milliseconds(50))
+        let answer = Task { await initiatives.ask("Je t'ouvre le Terminal ?") }
+        #expect(await waitUntil { initiatives.current != nil })
+        initiatives.press(.accept)
+        #expect(initiatives.held == .accept)
+        #expect(await answer.value)
+        #expect(initiatives.current == nil)
+        #expect(initiatives.held == nil)
+    }
+
+    @Test("Relâchée trop tôt, rien n'est décidé")
+    func earlyReleaseDoesNothing() async throws {
+        let initiatives = ZeboInitiatives(holdDuration: .milliseconds(80))
+        let answer = Task { await initiatives.ask("Je t'ouvre le Terminal ?") }
+        #expect(await waitUntil { initiatives.current != nil })
+        initiatives.press(.refuse)
+        initiatives.release(.refuse)
+        try await Task.sleep(for: .milliseconds(150))
+        #expect(initiatives.current != nil)
+        initiatives.choose(.refuse)
+        #expect(await answer.value == false)
+    }
+
+    @Test("Les propositions passent une par une")
+    func oneAtATime() async {
+        let initiatives = ZeboInitiatives()
+        let first = Task { await initiatives.ask("Un") }
+        #expect(await waitUntil { initiatives.current?.text == "Un" })
+        let second = Task { await initiatives.ask("Deux") }
+        try? await Task.sleep(for: .milliseconds(20))
+        #expect(initiatives.current?.text == "Un")
+        initiatives.choose(.accept)
+        #expect(await waitUntil { initiatives.current?.text == "Deux" })
+        initiatives.dismissAll()
+        #expect(await first.value)
+        #expect(await second.value == false)
     }
 }
