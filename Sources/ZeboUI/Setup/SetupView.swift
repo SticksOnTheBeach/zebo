@@ -109,7 +109,17 @@ public struct SetupView: View {
 
                 Spacer()
 
-                if wizard.isLastStep {
+                if wizard.step == .welcome {
+                    Button(action: wizard.advance) {
+                        HStack(spacing: 6) {
+                            Text("Commencer")
+                            Image(systemName: "arrow.right")
+                        }
+                    }
+                    .buttonStyle(ZeboButtonStyle(kind: .primary))
+                    .keyboardShortcut(.defaultAction)
+                    .transition(.opacity.combined(with: .scale(scale: 0.9)))
+                } else if wizard.isLastStep {
                     Button("C'est parti", action: onFinish)
                         .buttonStyle(ZeboButtonStyle(kind: .primary))
                         .keyboardShortcut(.defaultAction)
