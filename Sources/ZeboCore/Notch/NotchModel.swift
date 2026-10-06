@@ -12,6 +12,10 @@ public final class NotchModel {
     public nonisolated static let topCornerRadius: CGFloat = 6
 
     public var isOpen = false
+    /// La souris survole la notch fermée : elle grandit un peu, en attendant un clic pour s'ouvrir.
+    public var isPeeking = false
+    /// De combien la notch fermée grandit au survol.
+    public static let peekGrowth = CGSize(width: 16, height: 6)
     /// Taille de l'encoche physique (ou de la fausse notch si l'écran n'en a pas).
     public var hardwareNotchSize: CGSize = .zero
     public let openSize = CGSize(width: 480, height: 180)
@@ -29,8 +33,16 @@ public final class NotchModel {
         CGSize(width: hardwareNotchSize.width + Self.wingWidth * 2, height: hardwareNotchSize.height)
     }
 
+    /// Taille de la notch survolée : un peu plus grande que fermée.
+    public var peekSize: CGSize {
+        CGSize(width: closedSize.width + Self.peekGrowth.width, height: closedSize.height + Self.peekGrowth.height)
+    }
+
     /// Taille visible de la notch.
-    public var notchSize: CGSize { isOpen ? openSize : closedSize }
+    public var notchSize: CGSize {
+        if isOpen { return openSize }
+        return isPeeking ? peekSize : closedSize
+    }
 
     /// Place de Zebo dans la notch (origine en haut à gauche de la notch) :
     /// couché dans son lit dans l'aile gauche, grand à gauche une fois ouverte.

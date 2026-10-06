@@ -52,4 +52,14 @@ struct NotchModelTests {
         // Origine de l'écran en bas : plus Zebo est bas dans la notch, plus y est petit.
         #expect(model.zeboScreenCenter.y == model.panelFrame.maxY - model.zeboFrame.midY)
     }
+
+    @Test("Survolée, la notch fermée grandit un peu ; ouverte, elle prend toute sa taille")
+    func peekingGrowsTheClosedNotch() {
+        let model = makeModel(isOpen: false)
+        model.isPeeking = true
+        #expect(model.notchSize.width == model.closedSize.width + NotchModel.peekGrowth.width)
+        #expect(model.notchSize.height == model.closedSize.height + NotchModel.peekGrowth.height)
+        model.isOpen = true
+        #expect(model.notchSize == model.openSize)
+    }
 }
