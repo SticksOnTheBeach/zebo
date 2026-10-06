@@ -14,20 +14,30 @@ The app's interface is in French.
   1. **Your first name**: what Zebo will call you ("Enchanté, … !").
   2. **Your favorite language**, among a dozen, each with its real logo.
   3. **Your code editors** (one or more): VS Code, Cursor, Xcode, the JetBrains IDEs… Click one and Zebo finds where it is installed on its own (or you point to it), so it can launch it later.
-  4. **Claude** (optional): an Anthropic API key, kept in the macOS Keychain, so Zebo can use Claude to find where your projects belong.
+  4. **Its AI** (optional): Claude, ChatGPT, Gemini or Mistral, with that provider's API key, kept in the macOS Keychain, so Zebo can use it to find where your projects belong.
   5. **Its notch**: what the right wing shows (time, date, today's commits, your language) and whether Zebo naps, with a live preview.
   6. **A summary**, then "C'est parti": the window fades away while Zebo alone flies to the center of the screen, winks, and flips his way back into the notch.
 
   While being set up, Zebo has a Dock icon. To run the setup again: right-click the notch, **Reconfigurer Zebo…**
-- **It helps with your projects.** The open notch has two tabs, **Accueil** and **Projets**. The Projects tab lists the projects created with Zebo (click to open one in its editor) and a **Nouveau projet** button: the notch detaches into a window where you pick the kind (Web, C, C++, Python, Rust, Java, Swift, Kotlin, Go, C#), name the project, then Zebo looks for an existing workspace for that kind in your projects folder and asks whether to use it or create a new one. Finally it creates the project (starter files, a Git repository), opens it in the editor you chose, and flips back into the notch.
-- **It asks Claude where your projects belong.** With an API key, Zebo sends Claude (`claude-opus-5-5`, low effort, JSON output, server-side fallback on refusal) the names of the folders in your projects folder and their file counts per extension, never file contents, and gets back which folders are workspaces for the chosen kind, with a reason. Without a key, or if the call fails, it guesses locally from folder names and file types.
+- **It helps with your projects.** The open notch has its tabs in a column on the right: **Accueil**, **Projets**, and **Paramètres** at the bottom. The Projects tab lists the recent projects created with Zebo: click one and it unfolds into an "Ouvrir avec" row (your editors, the usual one first, then the Finder and the Terminal). Its **Nouveau** button: the notch detaches into a window where you pick the kind (Web, C, C++, Python, Rust, Java, Swift, Kotlin, Go, C#), name the project, then Zebo looks for an existing workspace for that kind in your projects folder and asks whether to use it or create a new one. Finally it creates the project (starter files, a Git repository), opens it in the editor you chose, and flips back into the notch.
+- **It asks an AI where your projects belong.** With an API key, Zebo sends the AI you picked the names of the folders in your projects folder and their file counts per extension, never file contents, and gets back which folders are workspaces for the chosen kind, with a reason. Each provider is called over plain HTTPS with a JSON schema for the answer:
+
+  | AI | API | Default model |
+  | --- | --- | --- |
+  | Claude (Anthropic) | Messages | `claude-opus-5-5` (low effort, server-side fallback on refusal) |
+  | ChatGPT (OpenAI) | Responses | `gpt-6-luna` |
+  | Gemini (Google) | `generateContent` | `gemini-3.8-flash` |
+  | Mistral | Chat completions | `mistral-small-latest` |
+
+  The model can be changed in the settings. Without a key, or if the call fails, Zebo guesses locally from folder names and file types.
+- **It has settings.** **Paramètres** in the notch, **Zebo > Réglages…** (⌘,) or a right-click on the notch opens a settings window, with a sidebar like System Settings: general (first name), language, editors, notch, AI (provider, model, API key saved or deleted on the spot) and advanced (run the setup again, quit). Changes apply right away.
 - **It sleeps.** When the notch is closed, it lies in its bed in the left wing, wearing a nightcap, under its blanket; little "z"s float away from its head.
 - **It keeps you posted.** The right wing of the closed notch shows the widgets you picked: the time, the date, today's commits, your favorite language. With several of them, they take turns every 5, 10 or 30 seconds. Today's commits are counted with Git in the repositories of your projects folder (guessed, e.g. `~/Documents/Dev`), using your `git config user.email`, every 5 minutes.
 - **It wakes up.** When the mouse hovers the closed notch, it grows slightly, like [Alcove](https://tryalcove.com); a click opens it: the bed fades away, Zebo stands up, follows the mouse with its eyes, blinks and sways gently. The notch closes again when the mouse leaves.
 - **It talks.** Clicking on it shows a line (with your first name) in a cloud-shaped bubble, typed letter by letter, linked to Zebo by dots that pop in one by one. While talking, it looks thoughtful 🤔 (raised eyebrows, pout, eyes up). A new message can only start after 4 s.
 - **It faints.** Three clicks within 1.5 s knock it out: spiral eyes, stars around its head, it wobbles… then it gets catapulted out of the notch, spins across the screen and pops back a few seconds later.
 
-To quit Zebo: right-click the notch, then **Quitter Zebo**. Outside of setup, it has no Dock icon.
+To quit Zebo: right-click the notch, then **Quitter Zebo**. Zebo only has a Dock icon while one of its windows is open.
 
 ## Installation
 
@@ -71,21 +81,22 @@ The package is split into three modules, each depending only on the previous one
 ```
 Sources/
 ├── ZeboCore/
-│   ├── AI/          ClaudeWorkspaceAdvisor, SmartWorkspaceAdvisor (Claude, then local), HTTPTransport, APIKeyStore
+│   ├── AI/          AIProvider, WorkspaceQuestion (shared prompt and schema), Claude/OpenAI/Gemini/Mistral
+│   │                WorkspaceAdvisor, SmartWorkspaceAdvisor (the chosen AI, then local), HTTPTransport
 │   ├── Behavior/    ZeboBehavior (reactions to clicks), PokeTracker (rules)
 │   ├── Code/        IDE (editor catalog), Language, CommitActivity (today's commits), ProjectsFolder
 │   ├── Notch/       NotchModel (notch geometry, tabs), ZeboPlacement, DetachedWindowFlow (notch → window → notch)
 │   ├── Physics/     Flight (fall trajectory)
 │   ├── Preferences/ ZeboPreferences, ZeboSettings (preferences and their storage)
 │   ├── Projects/    ProjectKind, WorkspaceAdvisor (+ local), ProjectTemplate, ProjectScaffolder,
-│   │                NewProjectWizard, ProjectsLibrary
+│   │                NewProjectWizard, ProjectsLibrary (+ ProjectOpenTarget)
 │   ├── Setup/       SetupFlow, SetupWizard (steps), SetupStore
 │   ├── Speech/      ZeboSpeech (typewriter), SpeechLineSource and PersonalizedLines (lines), ZeboSpeaking
 │   └── Widgets/     NotchWidget, NotchWidgetRotation (what shows when)
 ├── ZeboUI/
 │   ├── Character/   ZeboCharacter (drawing), AnimatedZebo (life), ZeboMood, Shapes/
 │   ├── Components/  ZeboButtonStyle, PageDots, .appearing (staggered appearance), VisualEffectBackground,
-│   │                SparkleField
+│   │                SparkleField, AIProviderBadge
 │   ├── Fall/        FallingZeboView
 │   ├── Notch/       NotchView, NotchShape, NotchWidgetsView (rotating widgets), NotchClock, NotchTabBar,
 │   │                ProjectsTabView
@@ -94,18 +105,19 @@ Sources/
 │   ├── Setup/       SetupView (window), SetupBackground (glass), Steps/ (one view per step), SetupTransitionView and
 │   │                NotchToWindowShape (notch → window), SetupFinaleView (wink and flip back), NotchPreview,
 │   │                SetupPrompt (notch button)
+│   ├── Settings/    SettingsView (sidebar), SettingsSection, AISettingsPage, AdvancedSettingsPage
 │   ├── Sleep/       InBed (the bed), SleepingZs (the "z"s)
 │   ├── Speech/      SpeechBubbleView, CloudBubbleShape, CappedWidth
 │   └── ZeboPalette
 └── Zebo/
     ├── AI/          KeychainAPIKeyStore
-    ├── App/         ZeboApp (entry point), AppDelegate, MainMenu, DevReset
+    ├── App/         ZeboApp (entry point), AppDelegate, MainMenu, AppPresence (Dock icon), DevReset
     ├── Code/        WorkspaceApplicationLocator (finds editors), Git, GitCommitCounter (counts commits),
     │                FolderScanner (describes the projects folder), ProjectOpener
     ├── Extensions/  NSScreen+Notch
     ├── Input/       MouseMonitor
     └── Windows/     NotchController, OverlayPanel, DetachedWindowController (windows born from the notch),
-                     SetupWindowController, ProjectWindowController
+                     SetupWindowController, ProjectWindowController, SettingsWindowController
 Tests/
 └── ZeboCoreTests/
 ```
@@ -115,8 +127,8 @@ The app uses three transparent windows above the menu bar: the notch itself, the
 A few design choices:
 
 - **Rules are pure.** `PokeTracker` and `Flight` take the date and the random generator as parameters, which makes them testable.
-- **Dependencies go through protocols.** `ZeboBehavior` only knows `ZeboSpeaking` and `ZeboPlacement`, not the concrete classes; tests use fakes. The same goes for `ApplicationLocator`, `CommitCounter`, `WorkspaceAdvisor`, `HTTPTransport` and `APIKeyStore`: the Claude client is tested without any network call.
-- **Claude can't invent paths.** Its answer is constrained by a JSON schema, and any path it returns that wasn't in the folders sent to it is dropped.
+- **Dependencies go through protocols.** `ZeboBehavior` only knows `ZeboSpeaking` and `ZeboPlacement`, not the concrete classes; tests use fakes. The same goes for `ApplicationLocator`, `CommitCounter`, `WorkspaceAdvisor`, `HTTPTransport` and `APIKeyStore`: the AI clients are tested without any network call.
+- **The AI can't invent paths.** Its answer is constrained by a JSON schema, and any path it returns that wasn't in the folders sent to it is dropped.
 - **Lines are swappable.** `ZeboSpeech` takes a `SpeechLineSource`: plugging in an AI only means writing a new source.
 - **Animations stay in the views.** Models change state, views decide how to animate it (`.animation(_:value:)`).
 - **One mood at a time.** `ZeboMood` (calm, thinking, dizzy, sleeping) drives Zebo's expression, with no booleans that could contradict each other.
@@ -125,7 +137,7 @@ A few design choices:
 
 ## Tests
 
-Tests cover `ZeboCore` with [Swift Testing](https://developer.apple.com/documentation/testing): click rules, trajectory and ejection, lines, speech (typewriter, silence), behavior from clicks to ejection, notch geometry, widgets and their rotation, preferences (and migration of old ones), editors, today's commits, setup (flow, wizard, storage), workspace detection (local and Claude, with a fake transport), project templates and creation, the new project wizard and the projects library.
+Tests cover `ZeboCore` with [Swift Testing](https://developer.apple.com/documentation/testing): click rules, trajectory and ejection, lines, speech (typewriter, silence), behavior from clicks to ejection, notch geometry, widgets and their rotation, preferences (and migration of old ones), editors, today's commits, setup (flow, wizard, storage), workspace detection (local and with every AI, with a fake transport), the AI and model preferences, project templates and creation, the new project wizard and the projects library.
 
 `ZeboUI` views have no isolated logic: they are checked by eye, by running the app. For a screenshot or a preview without appearance animations: `.environment(\.showsFinalAppearance, true)`.
 
@@ -146,5 +158,5 @@ Language logos come from [Devicon](https://devicon.dev) (MIT license, see `Sourc
 ## What's next
 
 - A shortcuts tab in the notch, to launch the editors picked during setup.
-- Starting a project from a template chosen by Claude, or adding an existing project to the library.
+- Starting a project from a template chosen by the AI, or adding an existing project to the library.
 - Once set up, the open notch says "SOON… In progress…": the space next to Zebo is reserved for a real conversation with it.
