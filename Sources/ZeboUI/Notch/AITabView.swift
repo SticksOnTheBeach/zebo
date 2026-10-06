@@ -12,11 +12,25 @@ struct AITabView: View {
     @FocusState private var isFocused: Bool
 
     var body: some View {
-        if let provider = chat.provider {
-            conversation(poweredBy: provider)
-        } else {
-            notConnected
+        ZStack(alignment: .top) {
+            if let draft = chat.projectDraft {
+                // Zebo veut créer un projet : la fiche jaillit à la place de la discussion.
+                ProjectDraftCard(
+                    draft: draft, isTyping: $isTyping, onCreate: chat.confirmProjectDraft,
+                    onCancel: chat.cancelProjectDraft
+                )
+                .transition(
+                    .asymmetric(
+                        insertion: .scale(scale: 0.8, anchor: .bottom).combined(with: .opacity),
+                        removal: .scale(scale: 0.95).combined(with: .opacity)))
+            } else if let provider = chat.provider {
+                conversation(poweredBy: provider)
+                    .transition(.opacity)
+            } else {
+                notConnected
+            }
         }
+        .animation(.spring(response: 0.45, dampingFraction: 0.72), value: chat.projectDraft == nil)
     }
 
     // MARK: - Sans IA
