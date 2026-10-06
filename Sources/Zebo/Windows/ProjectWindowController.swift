@@ -15,10 +15,7 @@ final class ProjectWindowController {
     ) {
         detached = DetachedWindowController(flow: flow, model: model) { close in
             let preferences = settings.preferences
-            let projectsFolder =
-                preferences.projectsFolder.map { URL(fileURLWithPath: $0) }
-                ?? ProjectsFolder.guessOnThisMac()
-                ?? FileManager.default.homeDirectoryForCurrentUser.appending(path: "Developer")
+            let projectsFolder = ProjectsFolder.forNewProjects(preferences)
             let wizard = NewProjectWizard(
                 projectsFolder: projectsFolder, editors: preferences.ides,
                 advisor: SmartWorkspaceAdvisor(

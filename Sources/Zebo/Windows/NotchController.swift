@@ -59,6 +59,9 @@ final class NotchController: NSObject {
             flow: newProject, model: model, settings: settings, library: projects, keyStore: keyStore)
         super.init()
 
+        // Dans la discussion, Zebo peut ouvrir des éditeurs et des projets, et en créer.
+        chat.actions = MacActions(settings: settings, library: projects)
+
         setup.onPhaseChange = { [weak self] phase in self?.setupPhaseDidChange(phase) }
         newProject.onPhaseChange = { [weak self] phase in self?.projectPhaseDidChange(phase) }
         settingsWindow.onPreferencesChange = { [weak self] in self?.applyPreferences() }
