@@ -10,7 +10,7 @@ The app's interface is in French.
 
 ## What Zebo does
 
-- **It gets set up.** On first launch, the open notch offers "Configurer Zebo". Click it and the notch detaches: its shape glides to the center of the screen and turns into an app window. Zebo introduces itself, then a few animated steps follow:
+- **It gets set up.** On first launch, the open notch offers "Configurer Zebo". Click it and the notch detaches: its shape glides to the center of the screen and turns into a frosted-glass window (inspired by Alcove's onboarding). Zebo introduces itself, then a few animated steps follow:
   1. **Your first name**: what Zebo will call you ("Enchanté, … !").
   2. **Your favorite language**, among a dozen, each with its real logo.
   3. **Your code editors** (one or more): VS Code, Cursor, Xcode, the JetBrains IDEs… Click one and Zebo finds where it is installed on its own (or you point to it), so it can launch it later.
@@ -20,7 +20,7 @@ The app's interface is in French.
   While being set up, Zebo has a Dock icon. To run the setup again: right-click the notch, **Reconfigurer Zebo…**
 - **It sleeps.** When the notch is closed, it lies in its bed in the left wing, wearing a nightcap, under its blanket; little "z"s float away from its head.
 - **It keeps you posted.** The right wing of the closed notch shows the widgets you picked: the time, the date, today's commits, your favorite language. With several of them, they take turns every 5, 10 or 30 seconds. Today's commits are counted with Git in the repositories of your projects folder (guessed, e.g. `~/Documents/Dev`), using your `git config user.email`, every 5 minutes.
-- **It wakes up.** When the mouse hovers the notch, it opens: the bed fades away, Zebo stands up, follows the mouse with its eyes, blinks and sways gently.
+- **It wakes up.** When the mouse hovers the closed notch, it grows slightly, like [Alcove](https://tryalcove.com); a click opens it: the bed fades away, Zebo stands up, follows the mouse with its eyes, blinks and sways gently. The notch closes again when the mouse leaves.
 - **It talks.** Clicking on it shows a line (with your first name) in a cloud-shaped bubble, typed letter by letter, linked to Zebo by dots that pop in one by one. While talking, it looks thoughtful 🤔 (raised eyebrows, pout, eyes up). A new message can only start after 4 s.
 - **It faints.** Three clicks within 1.5 s knock it out: spiral eyes, stars around its head, it wobbles… then it gets catapulted out of the notch, spins across the screen and pops back a few seconds later.
 
@@ -78,11 +78,12 @@ Sources/
 │   └── Widgets/     NotchWidget, NotchWidgetRotation (what shows when)
 ├── ZeboUI/
 │   ├── Character/   ZeboCharacter (drawing), AnimatedZebo (life), ZeboMood, Shapes/
-│   ├── Components/  ZeboButtonStyle, PageDots, .appearing (staggered appearance)
+│   ├── Components/  ZeboButtonStyle, PageDots, .appearing (staggered appearance), VisualEffectBackground,
+│   │                SparkleField
 │   ├── Fall/        FallingZeboView
 │   ├── Notch/       NotchView, NotchShape, NotchWidgetsView (rotating widgets), NotchClock
 │   ├── Resources/   Languages/ (language logos, SVG)
-│   ├── Setup/       SetupView (window), Steps/ (one view per step), SetupTransitionView and
+│   ├── Setup/       SetupView (window), SetupBackground (glass), Steps/ (one view per step), SetupTransitionView and
 │   │                NotchToWindowShape (animation), NotchPreview, SetupPrompt (notch button)
 │   ├── Sleep/       InBed (the bed), SleepingZs (the "z"s)
 │   ├── Speech/      SpeechBubbleView, CloudBubbleShape, CappedWidth
