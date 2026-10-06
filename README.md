@@ -15,7 +15,7 @@ The app's interface is in French.
   2. **Your favorite language**, among a dozen, each with its real logo.
   3. **Your code editors** (one or more): VS Code, Cursor, Xcode, the JetBrains IDEs… Click one and Zebo finds where it is installed on its own (or you point to it), so it can launch it later.
   4. **Its notch**: what the right wing shows (time, date, today's commits, your language) and whether Zebo naps, with a live preview.
-  5. **A summary**, then "C'est parti": the window shrinks back into the notch.
+  5. **A summary**, then "C'est parti": the window fades away while Zebo alone flies to the center of the screen, winks, and flips his way back into the notch.
 
   While being set up, Zebo has a Dock icon. To run the setup again: right-click the notch, **Reconfigurer Zebo…**
 - **It sleeps.** When the notch is closed, it lies in its bed in the left wing, wearing a nightcap, under its blanket; little "z"s float away from its head.
@@ -84,7 +84,8 @@ Sources/
 │   ├── Notch/       NotchView, NotchShape, NotchWidgetsView (rotating widgets), NotchClock
 │   ├── Resources/   Languages/ (language logos, SVG)
 │   ├── Setup/       SetupView (window), SetupBackground (glass), Steps/ (one view per step), SetupTransitionView and
-│   │                NotchToWindowShape (animation), NotchPreview, SetupPrompt (notch button)
+│   │                NotchToWindowShape (notch → window), SetupFinaleView (wink and flip back), NotchPreview,
+│   │                SetupPrompt (notch button)
 │   ├── Sleep/       InBed (the bed), SleepingZs (the "z"s)
 │   ├── Speech/      SpeechBubbleView, CloudBubbleShape, CappedWidth
 │   └── ZeboPalette
