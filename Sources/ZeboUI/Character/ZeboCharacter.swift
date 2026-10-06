@@ -12,6 +12,8 @@ struct ZeboCharacter: View {
     var mood: ZeboMood = .calm
     /// Rotation des spirales et des étoiles (on la fait avancer pour les animer).
     var dizzySpin: Angle = .zero
+    /// Clin d'œil : l'œil droit se ferme en petit arc « ^ ».
+    var isWinking = false
 
     var body: some View {
         GeometryReader { geo in
@@ -39,7 +41,7 @@ struct ZeboCharacter: View {
                     // Pas de pupilles : ce sont les yeux entiers qui suivent le regard.
                     Group {
                         eye(u).offset(x: -13 * u, y: 10 * u)
-                        eye(u).offset(x: 13 * u, y: 10 * u)
+                        eye(u, isWinking: isWinking).offset(x: 13 * u, y: 10 * u)
 
                         if mood == .thinking {
                             // Un sourcil bien haut, l'autre plus bas et penché : il se demande quelque chose.
@@ -105,8 +107,12 @@ struct ZeboCharacter: View {
     /// Petit œil ovale noir ; en clignant, il s'aplatit jusqu'à devenir un trait.
     /// Étourdi, il devient une spirale qui tourne ; endormi, un petit arc fermé.
     @ViewBuilder
-    private func eye(_ u: CGFloat) -> some View {
-        if mood == .sleeping {
+    private func eye(_ u: CGFloat, isWinking: Bool = false) -> some View {
+        if isWinking {
+            BrowShape()
+                .stroke(ZeboPalette.ink, style: StrokeStyle(lineWidth: 2.8 * u, lineCap: .round))
+                .frame(width: 10 * u, height: 3 * u)
+        } else if mood == .sleeping {
             SmileShape()
                 .stroke(ZeboPalette.ink, style: StrokeStyle(lineWidth: 2.6 * u, lineCap: .round))
                 .frame(width: 10 * u, height: 2.5 * u)
