@@ -75,12 +75,13 @@ struct WorkspaceStep: View {
     }
 
     private func header(_ advice: WorkspaceAdvice) -> some View {
-        HStack(spacing: 6) {
-            Image(systemName: advice.source == .ai ? "sparkles" : "magnifyingglass")
-            Text(advice.source == .ai ? "Repéré par Claude" : "Repéré sans IA (noms de dossiers et fichiers)")
+        let provider: AIProvider? = if case .ai(let provider) = advice.source { provider } else { nil }
+        return HStack(spacing: 6) {
+            Image(systemName: provider == nil ? "magnifyingglass" : "sparkles")
+            Text(provider.map { "Repéré par \($0.name)" } ?? "Repéré sans IA (noms de dossiers et fichiers)")
         }
         .font(.system(size: 11, weight: .semibold, design: .rounded))
-        .foregroundStyle(advice.source == .ai ? ZeboPalette.cloudBottom : .white.opacity(0.55))
+        .foregroundStyle(provider == nil ? .white.opacity(0.55) : ZeboPalette.cloudBottom)
         .padding(.horizontal, 10)
         .padding(.vertical, 4)
         .background(Capsule().fill(.white.opacity(0.08)))

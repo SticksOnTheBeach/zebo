@@ -1,49 +1,81 @@
 import SwiftUI
 import ZeboCore
 
-/// Étape facultative : brancher Zebo sur Claude avec une clé d'API, pour qu'il repère tout seul
-/// les workspaces quand on crée un projet.
+/// Étape facultative : brancher Zebo sur une IA (Claude, ChatGPT, Gemini, Mistral) avec une clé
+/// d'API, pour qu'il repère tout seul les workspaces quand on crée un projet.
 struct AIStep: View {
     @Bindable var wizard: SetupWizard
 
     @FocusState private var isFocused: Bool
 
-    private static let consoleURL: URL? = URL(string: "https://console.anthropic.com/settings/keys")
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 5)
 
     var body: some View {
         SetupStepLayout(
-            title: "Connecte-moi à Claude",
+            title: "Connecte-moi à une IA",
             subtitle: "Avec une clé d'API, je trouve tout seul où ranger tes nouveaux projets. Facultatif."
         ) {
-            VStack(alignment: .leading, spacing: 14) {
-                field
-                    .appearing(order: 2)
-
-                HStack(spacing: 16) {
-                    if wizard.hasStoredAPIKey, wizard.apiKey.isEmpty {
-                        Label("Une clé est déjà enregistrée", systemImage: "checkmark.seal.fill")
-                            .foregroundStyle(.green)
+            VStack(alignment: .leading, spacing: 12) {
+                LazyVGrid(columns: columns, spacing: 8) {
+                    ForEach(Array(AIProvider.allCases.enumerated()), id: \.element) { index, provider in
+                        providerTile(provider)
+                            .appearing(order: 2 + index)
                     }
-                    if let url = Self.consoleURL {
-                        Link(destination: url) {
-                            Label("Créer une clé sur la console Anthropic", systemImage: "arrow.up.right.square")
-                        }
-                        .foregroundStyle(ZeboPalette.cloudBottom)
+                    SelectableTile(title: "Aucune", isSelected: wizard.draft.aiProvider == nil) {
+                        select(nil)
+                    } icon: {
+                        Image(systemName: "nosign")
+                            .font(.system(size: 24, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.6))
                     }
+                    .appearing(order: 6)
                 }
-                .font(.system(size: 13, weight: .medium, design: .rounded))
-                .appearing(order: 3)
+
+                if let provider = wizard.draft.aiProvider {
+                    field(for: provider)
+                        .appearing(order: 7)
+
+                    HStack(spacing: 16) {
+                        if wizard.hasStoredAPIKey, wizard.apiKey.isEmpty {
+                            Label("Une clé \(provider.name) est déjà enregistrée", systemImage: "checkmark.seal.fill")
+                                .foregroundStyle(.green)
+                        }
+                        if let url = provider.keysPage {
+                            Link(destination: url) {
+                                Label("Créer une clé chez \(provider.company)", systemImage: "arrow.up.right.square")
+                            }
+                            .foregroundStyle(ZeboPalette.cloudBottom)
+                        }
+                    }
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                }
 
                 privacy
-                    .appearing(order: 4)
+                    .appearing(order: 8)
             }
+            .animation(.spring(response: 0.4, dampingFraction: 0.85), value: wizard.draft.aiProvider)
         }
     }
 
-    private var field: some View {
+    private func providerTile(_ provider: AIProvider) -> some View {
+        SelectableTile(title: provider.name, isSelected: wizard.draft.aiProvider == provider) {
+            select(provider)
+        } icon: {
+            AIProviderBadge(provider: provider)
+        }
+    }
+
+    /// Changer d'IA oublie la clé tapée pour la précédente.
+    private func select(_ provider: AIProvider?) {
+        guard wizard.draft.aiProvider != provider else { return }
+        wizard.apiKey = ""
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) { wizard.draft.aiProvider = provider }
+    }
+
+    private func field(for provider: AIProvider) -> some View {
         SecureField(
             "", text: $wizard.apiKey,
-            prompt: Text(wizard.hasStoredAPIKey ? "Remplacer la clé (facultatif)" : "sk-ant-…")
+            prompt: Text(wizard.hasStoredAPIKey ? "Remplacer la clé (facultatif)" : provider.keyPlaceholder)
                 .foregroundStyle(.white.opacity(0.3))
         )
         .textFieldStyle(.plain)
@@ -74,7 +106,7 @@ struct AIStep: View {
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white)
                 Text(
-                    "Je n'envoie à Claude que le nom de tes dossiers de projets et le nombre de fichiers de chaque type, jamais leur contenu. Ta clé reste dans le trousseau de ton Mac."
+                    "Je n'envoie à l'IA que le nom de tes dossiers de projets et le nombre de fichiers de chaque type, jamais leur contenu. Ta clé reste dans le trousseau de ton Mac."
                 )
                 .font(.system(size: 12, design: .rounded))
                 .foregroundStyle(.white.opacity(0.65))

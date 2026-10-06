@@ -16,13 +16,17 @@ public struct ZeboPreferences: Equatable, Sendable {
     public var favoriteLanguage: Language?
     /// Le dossier des projets, où compter les commits du jour.
     public var projectsFolder: String?
+    /// L'IA à consulter (aucune : Zebo devine seul).
+    public var aiProvider: AIProvider?
+    /// Le modèle choisi pour chaque IA (par son identifiant), s'il diffère du modèle par défaut.
+    public var aiModels: [String: String]
 
     public static let standard = ZeboPreferences(name: "")
 
     public init(
         name: String, notchWidgets: [NotchWidget] = [.clock], widgetRotationInterval: TimeInterval = 10,
         sleepsWhenClosed: Bool = true, ides: [IDEChoice] = [], favoriteLanguage: Language? = nil,
-        projectsFolder: String? = nil
+        projectsFolder: String? = nil, aiProvider: AIProvider? = .claude, aiModels: [String: String] = [:]
     ) {
         self.name = name
         self.notchWidgets = notchWidgets
@@ -31,6 +35,19 @@ public struct ZeboPreferences: Equatable, Sendable {
         self.ides = ides
         self.favoriteLanguage = favoriteLanguage
         self.projectsFolder = projectsFolder
+        self.aiProvider = aiProvider
+        self.aiModels = aiModels
+    }
+
+    /// Le modèle à utiliser avec cette IA.
+    public func model(for provider: AIProvider) -> String {
+        aiModels[provider.rawValue].flatMap { $0.isEmpty ? nil : $0 } ?? provider.defaultModel
+    }
+
+    /// Change le modèle d'une IA ; vide ou égal au modèle par défaut, on revient au défaut.
+    public mutating func setModel(_ model: String, for provider: AIProvider) {
+        let trimmed = model.trimmingCharacters(in: .whitespacesAndNewlines)
+        aiModels[provider.rawValue] = trimmed.isEmpty || trimmed == provider.defaultModel ? nil : trimmed
     }
 
     /// Le widget est-il choisi ?
@@ -56,6 +73,7 @@ public struct ZeboPreferences: Equatable, Sendable {
 extension ZeboPreferences: Codable {
     private enum CodingKeys: String, CodingKey {
         case name, notchWidgets, widgetRotationInterval, sleepsWhenClosed, ides, favoriteLanguage, projectsFolder
+        case aiProvider, aiModels
         /// Anciennes versions : l'heure seule, un seul éditeur.
         case showsClock, ide
     }
@@ -83,6 +101,13 @@ extension ZeboPreferences: Codable {
         // Un langage inconnu (retiré depuis) est simplement oublié.
         favoriteLanguage = try? container.decodeIfPresent(Language.self, forKey: .favoriteLanguage)
         projectsFolder = try container.decodeIfPresent(String.self, forKey: .projectsFolder)
+        // Avant le choix de l'IA, c'était Claude ; une IA inconnue (retirée depuis) devient aucune.
+        if container.contains(.aiProvider) {
+            aiProvider = try? container.decodeIfPresent(AIProvider.self, forKey: .aiProvider)
+        } else {
+            aiProvider = standard.aiProvider
+        }
+        aiModels = try container.decodeIfPresent([String: String].self, forKey: .aiModels) ?? [:]
     }
 
     public func encode(to encoder: any Encoder) throws {
@@ -94,5 +119,8 @@ extension ZeboPreferences: Codable {
         try container.encode(ides, forKey: .ides)
         try container.encodeIfPresent(favoriteLanguage, forKey: .favoriteLanguage)
         try container.encodeIfPresent(projectsFolder, forKey: .projectsFolder)
+        // Écrit même quand il n'y en a pas : « aucune IA » ne doit pas redevenir Claude à la relecture.
+        try container.encode(aiProvider, forKey: .aiProvider)
+        try container.encode(aiModels, forKey: .aiModels)
     }
 }

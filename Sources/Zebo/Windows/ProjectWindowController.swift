@@ -21,7 +21,9 @@ final class ProjectWindowController {
                 ?? FileManager.default.homeDirectoryForCurrentUser.appending(path: "Developer")
             let wizard = NewProjectWizard(
                 projectsFolder: projectsFolder, editors: preferences.ides,
-                advisor: SmartWorkspaceAdvisor(keyStore: keyStore),
+                advisor: SmartWorkspaceAdvisor(
+                    provider: preferences.aiProvider, model: preferences.aiProvider.map(preferences.model(for:)),
+                    keyStore: keyStore),
                 scan: { await FolderScanner().scan($0) })
             let view = NewProjectView(
                 wizard: wizard,

@@ -42,8 +42,8 @@ public struct WorkspaceSuggestion: Equatable, Sendable {
 /// Les workspaces trouvés pour un genre de projet, du plus probable au moins probable.
 public struct WorkspaceAdvice: Equatable, Sendable {
     public enum Source: Equatable, Sendable {
-        /// Jugé par l'IA.
-        case ai
+        /// Jugé par une IA.
+        case ai(AIProvider)
         /// Deviné localement (noms de dossiers, extensions).
         case local
     }

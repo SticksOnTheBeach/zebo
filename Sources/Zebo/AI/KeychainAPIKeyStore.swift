@@ -2,25 +2,29 @@ import Foundation
 import Security
 import ZeboCore
 
-/// La clé d'API de Claude, rangée dans le trousseau de macOS (jamais dans les préférences).
+/// Les clés d'API des IA, rangées dans le trousseau de macOS (jamais dans les préférences).
 struct KeychainAPIKeyStore: APIKeyStore {
     struct Failure: Error {
         let status: OSStatus
     }
 
     private static let service = "com.sticksonthebeach.zebo.anthropic"
-    private static let account = "api-key"
 
-    private var query: [String: Any] {
+    /// Une entrée par IA ; Claude garde le nom de la première version, pour ne pas perdre sa clé.
+    private static func account(for provider: AIProvider) -> String {
+        provider == .claude ? "api-key" : "api-key-\(provider.rawValue)"
+    }
+
+    private func query(for provider: AIProvider) -> [String: Any] {
         [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: Self.service,
-            kSecAttrAccount as String: Self.account,
+            kSecAttrAccount as String: Self.account(for: provider),
         ]
     }
 
-    func readKey() -> String? {
-        var request = query
+    func readKey(for provider: AIProvider) -> String? {
+        var request = query(for: provider)
         request[kSecReturnData as String] = true
         request[kSecMatchLimit as String] = kSecMatchLimitOne
         var result: AnyObject?
@@ -30,16 +34,16 @@ struct KeychainAPIKeyStore: APIKeyStore {
         return String(data: data, encoding: .utf8)
     }
 
-    func saveKey(_ key: String) throws {
-        deleteKey()
-        var item = query
+    func saveKey(_ key: String, for provider: AIProvider) throws {
+        deleteKey(for: provider)
+        var item = query(for: provider)
         item[kSecValueData as String] = Data(key.utf8)
         item[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
         let status = SecItemAdd(item as CFDictionary, nil)
         guard status == errSecSuccess else { throw Failure(status: status) }
     }
 
-    func deleteKey() {
-        SecItemDelete(query as CFDictionary)
+    func deleteKey(for provider: AIProvider) {
+        SecItemDelete(query(for: provider) as CFDictionary)
     }
 }

@@ -15,7 +15,7 @@ final class SetupWindowController {
         detached = DetachedWindowController(flow: flow.window, model: model) { close in
             // On part des réglages actuels : une reconfiguration les retrouve tels quels.
             let wizard = SetupWizard(draft: settings.preferences, locator: WorkspaceApplicationLocator())
-            wizard.hasStoredAPIKey = keyStore.readKey() != nil
+            wizard.providersWithStoredKey = Set(AIProvider.allCases.filter { keyStore.readKey(for: $0) != nil })
             // Le dossier de projets est deviné, et les commits du jour comptés pour l'aperçu.
             if wizard.draft.projectsFolder == nil {
                 wizard.draft.projectsFolder = ProjectsFolder.guessOnThisMac()?.path
@@ -29,7 +29,9 @@ final class SetupWindowController {
                     settings.preferences = wizard.preferences
                     // Une nouvelle clé remplace l'ancienne ; sans nouvelle clé, on garde celle qu'on a.
                     let key = wizard.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if !key.isEmpty { try? keyStore.saveKey(key) }
+                    if !key.isEmpty, let provider = wizard.draft.aiProvider {
+                        try? keyStore.saveKey(key, for: provider)
+                    }
                     flow.complete()
                 },
                 onClose: close)

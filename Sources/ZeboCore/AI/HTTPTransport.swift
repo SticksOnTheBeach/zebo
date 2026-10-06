@@ -16,9 +16,9 @@ public struct URLSessionTransport: HTTPTransport {
     }
 }
 
-/// Garde la clé d'API de Claude (dans le trousseau, pour l'app).
+/// Garde une clé d'API par IA (dans le trousseau, pour l'app).
 public protocol APIKeyStore: Sendable {
-    func readKey() -> String?
-    func saveKey(_ key: String) throws
-    func deleteKey()
+    func readKey(for provider: AIProvider) -> String?
+    func saveKey(_ key: String, for provider: AIProvider) throws
+    func deleteKey(for provider: AIProvider)
 }

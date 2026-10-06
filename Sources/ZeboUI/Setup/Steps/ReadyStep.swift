@@ -23,14 +23,17 @@ struct ReadyStep: View {
                 divider
                 row(4, "moon.zzz.fill", .indigo, "La sieste", wizard.draft.sleepsWhenClosed ? "Oui" : "Non")
                 divider
-                row(5, "sparkles", .pink, "Claude", isConnectedToClaude ? "Connecté" : "Non")
+                row(5, "sparkles", .pink, "Mon IA", aiSummary)
             }
             .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(.white.opacity(0.07)))
         }
     }
 
-    private var isConnectedToClaude: Bool {
-        wizard.hasStoredAPIKey || !wizard.apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    /// L'IA choisie, et si elle a une clé.
+    private var aiSummary: String {
+        guard let provider = wizard.draft.aiProvider else { return "Aucune" }
+        let hasKey = wizard.hasStoredAPIKey || !wizard.apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        return hasKey ? provider.name : "\(provider.name) (sans clé)"
     }
 
     /// Les widgets choisis, et leur rythme s'ils défilent.
