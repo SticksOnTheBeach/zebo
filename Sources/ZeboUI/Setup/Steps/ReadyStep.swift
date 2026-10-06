@@ -22,9 +22,15 @@ struct ReadyStep: View {
                 row(3, "rectangle.topthird.inset.filled", .teal, "Dans la notch", notchSummary)
                 divider
                 row(4, "moon.zzz.fill", .indigo, "La sieste", wizard.draft.sleepsWhenClosed ? "Oui" : "Non")
+                divider
+                row(5, "sparkles", .pink, "Claude", isConnectedToClaude ? "Connecté" : "Non")
             }
             .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(.white.opacity(0.07)))
         }
+    }
+
+    private var isConnectedToClaude: Bool {
+        wizard.hasStoredAPIKey || !wizard.apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     /// Les widgets choisis, et leur rythme s'ils défilent.

@@ -11,6 +11,7 @@ public final class SetupWizard {
         case name
         case language
         case ide
+        case ai
         case notch
         case ready
 
@@ -25,6 +26,11 @@ public final class SetupWizard {
     public private(set) var isMovingForward = true
     /// Réglages en cours de saisie.
     public var draft: ZeboPreferences
+    /// Une nouvelle clé d'API de Claude, tapée pendant la configuration (rangée dans le trousseau
+    /// à la fin, jamais dans les préférences). Vide : on garde celle qu'on a, s'il y en a une.
+    public var apiKey = ""
+    /// Une clé d'API est déjà enregistrée.
+    public var hasStoredAPIKey = false
 
     /// Résultat de la dernière recherche d'éditeur de code.
     public enum IDESearch: Equatable, Sendable {

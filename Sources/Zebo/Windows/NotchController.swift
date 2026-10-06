@@ -13,6 +13,7 @@ final class NotchController: NSObject {
     private let setup = SetupFlow(store: UserDefaultsSetupStore())
     private let settings = ZeboSettings(store: UserDefaultsPreferencesStore())
     private let commits = CommitActivity(counter: GitCommitCounter())
+    private let keyStore = KeychainAPIKeyStore()
     /// Recompte les commits du jour de temps en temps.
     private var commitsTimer: Timer?
     private let panel: OverlayPanel
@@ -35,7 +36,8 @@ final class NotchController: NSObject {
         fallPanel = OverlayPanel(rootView: FallingZeboView(behavior: behavior))
         // Au-dessus de la notch : Zebo en sort par-dessus.
         fallPanel.level = .mainMenu + 4
-        setupWindow = SetupWindowController(flow: setup, model: model, settings: settings, commits: commits)
+        setupWindow = SetupWindowController(
+            flow: setup, model: model, settings: settings, commits: commits, keyStore: keyStore)
         super.init()
 
         setup.onPhaseChange = { [weak self] phase in self?.setupPhaseDidChange(phase) }

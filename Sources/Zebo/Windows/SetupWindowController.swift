@@ -8,10 +8,14 @@ import ZeboUI
 final class SetupWindowController {
     private let detached: DetachedWindowController
 
-    init(flow: SetupFlow, model: NotchModel, settings: ZeboSettings, commits: CommitActivity) {
+    init(
+        flow: SetupFlow, model: NotchModel, settings: ZeboSettings, commits: CommitActivity,
+        keyStore: any APIKeyStore
+    ) {
         detached = DetachedWindowController(flow: flow.window, model: model) { close in
             // On part des réglages actuels : une reconfiguration les retrouve tels quels.
             let wizard = SetupWizard(draft: settings.preferences, locator: WorkspaceApplicationLocator())
+            wizard.hasStoredAPIKey = keyStore.readKey() != nil
             // Le dossier de projets est deviné, et les commits du jour comptés pour l'aperçu.
             if wizard.draft.projectsFolder == nil {
                 wizard.draft.projectsFolder = ProjectsFolder.guessOnThisMac()?.path
@@ -23,6 +27,9 @@ final class SetupWindowController {
                 wizard: wizard, commits: commits,
                 onFinish: {
                     settings.preferences = wizard.preferences
+                    // Une nouvelle clé remplace l'ancienne ; sans nouvelle clé, on garde celle qu'on a.
+                    let key = wizard.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !key.isEmpty { try? keyStore.saveKey(key) }
                     flow.complete()
                 },
                 onClose: close)
