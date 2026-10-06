@@ -26,7 +26,7 @@ final class SetupWindowController: NSObject, NSWindowDelegate {
     func phaseDidChange(to phase: SetupFlow.Phase) {
         switch phase {
         case .detaching: showTransition()
-        case .configuring: showWindow()
+        case .presenting: showWindow()
         case .returning: showReturn()
         case .idle: tearDown()
         }

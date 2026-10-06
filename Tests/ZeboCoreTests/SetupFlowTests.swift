@@ -46,8 +46,8 @@ struct SetupFlowTests {
         #expect(!flow.isNotchAvailable)
 
         flow.finishDetaching()
-        #expect(flow.phase == .configuring)
-        #expect(phases == [.detaching, .configuring])
+        #expect(flow.phase == .presenting)
+        #expect(phases == [.detaching, .presenting])
     }
 
     @Test("Un deuxième clic pendant l'animation ne relance rien")
