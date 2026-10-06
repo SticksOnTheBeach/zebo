@@ -14,6 +14,8 @@ public struct SetupView: View {
     /// pour que l'étape qui s'en va connaisse déjà le sens du déplacement.
     @State private var displayedStep: SetupWizard.Step = .welcome
     @State private var isMovingForward = true
+    /// « C'est parti » : Zebo quitte la fenêtre (une autre vue le fait voyager jusqu'à la notch).
+    @State private var hasZeboLeft = false
 
     /// - Parameters:
     ///   - onFinish: « C'est parti » : enregistrer et retourner dans la notch.
@@ -95,6 +97,7 @@ public struct SetupView: View {
         AnimatedZebo(mouse: gaze, center: .zero, isAwake: true, hopTrigger: displayedStep.rawValue)
             .frame(width: zeboFrame.width, height: zeboFrame.height)
             .offset(x: zeboFrame.minX, y: zeboFrame.minY)
+            .opacity(hasZeboLeft ? 0 : 1)
     }
 
     /// Où est Zebo : en grand au centre pour l'accueillir, puis à sa place en haut à gauche.
@@ -130,10 +133,13 @@ public struct SetupView: View {
                 Spacer()
 
                 if wizard.isLastStep {
-                    Button("C'est parti", action: onFinish)
-                        .buttonStyle(ZeboButtonStyle(kind: .primary))
-                        .keyboardShortcut(.defaultAction)
-                        .transition(.opacity.combined(with: .scale(scale: 0.9)))
+                    Button("C'est parti") {
+                        hasZeboLeft = true
+                        onFinish()
+                    }
+                    .buttonStyle(ZeboButtonStyle(kind: .primary))
+                    .keyboardShortcut(.defaultAction)
+                    .transition(.opacity.combined(with: .scale(scale: 0.9)))
                 } else {
                     Button(action: wizard.advance) {
                         Image(systemName: "arrow.right")

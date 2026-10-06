@@ -107,29 +107,37 @@ final class SetupWindowController: NSObject, NSWindowDelegate {
         transitionPanel = nil
     }
 
-    /// La fenêtre (là où elle est, même déplacée) se rétracte dans la notch fermée.
+    /// Seul Zebo quitte la fenêtre (là où elle est, même déplacée) : il passe par le centre
+    /// de l'écran, fait un clin d'œil, puis rejoint la notch en salto. La fenêtre s'efface.
     private func showReturn() {
         guard let window else { return tearDown() }
         let notch = overlayRect(closedNotchFrame)
-        let view = SetupTransitionView(
-            notchFrame: notch,
-            windowFrame: overlayRect(window.frame),
-            zeboStart: model.zeboFrame.offsetBy(dx: notch.minX, dy: notch.minY),
-            notchBottomRadius: 12,
-            isReversed: true,
+        let windowFrame = overlayRect(window.frame)
+        let view = SetupFinaleView(
+            start: SetupWindowLayout.zeboFrame.offsetBy(dx: windowFrame.minX, dy: windowFrame.minY),
+            end: model.zeboFrame.offsetBy(dx: notch.minX, dy: notch.minY),
+            screenSize: model.screenFrame.size,
             onFinished: { [weak self] in self?.flow.finishReturning() }
         )
         let panel = OverlayPanel(rootView: view)
         panel.level = .mainMenu + 4
         panel.setFrame(model.screenFrame, display: true)
-        // L'animation se pose par-dessus la fenêtre avant qu'elle disparaisse : pas de saut.
+        // Zebo apparaît par-dessus la fenêtre, pile à sa place, avant qu'elle s'efface.
         panel.orderFrontRegardless()
         transitionPanel = panel
 
         self.window = nil
         window.delegate = nil
-        window.orderOut(nil)
-        window.close()
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.35
+            window.animator().alphaValue = 0
+        } completionHandler: {
+            // AppKit rappelle sur le fil principal.
+            MainActor.assumeIsolated {
+                window.orderOut(nil)
+                window.close()
+            }
+        }
         NSApp.setActivationPolicy(.accessory)
     }
 
