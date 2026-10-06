@@ -3,8 +3,10 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-swift build
-BIN_DIR="$(swift build --show-bin-path)"
+# Compilé hors d'iCloud (~/Documents ajoute des attributs Finder qui cassent la signature).
+BUILD_DIR="${BUILD_DIR:-$HOME/Library/Caches/zebo-build}"
+swift build --scratch-path "$BUILD_DIR"
+BIN_DIR="$(swift build --scratch-path "$BUILD_DIR" --show-bin-path)"
 
 APP="build/Zebo.app"
 rm -rf "$APP"

@@ -1,9 +1,10 @@
 # Commandes courantes du projet. `make help` pour la liste.
 
 # Le dépôt vit dans ~/Documents, synchronisé par iCloud : iCloud ajoute des attributs Finder
-# aux bundles compilés, ce qui fait échouer la signature du bundle de tests.
-# On compile donc les tests hors d'iCloud.
-TEST_BUILD_DIR ?= $(HOME)/Library/Caches/zebo-build
+# aux bundles compilés (tests, ressources), ce qui fait échouer leur signature.
+# On compile donc hors d'iCloud (run.sh utilise le même dossier).
+BUILD_DIR ?= $(HOME)/Library/Caches/zebo-build
+export BUILD_DIR
 SOURCES := Sources Tests Package.swift
 
 .PHONY: help build test run format lint
@@ -12,10 +13,10 @@ help: ## Affiche cette aide
 	@grep -E '^[a-z]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "} {printf "  %-8s %s\n", $$1, $$2}'
 
 build: ## Compile le projet
-	swift build
+	swift build --scratch-path $(BUILD_DIR)
 
 test: ## Lance les tests unitaires
-	swift test --scratch-path $(TEST_BUILD_DIR)
+	swift test --scratch-path $(BUILD_DIR)
 
 run: ## Compile, assemble Zebo.app et le lance
 	./run.sh
