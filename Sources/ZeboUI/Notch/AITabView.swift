@@ -93,10 +93,12 @@ struct AITabView: View {
             Text(chat.userName.isEmpty ? "On discute ?" : "On discute, \(chat.userName) ?")
                 .font(.system(size: 13, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
-            Text("Pose-moi une question sur ton code ou tes projets. Mes pouvoirs me viennent de \(provider.name).")
-                .font(.system(size: 11.5, design: .rounded))
-                .foregroundStyle(.white.opacity(0.6))
-                .fixedSize(horizontal: false, vertical: true)
+            Text(
+                "Pose-moi une question, ou demande-moi d'ouvrir un éditeur ou de créer un projet. Mes pouvoirs me viennent de \(provider.name)."
+            )
+            .font(.system(size: 11.5, design: .rounded))
+            .foregroundStyle(.white.opacity(0.6))
+            .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -147,26 +149,83 @@ struct AITabView: View {
     }
 }
 
-/// Une bulle : les questions à droite, en rose ; les réponses de Zebo à gauche.
+/// Une bulle : les questions à droite, en rose ; les réponses de Zebo à gauche,
+/// avec en dessous ce qu'il fait sur le Mac, s'il agit.
 private struct ChatBubble: View {
     let message: ZeboChat.Message
 
     var body: some View {
-        Text(message.text)
-            .font(.system(size: 12, design: .rounded))
-            .foregroundStyle(message.isFromZebo ? .white : ZeboPalette.ink)
-            .textSelection(.enabled)
-            .fixedSize(horizontal: false, vertical: true)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(
-                        message.isFromZebo ? AnyShapeStyle(.white.opacity(0.1)) : AnyShapeStyle(ZeboPalette.cloudBottom)
-                    )
-            )
-            .frame(maxWidth: 230, alignment: message.isFromZebo ? .leading : .trailing)
-            .frame(maxWidth: .infinity, alignment: message.isFromZebo ? .leading : .trailing)
+        VStack(alignment: message.isFromZebo ? .leading : .trailing, spacing: 4) {
+            Text(message.text)
+                .font(.system(size: 12, design: .rounded))
+                .foregroundStyle(message.isFromZebo ? .white : ZeboPalette.ink)
+                .textSelection(.enabled)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(
+                            message.isFromZebo
+                                ? AnyShapeStyle(.white.opacity(0.1)) : AnyShapeStyle(ZeboPalette.cloudBottom)
+                        )
+                )
+            if let action = message.action {
+                ActionStatusView(status: action)
+                    .transition(.opacity)
+            }
+        }
+        .frame(maxWidth: 230, alignment: message.isFromZebo ? .leading : .trailing)
+        .frame(maxWidth: .infinity, alignment: message.isFromZebo ? .leading : .trailing)
+        .animation(.easeOut(duration: 0.2), value: message.action)
+    }
+}
+
+/// Ce que Zebo fait sur le Mac : en cours, fait, ou impossible.
+private struct ActionStatusView: View {
+    let status: ZeboChat.ActionStatus
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 5) {
+            Image(systemName: symbol)
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(color)
+                .symbolEffect(.pulse, isActive: isRunning)
+            Text(text)
+                .font(.system(size: 10.5, weight: .medium, design: .rounded))
+                .foregroundStyle(.white.opacity(0.7))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(color.opacity(0.14)))
+    }
+
+    private var isRunning: Bool {
+        if case .running = status { return true }
+        return false
+    }
+
+    private var text: String {
+        switch status {
+        case .running(let text), .done(let text), .failed(let text): text
+        }
+    }
+
+    private var symbol: String {
+        switch status {
+        case .running: "bolt.fill"
+        case .done: "checkmark.circle.fill"
+        case .failed: "exclamationmark.triangle.fill"
+        }
+    }
+
+    private var color: Color {
+        switch status {
+        case .running: ZeboPalette.cloudBottom
+        case .done: .green
+        case .failed: .orange
+        }
     }
 }
 
