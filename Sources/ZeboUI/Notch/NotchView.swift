@@ -12,15 +12,15 @@ public struct NotchView: View {
     /// La fenêtre « Nouveau projet », qui naît de la notch.
     private let newProject: DetachedWindowFlow
     private let projects: ProjectsLibrary
-    /// Ouvre un projet (dans son éditeur, ou dans le Finder).
-    private let onOpenProject: (ZeboProject) -> Void
+    /// Ouvre un projet avec un éditeur, le Finder ou le Terminal.
+    private let onOpenProject: (ZeboProject, ProjectOpenTarget) -> Void
     /// Remise à zéro complète, proposée au clic droit (versions de développement seulement).
     private let onReset: (() -> Void)?
 
     public init(
         model: NotchModel, speech: ZeboSpeech, behavior: ZeboBehavior, setup: SetupFlow, settings: ZeboSettings,
         commits: CommitActivity, newProject: DetachedWindowFlow, projects: ProjectsLibrary,
-        onOpenProject: @escaping (ZeboProject) -> Void, onReset: (() -> Void)? = nil
+        onOpenProject: @escaping (ZeboProject, ProjectOpenTarget) -> Void, onReset: (() -> Void)? = nil
     ) {
         self.model = model
         self.speech = speech
@@ -150,7 +150,9 @@ public struct NotchView: View {
                         switch model.selectedTab {
                         case .home: comingSoon
                         case .projects:
-                            ProjectsTabView(library: projects, onOpen: onOpenProject) { newProject.open() }
+                            ProjectsTabView(library: projects, editors: preferences.ides, onOpen: onOpenProject) {
+                                newProject.open()
+                            }
                         }
                     }
                     .transition(.opacity.combined(with: .offset(y: 6)))

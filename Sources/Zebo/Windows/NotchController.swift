@@ -30,11 +30,17 @@ final class NotchController: NSObject {
 
     override init() {
         behavior = ZeboBehavior(placement: model, speech: speech)
+        // Ouvrir un projet retient l'éditeur choisi pour la prochaine fois.
+        let library = projects
+        let openProject: (ZeboProject, ProjectOpenTarget) -> Void = { project, target in
+            ProjectOpener.open(project, with: target)
+            library.remember(target, for: project)
+        }
         panel = OverlayPanel(
             rootView: NotchView(
                 model: model, speech: speech, behavior: behavior, setup: setup, settings: settings,
                 commits: commits, newProject: newProject, projects: projects,
-                onOpenProject: ProjectOpener.open, onReset: Self.devReset))
+                onOpenProject: openProject, onReset: Self.devReset))
         bubblePanel = OverlayPanel(rootView: SpeechBubbleView(model: model, speech: speech))
         // Sous la notch : les points qui dépassent vers Zebo passent derrière elle.
         bubblePanel.level = .mainMenu + 2
