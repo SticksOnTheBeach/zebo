@@ -9,7 +9,7 @@ struct NewProjectWizardTests {
     private struct FixedAdvisor: WorkspaceAdvisor {
         let paths: [String]
         func adviseWorkspaces(for kind: ProjectKind, among folders: [FolderSummary]) async -> WorkspaceAdvice {
-            WorkspaceAdvice(workspaces: paths.map { WorkspaceSuggestion(path: $0, reason: "") }, source: .ai)
+            WorkspaceAdvice(workspaces: paths.map { WorkspaceSuggestion(path: $0, reason: "") }, source: .ai(.claude))
         }
     }
 

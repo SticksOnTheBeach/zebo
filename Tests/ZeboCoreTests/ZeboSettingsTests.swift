@@ -89,4 +89,23 @@ struct LegacyPreferencesTests {
         #expect(try JSONDecoder().decode(ZeboPreferences.self, from: data).favoriteLanguage == .rust)
         #expect(try decode(#"{"favoriteLanguage":"cobol"}"#).favoriteLanguage == nil)
     }
+
+    @Test("Avant le choix de l'IA, c'était Claude ; « aucune IA » reste aucune")
+    func aiProviderMigration() throws {
+        #expect(try decode(#"{"name":"Mael"}"#).aiProvider == .claude)
+        var none = ZeboPreferences.standard
+        none.aiProvider = nil
+        let data = try JSONEncoder().encode(none)
+        #expect(try JSONDecoder().decode(ZeboPreferences.self, from: data).aiProvider == nil)
+    }
+
+    @Test("Le modèle de chaque IA : celui par défaut, ou celui qu'on a choisi")
+    func modelPerProvider() {
+        var preferences = ZeboPreferences.standard
+        #expect(preferences.model(for: .gemini) == AIProvider.gemini.defaultModel)
+        preferences.setModel(" gemini-test ", for: .gemini)
+        #expect(preferences.model(for: .gemini) == "gemini-test")
+        preferences.setModel("", for: .gemini)
+        #expect(preferences.aiModels.isEmpty)
+    }
 }
