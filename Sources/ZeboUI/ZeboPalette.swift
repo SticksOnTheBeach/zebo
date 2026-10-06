@@ -18,10 +18,10 @@ enum ZeboPalette {
     /// « z » qui s'échappent quand il dort.
     static let sleepZ = Color(red: 0.86, green: 0.82, blue: 1.00)
     /// Boutons posés sur le noir de la notch : gris foncé, plus clair au survol, plus sombre appuyé.
-    static let button = Color(white: 0.2)
-    static let buttonHovered = Color(white: 0.28)
-    static let buttonPressed = Color(white: 0.14)
-    static let buttonDisabled = Color(white: 0.12)
+    static let button = Color.white.opacity(0.14)
+    static let buttonHovered = Color.white.opacity(0.22)
+    static let buttonPressed = Color.white.opacity(0.08)
+    static let buttonDisabled = Color.white.opacity(0.07)
     /// Étoiles qui tournent quand il est sonné.
     static let star = Color(red: 1.0, green: 0.84, blue: 0.3)
 }

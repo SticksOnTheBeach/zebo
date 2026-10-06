@@ -16,6 +16,8 @@ struct ZeboButtonStyle: ButtonStyle {
         case text
         /// Une icône seule, dans un carré.
         case icon
+        /// Un grand bouton, large, pour l'action principale d'un écran (« Commencer »).
+        case wide
     }
 
     var kind: Kind = .secondary
@@ -36,14 +38,19 @@ private struct ZeboButton: View {
 
     var body: some View {
         configuration.label
-            .font(.system(size: 13, weight: .semibold, design: .rounded))
+            .font(.system(size: shape == .wide ? 15 : 13, weight: .semibold, design: .rounded))
             .foregroundStyle(foreground)
-            .padding(.horizontal, shape == .icon ? 0 : 14)
-            .padding(.vertical, shape == .icon ? 0 : 7)
-            .frame(width: shape == .icon ? 36 : nil, height: shape == .icon ? 36 : nil)
+            .padding(.horizontal, shape == .text ? 14 : 0)
+            .padding(.vertical, shape == .text ? 7 : 0)
+            .frame(width: width, height: height)
             .background(
-                RoundedRectangle(cornerRadius: shape == .icon ? 10 : 8, style: .continuous)
+                RoundedRectangle(cornerRadius: shape == .text ? 8 : 10, style: .continuous)
                     .fill(background)
+            )
+            .overlay(
+                // Un fin liseré, pour que le bouton se détache du verre.
+                RoundedRectangle(cornerRadius: shape == .text ? 8 : 10, style: .continuous)
+                    .strokeBorder(.white.opacity(kind == .secondary ? 0.1 : 0))
             )
             .contentShape(Rectangle())
             .scaleEffect(scale)
@@ -58,6 +65,22 @@ private struct ZeboButton: View {
                     NSCursor.pop()
                 }
             }
+    }
+
+    private var width: CGFloat? {
+        switch shape {
+        case .text: nil
+        case .icon: 36
+        case .wide: 260
+        }
+    }
+
+    private var height: CGFloat? {
+        switch shape {
+        case .text: nil
+        case .icon: 36
+        case .wide: 42
+        }
     }
 
     private var foreground: Color {
