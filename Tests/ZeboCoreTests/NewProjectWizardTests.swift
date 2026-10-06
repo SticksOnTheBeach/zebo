@@ -18,7 +18,8 @@ struct NewProjectWizardTests {
 
     private func makeWizard(found paths: [String] = []) -> NewProjectWizard {
         NewProjectWizard(
-            projectsFolder: root, editors: [vscode], advisor: FixedAdvisor(paths: paths), scan: { _ in [] })
+            projectsFolder: root, editors: [vscode], advisor: FixedAdvisor(paths: paths), scan: { _ in [] },
+            folderExists: { _ in false })
     }
 
     @Test("On choisit d'abord un genre, puis un nom valide")
@@ -54,6 +55,16 @@ struct NewProjectWizardTests {
         wizard.kind = .rust
         await wizard.searchWorkspaces()
         #expect(wizard.workspace == .new(path: "/Users/me/Dev/Rust"))
+    }
+
+    @Test("Un nouveau workspace ne reprend pas le nom d'un dossier qui existe déjà")
+    func newWorkspaceAvoidsExistingFolders() {
+        let existing: Set<String> = ["/Users/me/Dev/C++", "/Users/me/Dev/C++ 2"]
+        let wizard = NewProjectWizard(
+            projectsFolder: root, editors: [], advisor: FixedAdvisor(paths: []), scan: { _ in [] },
+            folderExists: { existing.contains($0) })
+        wizard.kind = .cpp
+        #expect(wizard.suggestedNewWorkspace == "/Users/me/Dev/C++ 3")
     }
 
     @Test("Changer de genre oublie le workspace choisi")

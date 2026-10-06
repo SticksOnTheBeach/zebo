@@ -55,15 +55,18 @@ public final class NewProjectWizard {
 
     @ObservationIgnored private let scan: @Sendable (URL) async -> [FolderSummary]
     @ObservationIgnored private let advisor: any WorkspaceAdvisor
+    @ObservationIgnored private let folderExists: (String) -> Bool
 
     public init(
         projectsFolder: URL, editors: [IDEChoice], advisor: any WorkspaceAdvisor,
-        scan: @escaping @Sendable (URL) async -> [FolderSummary]
+        scan: @escaping @Sendable (URL) async -> [FolderSummary],
+        folderExists: @escaping (String) -> Bool = { FileManager.default.fileExists(atPath: $0) }
     ) {
         self.projectsFolder = projectsFolder
         self.editors = editors
         self.advisor = advisor
         self.scan = scan
+        self.folderExists = folderExists
         editor = editors.first
     }
 
@@ -95,9 +98,14 @@ public final class NewProjectWizard {
 
     // MARK: - Workspace
 
-    /// Un nouveau workspace pour ce genre, dans le dossier des projets (ex. « …/Dev/C++ »).
+    /// Un nouveau workspace pour ce genre, dans le dossier des projets (ex. « …/Dev/C++ ») ;
+    /// si ce dossier existe déjà, le premier nom libre (« C++ 2 », « C++ 3 »…).
     public var suggestedNewWorkspace: String? {
-        kind.map { projectsFolder.appending(path: $0.suggestedWorkspaceName).path }
+        guard let kind else { return nil }
+        let base = kind.suggestedWorkspaceName
+        let candidates = [base] + (2...99).map { "\(base) \($0)" }
+        let free = candidates.first { !folderExists(projectsFolder.appending(path: $0).path) }
+        return projectsFolder.appending(path: free ?? base).path
     }
 
     /// Cherche les workspaces du genre choisi, puis propose le plus probable
@@ -135,6 +143,6 @@ public final class NewProjectWizard {
 
     /// Un dossier porte déjà ce nom dans le workspace choisi.
     public var isProjectFolderTaken: Bool {
-        projectPath.map { FileManager.default.fileExists(atPath: $0) } ?? false
+        projectPath.map(folderExists) ?? false
     }
 }
