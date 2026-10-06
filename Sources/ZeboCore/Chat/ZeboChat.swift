@@ -10,6 +10,15 @@ public final class ZeboChat {
         public let id = UUID()
         public let isFromZebo: Bool
         public let text: String
+        /// Ce que Zebo a fait sur le Mac en répondant, s'il a agi.
+        public internal(set) var action: ActionStatus?
+    }
+
+    /// Où en est une action de Zebo, en une phrase.
+    public enum ActionStatus: Equatable, Sendable {
+        case running(String)
+        case done(String)
+        case failed(String)
     }
 
     public private(set) var messages: [Message] = []
@@ -28,6 +37,9 @@ public final class ZeboChat {
             if client?.provider != oldValue?.provider { reset() }
         }
     }
+
+    /// Ce que Zebo peut faire sur le Mac ; sans lui, il ne fait que répondre.
+    public var actions: (any ZeboActionPerformer)?
 
     /// Au-delà, les plus anciens messages ne sont plus envoyés : la discussion reste légère.
     static let maxContext = 20
@@ -49,7 +61,16 @@ public final class ZeboChat {
         draft = ""
         failure = nil
         isWaiting = true
-        let prompt = AIPrompt(instructions: instructions, messages: conversation)
+        let performer = actions
+        let prompt =
+            if let performer {
+                AIPrompt(
+                    instructions: instructions + "\n\n"
+                        + ActionQuestion.instructions(editors: performer.editors, projects: performer.projects),
+                    messages: conversation, format: ActionQuestion.format, maxTokens: 4096)
+            } else {
+                AIPrompt(instructions: instructions, messages: conversation)
+            }
         pending = Task {
             let result: Result<String, any Error>
             do {
@@ -61,6 +82,10 @@ public final class ZeboChat {
             guard !Task.isCancelled else { return }
             switch result {
             case .success(let reply):
+                if let performer, let answer = ActionQuestion.answer(fromJSON: reply) {
+                    await answerAndAct(answer, with: performer)
+                    return
+                }
                 messages.append(
                     Message(isFromZebo: true, text: reply.trimmingCharacters(in: .whitespacesAndNewlines)))
             case .failure(let error):
@@ -68,6 +93,38 @@ public final class ZeboChat {
             }
             isWaiting = false
         }
+    }
+
+    /// Affiche la phrase de Zebo, puis fait l'action qu'il a choisie en montrant où il en est.
+    private func answerAndAct(_ answer: ActionQuestion.Answer, with performer: any ZeboActionPerformer) async {
+        let action: ZeboAction?
+        var status: ActionStatus?
+        do {
+            action = try ActionQuestion.resolve(
+                answer.action, editors: performer.editors, projects: performer.projects)
+            status = action.map { .running($0.progressText) }
+        } catch {
+            action = nil
+            status = .failed(error.message)
+        }
+        let text = answer.reply.trimmingCharacters(in: .whitespacesAndNewlines)
+        let message = Message(
+            isFromZebo: true, text: text.isEmpty ? (action?.progressText ?? "…") : text, action: status)
+        messages.append(message)
+        isWaiting = false
+
+        guard let action else { return }
+        let outcome: ActionStatus
+        do {
+            outcome = .done(try await performer.perform(action))
+        } catch let error as ZeboActionError {
+            outcome = .failed(error.message)
+        } catch {
+            outcome = .failed(error.localizedDescription)
+        }
+        // Recommencée entre-temps : le message n'est plus là.
+        guard let index = messages.firstIndex(where: { $0.id == message.id }) else { return }
+        messages[index].action = outcome
     }
 
     /// Recommence une discussion vide.
@@ -96,13 +153,23 @@ public final class ZeboChat {
         var merged: [AIPrompt.Message] = []
         while let message = recent.popFirst() {
             let role: AIPrompt.Message.Role = message.isFromZebo ? .assistant : .user
+            let text = Self.remembered(message)
             if let last = merged.last, last.role == role {
-                merged[merged.count - 1] = AIPrompt.Message(role: role, text: last.text + "\n\n" + message.text)
+                merged[merged.count - 1] = AIPrompt.Message(role: role, text: last.text + "\n\n" + text)
             } else {
-                merged.append(AIPrompt.Message(role: role, text: message.text))
+                merged.append(AIPrompt.Message(role: role, text: text))
             }
         }
         return merged
+    }
+
+    /// Un message tel que l'IA s'en souvient : avec ce que Zebo a fait (ou n'a pas pu faire).
+    private static func remembered(_ message: Message) -> String {
+        switch message.action {
+        case .done(let text): message.text + "\n(Fait : \(text))"
+        case .failed(let text): message.text + "\n(Échec : \(text))"
+        case .running, nil: message.text
+        }
     }
 
     /// Ce qui s'est mal passé, en une phrase de Zebo.
