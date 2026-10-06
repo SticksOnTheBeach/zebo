@@ -62,7 +62,13 @@ final class SetupWindowController: NSObject, NSWindowDelegate {
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
         window.isMovableByWindowBackground = true
-        window.backgroundColor = .black
+        // Fenêtre en verre, aux coins très arrondis et sans boutons, comme Alcove : c'est la vue
+        // qui dessine sa forme ; l'ombre de la fenêtre suit cette forme.
+        window.isOpaque = false
+        window.backgroundColor = .clear
+        for button in [NSWindow.ButtonType.closeButton, .miniaturizeButton, .zoomButton] {
+            window.standardWindowButton(button)?.isHidden = true
+        }
         window.appearance = NSAppearance(named: .darkAqua)
         window.isReleasedWhenClosed = false
         // On part des réglages actuels : une reconfiguration les retrouve tels quels.
@@ -75,10 +81,13 @@ final class SetupWindowController: NSObject, NSWindowDelegate {
             Task { await commits.refresh(in: URL(fileURLWithPath: folder)) }
         }
         let content = NSHostingView(
-            rootView: SetupView(wizard: wizard, commits: commits) { [weak self] in
-                self?.settings.preferences = wizard.preferences
-                self?.flow.complete()
-            })
+            rootView: SetupView(
+                wizard: wizard, commits: commits,
+                onFinish: { [weak self] in
+                    self?.settings.preferences = wizard.preferences
+                    self?.flow.complete()
+                },
+                onClose: { [weak window] in window?.close() }))
         // La fenêtre garde la taille prévue, sans s'ajuster au contenu.
         content.sizingOptions = []
         window.contentView = content

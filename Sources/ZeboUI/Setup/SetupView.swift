@@ -8,16 +8,24 @@ public struct SetupView: View {
     private let wizard: SetupWizard
     private let commits: CommitActivity
     private let onFinish: () -> Void
+    private let onClose: () -> Void
 
     /// L'étape affichée suit celle de l'assistant avec un temps de retard,
     /// pour que l'étape qui s'en va connaisse déjà le sens du déplacement.
     @State private var displayedStep: SetupWizard.Step = .welcome
     @State private var isMovingForward = true
 
-    public init(wizard: SetupWizard, commits: CommitActivity, onFinish: @escaping () -> Void) {
+    /// - Parameters:
+    ///   - onFinish: « C'est parti » : enregistrer et retourner dans la notch.
+    ///   - onClose: Échap : fermer la fenêtre sans rien enregistrer.
+    public init(
+        wizard: SetupWizard, commits: CommitActivity, onFinish: @escaping () -> Void,
+        onClose: @escaping () -> Void = {}
+    ) {
         self.wizard = wizard
         self.commits = commits
         self.onFinish = onFinish
+        self.onClose = onClose
     }
 
     public var body: some View {
@@ -34,8 +42,20 @@ public struct SetupView: View {
             }
 
             footer
+
+            // Sans bouton de fermeture (comme Alcove), Échap ferme la fenêtre.
+            Button("", action: onClose)
+                .keyboardShortcut(.cancelAction)
+                .opacity(0)
+                .allowsHitTesting(false)
         }
         .frame(width: SetupWindowLayout.size.width, height: SetupWindowLayout.size.height)
+        .clipShape(RoundedRectangle(cornerRadius: SetupWindowLayout.cornerRadius, style: .continuous))
+        .overlay(
+            // Un liseré de lumière sur le bord du verre.
+            RoundedRectangle(cornerRadius: SetupWindowLayout.cornerRadius, style: .continuous)
+                .strokeBorder(.white.opacity(0.14), lineWidth: 1)
+        )
         .onChange(of: wizard.step) { _, newStep in
             isMovingForward = wizard.isMovingForward
             DispatchQueue.main.async {
@@ -51,7 +71,7 @@ public struct SetupView: View {
     @ViewBuilder
     private func step(_ step: SetupWizard.Step) -> some View {
         switch step {
-        case .welcome: WelcomeStep()
+        case .welcome: WelcomeStep(onStart: wizard.advance)
         case .name: NameStep(wizard: wizard)
         case .language: LanguageStep(wizard: wizard)
         case .ide: IDEStep(wizard: wizard)
@@ -109,17 +129,7 @@ public struct SetupView: View {
 
                 Spacer()
 
-                if wizard.step == .welcome {
-                    Button(action: wizard.advance) {
-                        HStack(spacing: 6) {
-                            Text("Commencer")
-                            Image(systemName: "arrow.right")
-                        }
-                    }
-                    .buttonStyle(ZeboButtonStyle(kind: .primary))
-                    .keyboardShortcut(.defaultAction)
-                    .transition(.opacity.combined(with: .scale(scale: 0.9)))
-                } else if wizard.isLastStep {
+                if wizard.isLastStep {
                     Button("C'est parti", action: onFinish)
                         .buttonStyle(ZeboButtonStyle(kind: .primary))
                         .keyboardShortcut(.defaultAction)
@@ -140,6 +150,10 @@ public struct SetupView: View {
         .padding(.bottom, 24)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         .animation(.spring(response: 0.4, dampingFraction: 0.85), value: wizard.step)
+        // L'accueil a son propre bouton « Commencer », au centre.
+        .opacity(displayedStep == .welcome ? 0 : 1)
+        .allowsHitTesting(displayedStep != .welcome)
+        .animation(.easeOut(duration: 0.3), value: displayedStep == .welcome)
         .appearing(order: 3)
     }
 }
