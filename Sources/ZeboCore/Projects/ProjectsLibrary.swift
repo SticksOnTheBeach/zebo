@@ -9,13 +9,19 @@ public struct ZeboProject: Codable, Equatable, Identifiable, Sendable {
     /// Dossier du projet.
     public var path: String
     public var createdAt: Date
+    /// L'éditeur où l'ouvrir (aucun : on l'ouvre dans le Finder).
+    public var editor: IDEChoice?
 
-    public init(id: UUID = UUID(), name: String, kind: ProjectKind, path: String, createdAt: Date = Date()) {
+    public init(
+        id: UUID = UUID(), name: String, kind: ProjectKind, path: String, createdAt: Date = Date(),
+        editor: IDEChoice? = nil
+    ) {
         self.id = id
         self.name = name
         self.kind = kind
         self.path = path
         self.createdAt = createdAt
+        self.editor = editor
     }
 }
 

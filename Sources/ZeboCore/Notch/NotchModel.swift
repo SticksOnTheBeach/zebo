@@ -2,6 +2,12 @@ import CoreGraphics
 import Foundation
 import Observation
 
+/// Les onglets de la notch ouverte.
+public enum NotchTab: String, CaseIterable, Sendable {
+    case home
+    case projects
+}
+
 /// État partagé entre AppKit (les fenêtres) et SwiftUI (le dessin).
 @MainActor
 @Observable
@@ -12,6 +18,8 @@ public final class NotchModel {
     public nonisolated static let topCornerRadius: CGFloat = 6
 
     public var isOpen = false
+    /// L'onglet affiché quand la notch est ouverte.
+    public var selectedTab: NotchTab = .home
     /// La souris survole la notch fermée : elle grandit un peu, en attendant un clic pour s'ouvrir.
     public var isPeeking = false
     /// De combien la notch fermée grandit au survol.
