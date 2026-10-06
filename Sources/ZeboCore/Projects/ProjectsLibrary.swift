@@ -25,6 +25,16 @@ public struct ZeboProject: Codable, Equatable, Identifiable, Sendable {
     }
 }
 
+/// Comment ouvrir un projet.
+public enum ProjectOpenTarget: Equatable, Sendable {
+    /// Dans un éditeur de code.
+    case editor(IDEChoice)
+    /// Dans le Finder.
+    case finder
+    /// Dans un Terminal, placé dans son dossier.
+    case terminal
+}
+
 /// Retient les projets d'un lancement à l'autre.
 @MainActor
 public protocol ProjectsStore: AnyObject {
@@ -68,6 +78,16 @@ public final class ProjectsLibrary {
 
     public func add(_ project: ZeboProject) {
         projects.insert(project, at: 0)
+        store.saveProjects(projects)
+    }
+
+    /// Retient l'éditeur avec lequel on vient d'ouvrir le projet : ce sera le prochain proposé.
+    public func remember(_ target: ProjectOpenTarget, for project: ZeboProject) {
+        guard case .editor(let editor) = target,
+            let index = projects.firstIndex(where: { $0.id == project.id }),
+            projects[index].editor != editor
+        else { return }
+        projects[index].editor = editor
         store.saveProjects(projects)
     }
 

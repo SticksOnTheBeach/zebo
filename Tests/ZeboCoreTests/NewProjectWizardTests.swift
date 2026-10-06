@@ -119,4 +119,18 @@ struct ProjectsLibraryTests {
         #expect(library.projects.map(\.name) == ["B"])
         #expect(store.saved.map(\.name) == ["B"])
     }
+
+    @Test("L'éditeur choisi pour ouvrir un projet est retenu ; le Finder et le Terminal ne changent rien")
+    func remembersTheEditor() {
+        let store = MemoryStore()
+        let library = ProjectsLibrary(store: store)
+        let project = ZeboProject(name: "A", kind: .c, path: "/a")
+        library.add(project)
+        let xcode = IDEChoice(id: "xcode", name: "Xcode", path: "/Applications/Xcode.app")
+        library.remember(.editor(xcode), for: project)
+        #expect(library.projects.first?.editor == xcode)
+        library.remember(.finder, for: project)
+        library.remember(.terminal, for: project)
+        #expect(store.saved.first?.editor == xcode)
+    }
 }
