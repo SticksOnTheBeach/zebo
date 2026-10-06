@@ -94,8 +94,7 @@ final class DetachedWindowController: NSObject, NSWindowDelegate {
         window.delegate = self
         self.window = window
 
-        NSApp.setActivationPolicy(.regular)
-        NSApp.activate()
+        AppPresence.windowDidOpen()
         // Au premier plan même si macOS n'a pas (encore) activé Zebo.
         window.orderFrontRegardless()
         window.makeKey()
@@ -130,7 +129,7 @@ final class DetachedWindowController: NSObject, NSWindowDelegate {
                 window.close()
             }
         }
-        NSApp.setActivationPolicy(.accessory)
+        AppPresence.windowDidClose()
     }
 
     private func tearDown() {
@@ -140,9 +139,9 @@ final class DetachedWindowController: NSObject, NSWindowDelegate {
             self.window = nil
             window.delegate = nil
             window.close()
+            // Zebo redevient discret, s'il n'a plus d'autre fenêtre.
+            AppPresence.windowDidClose()
         }
-        // Zebo redevient discret : plus d'icône dans le Dock.
-        NSApp.setActivationPolicy(.accessory)
     }
 
     private func showPanel(_ view: some View) {
@@ -165,6 +164,7 @@ final class DetachedWindowController: NSObject, NSWindowDelegate {
     /// Fermée avant la fin : la notch revient tout de suite.
     func windowWillClose(_ notification: Notification) {
         window = nil
+        AppPresence.windowDidClose()
         flow.close()
     }
 
