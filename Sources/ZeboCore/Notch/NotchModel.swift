@@ -28,6 +28,10 @@ public final class NotchModel {
     public static let peekGrowth = CGSize(width: 16, height: 6)
     /// Taille de l'encoche physique (ou de la fausse notch si l'écran n'en a pas).
     public var hardwareNotchSize: CGSize = .zero
+    /// Zebo vient de démarrer : la notch s'agrandit le temps de son entrée en scène.
+    public var isLaunching = false
+    /// Taille de la notch pendant l'animation de lancement.
+    public static let launchSize = CGSize(width: 340, height: 132)
     /// On écrit dans la notch : elle reste ouverte même si la souris s'en va.
     public var isTyping = false
     /// Taille de la notch ouverte.
@@ -65,6 +69,9 @@ public final class NotchModel {
     /// Taille visible de la notch.
     public var notchSize: CGSize {
         if isOpen { return openSize }
+        if isLaunching {
+            return CGSize(width: Self.launchSize.width, height: max(Self.launchSize.height, closedSize.height))
+        }
         return isPeeking ? peekSize : closedSize
     }
 

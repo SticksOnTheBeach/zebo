@@ -74,4 +74,17 @@ struct NotchModelTests {
         #expect(model.notchSize.height <= NotchModel.largestOpenSize.height)
         #expect(model.zeboFrame.maxY <= model.openSize.height)
     }
+
+    @Test("Au lancement, la notch s'agrandit, sans dépasser sa fenêtre, puis reprend sa taille")
+    func launchSize() {
+        let model = makeModel(isOpen: false)
+        let closed = model.notchSize
+        model.isLaunching = true
+        #expect(model.notchSize.width > closed.width)
+        #expect(model.notchSize.height > closed.height)
+        #expect(model.notchSize.width <= NotchModel.largestOpenSize.width)
+        #expect(model.notchSize.height <= NotchModel.largestOpenSize.height)
+        model.isLaunching = false
+        #expect(model.notchSize == closed)
+    }
 }
