@@ -64,6 +64,16 @@ final class NotchController: NSObject {
 
         // Dans la discussion, Zebo peut ouvrir des éditeurs et des projets, et en créer.
         chat.actions = MacActions(settings: settings, library: projects)
+        // Zebo se met à coder : la notch s'ouvre en grand sur son terminal, et y reste le temps du travail.
+        chat.onWorkingChange = { [weak self] isWorking in
+            guard let self else { return }
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) { model.isWorking = isWorking }
+            if isWorking, isNotchAvailable {
+                model.selectedTab = .ai
+                setOpen(true)
+            }
+            initiativeWindow.reposition()
+        }
         // Zebo veut créer un projet : la notch s'ouvre sur sa fiche, prête à recevoir le nom.
         chat.onProjectDraftChange = { [weak self] draft in
             guard let self, draft != nil, isNotchAvailable else { return }
@@ -234,7 +244,7 @@ final class NotchController: NSObject {
         // Ouverte, elle se referme quand la souris s'en va, sauf si l'on est en train d'écrire.
         // La fenêtre est taillée pour le plus grand onglet : seule la notch visible compte.
         if model.isOpen {
-            if !contains(notchFrame(size: model.openSize)), !model.isTyping, chat.projectDraft == nil {
+            if !contains(notchFrame(size: model.openSize)), !model.isTyping, chat.projectDraft == nil, !chat.isWorking {
                 setOpen(false)
             }
             return
@@ -273,7 +283,7 @@ final class NotchController: NSObject {
     /// Un clic ailleurs : on n'écrit plus à Zebo, et la notch se ferme si la souris n'y est pas.
     @objc private func panelDidResignKey() {
         model.isTyping = false
-        if model.isOpen, chat.projectDraft == nil,
+        if model.isOpen, chat.projectDraft == nil, !chat.isWorking,
             !notchFrame(size: model.openSize).insetBy(dx: 0, dy: -1).contains(NSEvent.mouseLocation)
         {
             setOpen(false)

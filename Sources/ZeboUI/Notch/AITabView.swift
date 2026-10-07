@@ -63,7 +63,8 @@ struct AITabView: View {
                         if chat.messages.isEmpty && !chat.isWaiting {
                             welcome(provider)
                         }
-                        ForEach(chat.messages) { message in
+                        // Les résultats d'étapes repartent à l'IA ; on les voit dans le terminal.
+                        ForEach(chat.messages.filter { !$0.isHidden }) { message in
                             ChatBubble(message: message)
                                 .transition(.opacity.combined(with: .offset(y: 6)))
                         }
@@ -90,8 +91,16 @@ struct AITabView: View {
                 .onAppear { proxy.scrollTo(Self.bottom, anchor: .bottom) }
             }
 
+            if chat.isWorking {
+                // Zebo code : ce qu'il lance défile ici, en direct.
+                NotchTerminalView(terminal: chat.terminal, onStop: chat.stop)
+                    .frame(height: 112)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+
             inputField
         }
+        .animation(.spring(response: 0.4, dampingFraction: 0.82), value: chat.isWorking)
         .onChange(of: isFocused) { isTyping = isFocused }
         .onDisappear { isTyping = false }
     }
@@ -108,7 +117,7 @@ struct AITabView: View {
                 .font(.system(size: 13, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
             Text(
-                "Pose-moi une question, ou demande-moi d'ouvrir un éditeur ou de créer un projet. Mes pouvoirs me viennent de \(provider.name)."
+                "Pose-moi une question, ou demande-moi de coder : un site, une fonctionnalité, un projet entier. Mes pouvoirs me viennent de \(provider.name)."
             )
             .font(.system(size: 11.5, design: .rounded))
             .foregroundStyle(.white.opacity(0.6))
@@ -130,8 +139,15 @@ struct AITabView: View {
                     withAnimation(.easeOut(duration: 0.2)) { chat.reset() }
                 }
             }
-            iconButton("arrow.up", help: "Envoyer", isEnabled: chat.canSend, isProminent: true) {
-                chat.send()
+            if chat.isBusy {
+                // Pendant qu'il travaille, le bouton d'envoi l'arrête.
+                iconButton("stop.fill", help: "Arrêter Zebo", isEnabled: true, isProminent: true) {
+                    chat.stop()
+                }
+            } else {
+                iconButton("arrow.up", help: "Envoyer", isEnabled: chat.canSend, isProminent: true) {
+                    chat.send()
+                }
             }
         }
         .padding(.leading, 12)
