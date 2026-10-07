@@ -7,7 +7,7 @@ BUILD_DIR ?= $(HOME)/Library/Caches/zebo-build
 export BUILD_DIR
 SOURCES := Sources Tests Package.swift
 
-.PHONY: help build test run package format lint
+.PHONY: help build test run package release tools format lint
 
 help: ## Affiche cette aide
 	@grep -E '^[a-z]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "} {printf "  %-8s %s\n", $$1, $$2}'
@@ -23,6 +23,13 @@ run: ## Compile, assemble Zebo.app et le lance
 
 package: ## Prépare build/Zebo-<version>.zip, à joindre à une release
 	./package.sh
+
+release: ## Publie sur GitHub la release de la version courante (son tag déjà poussé)
+	./package.sh
+	cd tools/release && npm run release
+
+tools: ## Teste l'outil de release (TypeScript) et vérifie ses types
+	cd tools/release && npm install --silent && npm test && npx tsc --noEmit
 
 format: ## Formate tout le code
 	swift format --in-place --recursive $(SOURCES)
