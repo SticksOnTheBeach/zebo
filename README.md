@@ -25,6 +25,7 @@ The app's interface is in French.
   Zebo can also **act on your Mac** from the chat: "ouvre Cursor", "ouvre Mon jeu dans le Terminal", "crée-moi un projet en Rust". The AI answers with a sentence and one action from a closed list (open an editor, open a project with an editor, the Finder or the Terminal, create a project), choosing only among your editors (the ones picked during setup, then the ones installed on the Mac) and your projects; it never runs a command. When something is missing, like which kind of project, Zebo asks first. To create a project, a card springs up in the notch (which opens on the IA tab if needed): the name Zebo suggests, to keep or rewrite, and your editors to pick from, the one he suggests already selected; Return creates, Escape cancels. The project goes to the workspace of its kind, gets its starter files and a Git repository, and opens right away in the editor.
 
   Zebo can also **take initiatives**: one extra action he proposes on his own, like opening the Terminal in the project he just created. It drops from under the notch in a small notch-wide window with **N Refuser** and **Y Accepter**: click, or hold the key, and an outline draws itself around the button until it is decided (a quick tap does nothing, so typing elsewhere can't accept by accident; Escape refuses). Accepted, he does it; refused, he remembers that too. What he does shows under his answer (running, done, failed), and he remembers it in the conversation.
+- **It asks before acting, unless you allow it.** The **Autorisations** settings let Zebo open your editors, open your projects or offer new ones without the Y/N window (a project still goes through its card, for its name). They also open the macOS privacy settings, to grant folder access once and for all instead of being asked again.
 - **It asks an AI where your projects belong.** With an API key, Zebo sends the AI you picked the names of the folders in your projects folder and their file counts per extension, never file contents, and gets back which folders are workspaces for the chosen kind, with a reason. Each provider is called over plain HTTPS with a JSON schema for the answer:
 
   | AI | API | Default model |
@@ -46,6 +47,12 @@ To quit Zebo: right-click the notch, then **Quitter Zebo**. Zebo only has a Dock
 
 ## Installation
 
+### Download
+
+Each version is on the [Releases page](https://github.com/SticksOnTheBeach/zebo/releases) (see also the [changelog](CHANGELOG.md)): download `Zebo-<version>.zip`, unzip it and move `Zebo.app` to Applications. Zebo isn't notarized by Apple, so the first time, right-click `Zebo.app` and choose **Ouvrir** (or run `xattr -dr com.apple.quarantine /Applications/Zebo.app`). Requires macOS 14 or later.
+
+### From the sources
+
 Requirements: macOS 14 or later, Xcode 16 or later (Swift 6).
 
 ```sh
@@ -62,6 +69,7 @@ On a screen without a notch, Zebo draws a fake notch in the middle of the menu b
 
 ```sh
 make run      # build, assemble Zebo.app and launch it
+make package  # release build, zipped in build/Zebo-<version>.zip for a GitHub release
 make build    # build only
 make test     # unit tests
 make lint     # check the style without changing anything
@@ -91,7 +99,8 @@ Sources/
 │   │                HTTPTransport
 │   ├── Chat/        ZeboChat (a conversation with Zebo, answered by the chosen AI), ZeboAction (what he can
 │   │                do on the Mac), ActionQuestion (JSON answer, from the AI's request to a real action),
-│   │                ProjectDraft (the new project card), ZeboInitiatives (proposals, held Y or N)
+│   │                ProjectDraft (the new project card), ZeboInitiatives (proposals, held Y or N),
+│   │                ZeboPermission (what Zebo may do without asking)
 │   ├── Behavior/    ZeboBehavior (reactions to clicks), PokeTracker (rules)
 │   ├── Code/        IDE (editor catalog), Language, CommitActivity (today's commits), ProjectsFolder
 │   ├── Notch/       NotchModel (notch geometry, tabs), ZeboPlacement, DetachedWindowFlow (notch → window → notch)
@@ -115,7 +124,8 @@ Sources/
 │   ├── Setup/       SetupView (window), SetupBackground (glass), Steps/ (one view per step), SetupTransitionView and
 │   │                NotchToWindowShape (notch → window), SetupFinaleView (wink and flip back), NotchPreview,
 │   │                SetupPrompt (notch button)
-│   ├── Settings/    SettingsView (sidebar), SettingsSection, AISettingsPage, AdvancedSettingsPage
+│   ├── Settings/    SettingsView (sidebar), SettingsSection, SettingsRow, AISettingsPage,
+│   │                PermissionsSettingsPage, AdvancedSettingsPage
 │   ├── Sleep/       InBed (the bed), SleepingZs (the "z"s)
 │   ├── Speech/      SpeechBubbleView, CloudBubbleShape, CappedWidth
 │   └── ZeboPalette
@@ -162,6 +172,7 @@ Time-dependent tests don't wait for a fixed duration: `waitUntil` (in `Tests/Zeb
 - One file per type. SwiftUI shapes end with `Shape`.
 - Small commits, one per logical step, following [Conventional Commits](https://www.conventionalcommits.org/) with a scope: `feat(behavior): …`, `tweak(fall): …`, `refactor(speech): …`.
 - Tests with Swift Testing, one suite per type, each test described in one sentence.
+- Releases: bump the version in `Info.plist`, add it to `CHANGELOG.md`, tag `vX.Y.Z` (annotated), then publish a GitHub release with the zip from `make package`.
 
 ## Credits
 
