@@ -30,7 +30,48 @@ final class MacActions: ZeboActionPerformer {
 
     var projects: [ZeboProject] { library.projects }
 
-    func perform(_ action: ZeboAction) async throws -> String {
+    func perform(_ action: ZeboAction, terminal: ZeboTerminal) async throws -> ZeboActionResult {
+        switch action {
+        case .listFiles(let project, let path):
+            return try ProjectFiles.list(path, in: project)
+
+        case .readFile(let project, let path):
+            return try ProjectFiles.read(path, in: project)
+
+        case .writeFile(let project, let path, let content):
+            let result = try ProjectFiles.write(path, content: content, in: project)
+            terminal.note("✎ \(path)", in: project.path)
+            return result
+
+        case .runCommand(let project, let command):
+            return try await run(command, in: project, terminal: terminal)
+
+        default:
+            return ZeboActionResult(try await performOnTheMac(action))
+        }
+    }
+
+    /// Lance la commande et dit comment elle s'est terminée ; l'IA reçoit la fin de sa sortie.
+    private func run(_ command: String, in project: ZeboProject, terminal: ZeboTerminal) async throws
+        -> ZeboActionResult
+    {
+        let outcome = try await CommandRunner.run(command, in: ProjectFiles.projectRoot(project), terminal: terminal)
+        let summary: String
+        if outcome.didTimeOut {
+            summary = "« \(command) » a dépassé 5 minutes : je l'ai arrêtée."
+        } else if outcome.exitCode == 0 {
+            summary = "« \(command) » a réussi."
+        } else {
+            summary = "« \(command) » a échoué (code \(outcome.exitCode))."
+        }
+        let output = outcome.output.trimmingCharacters(in: .whitespacesAndNewlines)
+        return ZeboActionResult(
+            summary,
+            details: "Code de sortie : \(outcome.exitCode)\nSortie (fin) :\n\(output.isEmpty ? "(rien)" : output)")
+    }
+
+    /// Ouvrir un éditeur ou un projet, créer un projet.
+    private func performOnTheMac(_ action: ZeboAction) async throws -> String {
         switch action {
         case .openEditor(let editor):
             try await open(editor)
@@ -46,6 +87,9 @@ final class MacActions: ZeboActionPerformer {
 
         case .createProject(let name, let kind, let editor):
             return try await create(name, kind: kind, editor: editor)
+
+        case .listFiles, .readFile, .writeFile, .runCommand:
+            preconditionFailure("Les étapes de code sont faites par perform(_:terminal:).")
         }
     }
 
