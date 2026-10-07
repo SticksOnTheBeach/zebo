@@ -1,0 +1,18 @@
+{
+  "name": "zebo-release",
+  "private": true,
+  "description": "Publishes a GitHub release of Zebo: notes from CHANGELOG.md, the zip from make package.",
+  "type": "module",
+  "engines": {
+    "node": ">=23.6"
+  },
+  "scripts": {
+    "release": "node src/release.ts",
+    "test": "node --test \"test/*.test.ts\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "typescript": "^7.0.2"
+  }
+}
