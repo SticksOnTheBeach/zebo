@@ -37,6 +37,7 @@ The app's interface is in French.
 
   The model can be changed in the settings. Without a key, or if the call fails, Zebo guesses locally from folder names and file types.
 - **It has settings.** **Paramètres** in the notch, **Zebo > Réglages…** (⌘,) or a right-click on the notch opens a settings window, with a sidebar like System Settings: general (first name), language, editors, notch, AI (provider, model, API key saved or deleted on the spot) and advanced (run the setup again, quit). Changes apply right away.
+- **It makes an entrance.** At launch, the notch grows and Zebo pops up with a bounce among sparkles, his name slides next to him, he says hi ("Salut Maël, on code ?") and winks with a golden sparkle; then the notch closes and he goes back to bed.
 - **It sleeps.** When the notch is closed, it lies in its bed in the left wing, wearing a nightcap, under its blanket; little "z"s float away from its head.
 - **It keeps you posted.** The right wing of the closed notch shows the widgets you picked: the time, the date, today's commits, your favorite language. With several of them, they take turns every 5, 10 or 30 seconds. Today's commits are counted with Git in the repositories of your projects folder (guessed, e.g. `~/Documents/Dev`), using your `git config user.email`, every 5 minutes.
 - **It wakes up.** When the mouse hovers the closed notch, it grows slightly, like [Alcove](https://tryalcove.com); a click opens it: the bed fades away, Zebo stands up, follows the mouse with its eyes, blinks and sways gently. The notch closes again when the mouse leaves.
@@ -70,6 +71,8 @@ On a screen without a notch, Zebo draws a fake notch in the middle of the menu b
 ```sh
 make run      # build, assemble Zebo.app and launch it
 make package  # release build, zipped in build/Zebo-<version>.zip for a GitHub release
+make release  # package, then publish the GitHub release of the current version (tools/release)
+make tools    # test and type-check the release tool (TypeScript)
 make build    # build only
 make test     # unit tests
 make lint     # check the style without changing anything
@@ -142,6 +145,9 @@ Sources/
                      InitiativeWindowController (proposals under the notch, Y and N keys)
 Tests/
 └── ZeboCoreTests/
+tools/
+└── release/         The release tool, in TypeScript: version from Info.plist, notes from CHANGELOG.md,
+                     GitHub release with the zip attached (src/, test/)
 ```
 
 The app uses three transparent windows above the menu bar: the notch itself, the speech bubble right below it, and a full-screen window shown only while Zebo falls. Setup and new projects add a full-screen window for the animations, then a regular app window; Zebo then becomes a "normal" app (Dock icon, menu bar) and goes back to being discreet when the window closes.
@@ -172,7 +178,8 @@ Time-dependent tests don't wait for a fixed duration: `waitUntil` (in `Tests/Zeb
 - One file per type. SwiftUI shapes end with `Shape`.
 - Small commits, one per logical step, following [Conventional Commits](https://www.conventionalcommits.org/) with a scope: `feat(behavior): …`, `tweak(fall): …`, `refactor(speech): …`.
 - Tests with Swift Testing, one suite per type, each test described in one sentence.
-- Releases: bump the version in `Info.plist`, add it to `CHANGELOG.md`, tag `vX.Y.Z` (annotated), then publish a GitHub release with the zip from `make package`.
+- Releases: bump the version in `Info.plist`, add it to `CHANGELOG.md`, tag `vX.Y.Z` (annotated) and push the tag, then `make release`. The token is `GH_TOKEN`, or the one git already uses for github.com.
+- Tooling around the app is in TypeScript (`tools/`), run directly by Node 23.6+ (type stripping), tested with `node:test` and type-checked with `tsc`. The app itself stays in Swift.
 
 ## Credits
 
