@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Les sections de la fenêtre de paramètres.
 enum SettingsSection: String, CaseIterable, Identifiable {
-    case general, language, editors, notch, ai, advanced
+    case general, language, editors, notch, ai, permissions, advanced
 
     var id: Self { self }
 
@@ -13,6 +13,7 @@ enum SettingsSection: String, CaseIterable, Identifiable {
         case .editors: "Éditeurs"
         case .notch: "Notch"
         case .ai: "Intelligence artificielle"
+        case .permissions: "Autorisations"
         case .advanced: "Avancé"
         }
     }
@@ -24,6 +25,7 @@ enum SettingsSection: String, CaseIterable, Identifiable {
         case .editors: "chevron.left.forwardslash.chevron.right"
         case .notch: "rectangle.topthird.inset.filled"
         case .ai: "sparkles"
+        case .permissions: "checkmark.shield.fill"
         case .advanced: "gearshape.fill"
         }
     }
@@ -35,6 +37,7 @@ enum SettingsSection: String, CaseIterable, Identifiable {
         case .editors: .purple
         case .notch: .teal
         case .ai: .pink
+        case .permissions: .green
         case .advanced: .gray
         }
     }

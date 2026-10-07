@@ -116,6 +116,7 @@ public struct SettingsView: View {
         case .editors: IDEStep(wizard: wizard)
         case .notch: NotchStep(wizard: wizard, commits: commits)
         case .ai: AISettingsPage(wizard: wizard, actions: actions)
+        case .permissions: PermissionsSettingsPage(wizard: wizard)
         case .advanced: AdvancedSettingsPage(actions: actions)
         }
     }
