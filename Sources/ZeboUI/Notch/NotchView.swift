@@ -51,7 +51,10 @@ public struct NotchView: View {
             .frame(width: size.width, height: size.height)
             .overlay(alignment: .topLeading) {
                 ZStack(alignment: .topLeading) {
-                    if model.isOpen {
+                    if model.isLaunching {
+                        launchSplash
+                            .transition(.opacity.combined(with: .scale(scale: 0.85)))
+                    } else if model.isOpen {
                         openText
                             .transition(.opacity.combined(with: .offset(x: -12)))
                     } else if !preferences.displayableWidgets.isEmpty {
@@ -85,6 +88,8 @@ public struct NotchView: View {
                         if model.isOpen { behavior.poke() } else { open() }
                     }
                     .offset(x: zeboFrame.minX, y: zeboFrame.minY)
+                    // Pendant le lancement, Zebo fait son entrée au centre : le lit attend.
+                    .opacity(model.isLaunching ? 0 : 1)
                 }
             }
             .clipShape(NotchShape(bottomRadius: bottomRadius))
@@ -121,7 +126,7 @@ public struct NotchView: View {
     }
 
     /// Zebo est dans la notch : ni éjecté, ni parti dans la fenêtre de configuration.
-    private var isZeboHere: Bool { behavior.isHome && isAvailable }
+    private var isZeboHere: Bool { behavior.isHome && isAvailable && !model.isLaunching }
 
     /// Aucune fenêtre n'est née de la notch (configuration, nouveau projet) : elle est là.
     private var isAvailable: Bool { setup.isNotchAvailable && newProject.isIdle }
@@ -143,6 +148,13 @@ public struct NotchView: View {
         )
         .frame(width: NotchModel.wingWidth - NotchModel.topCornerRadius, height: model.hardwareNotchSize.height)
         .offset(x: size.width - NotchModel.wingWidth)
+    }
+
+    /// L'entrée en scène, centrée sous l'encoche physique.
+    private var launchSplash: some View {
+        LaunchSplash(name: preferences.name)
+            .frame(width: size.width, height: max(size.height - model.hardwareNotchSize.height, 0))
+            .offset(y: model.hardwareNotchSize.height)
     }
 
     /// À droite de Zebo : le bouton de configuration tant qu'il n'est pas configuré,

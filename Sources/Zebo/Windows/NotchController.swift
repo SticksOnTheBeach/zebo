@@ -96,6 +96,7 @@ final class NotchController: NSObject {
         bubblePanel.orderFrontRegardless()
         panel.orderFrontRegardless()
         mouse.start { [weak self] in self?.mouseDidMove() }
+        playLaunch()
 
         // Branchement/débranchement d'écran, changement de résolution…
         NotificationCenter.default.addObserver(
@@ -200,13 +201,30 @@ final class NotchController: NSObject {
         Task { await commits.refresh(in: folder) }
     }
 
+    // MARK: - Lancement
+
+    /// Zebo fait son entrée : la notch s'agrandit, il surgit et dit bonjour, puis elle se referme
+    /// et il retourne dans son lit.
+    private func playLaunch() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
+            guard let self, isNotchAvailable else { return }
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.72)) { model.isLaunching = true }
+            initiativeWindow.reposition()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.6) { [weak self] in
+                guard let self else { return }
+                withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) { model.isLaunching = false }
+                initiativeWindow.reposition()
+            }
+        }
+    }
+
     // MARK: - Survol
 
     private func mouseDidMove() {
         // Zebo suit la souris des yeux, notch ouverte ou fermée.
         model.mouseLocation = NSEvent.mouseLocation
-        // Pendant la configuration, la notch reste fermée.
-        guard isNotchAvailable else { return }
+        // Pendant la configuration (ou l'entrée en scène), la notch reste comme elle est.
+        guard isNotchAvailable, !model.isLaunching else { return }
 
         // +1 en haut : la souris collée au bord de l'écran est pile sur maxY.
         func contains(_ area: CGRect) -> Bool {
