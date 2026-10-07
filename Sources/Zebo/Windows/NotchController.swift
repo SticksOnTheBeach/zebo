@@ -181,6 +181,7 @@ final class NotchController: NSObject {
         let preferences = settings.preferences
         speech.lineSource = CannedLines(preferences: preferences)
         chat.userName = preferences.name
+        chat.alwaysAllowed = preferences.alwaysAllowed
         chat.client = preferences.aiProvider.flatMap { provider in
             keyStore.readKey(for: provider).map { key in
                 provider.makeClient(

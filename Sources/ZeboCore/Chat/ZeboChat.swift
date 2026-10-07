@@ -51,6 +51,8 @@ public final class ZeboChat {
 
     /// Ce qu'il propose de lui-même, à accepter ou refuser.
     public let initiatives: ZeboInitiatives
+    /// Les initiatives autorisées une fois pour toutes (dans les paramètres) : faites sans demander.
+    public var alwaysAllowed: Set<ZeboPermission> = []
 
     /// La fiche « nouveau projet » ouverte dans la notch, s'il y en a une.
     public private(set) var projectDraft: ProjectDraft?
@@ -154,6 +156,11 @@ public final class ZeboChat {
             let action = try? ActionQuestion.resolve(
                 initiative.action, editors: performer.editors, projects: performer.projects)
         else { return }
+        // Autorisée une fois pour toutes : pas besoin de demander.
+        if alwaysAllowed.contains(action.permission) {
+            await run(action, for: id, in: \.initiative, with: performer)
+            return
+        }
         let text = initiative.text.trimmingCharacters(in: .whitespacesAndNewlines)
         let proposal = text.isEmpty ? action.progressText : text
         update(id, \.initiative, to: .proposed(proposal))

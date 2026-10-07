@@ -108,4 +108,16 @@ struct LegacyPreferencesTests {
         preferences.setModel("", for: .gemini)
         #expect(preferences.aiModels.isEmpty)
     }
+
+    @Test("Les autorisations sont enregistrées ; aucune au départ, une inconnue est oubliée")
+    func alwaysAllowed() throws {
+        #expect(try decode("{}").alwaysAllowed.isEmpty)
+        var preferences = ZeboPreferences.standard
+        preferences.setAlwaysAllowed(.openProjects, true)
+        preferences.setAlwaysAllowed(.openEditors, true)
+        preferences.setAlwaysAllowed(.openEditors, false)
+        let data = try JSONEncoder().encode(preferences)
+        #expect(try JSONDecoder().decode(ZeboPreferences.self, from: data).alwaysAllowed == [.openProjects])
+        #expect(try decode(#"{"alwaysAllowed":["openEditors","launchRockets"]}"#).alwaysAllowed == [.openEditors])
+    }
 }

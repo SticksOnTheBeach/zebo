@@ -262,6 +262,20 @@ struct ZeboChatActionTests {
         #expect(chat.conversation.last?.text.contains("Initiative — Refusé") == true)
     }
 
+    @Test("Autorisée dans les paramètres, l'initiative est faite sans rien demander")
+    func allowedInitiativeSkipsTheQuestion() async {
+        let performer = RecordingPerformer()
+        let json =
+            #"{"reply":"Allez !","action":{"type":"none","editor":"","project":"","kind":"","name":""},"initiative":{"text":"J'ouvre Mon jeu ?","action":{"type":"open_project","editor":"","project":"Mon jeu","kind":"","name":""}}}"#
+        let (chat, _) = chat(replying: json, performer: performer)
+        chat.alwaysAllowed = [.openProjects]
+        chat.draft = "Je vais bosser sur mon jeu"
+        chat.send()
+        #expect(await waitUntil { chat.messages.last?.initiative == .done("RustRover est ouvert.") })
+        #expect(chat.initiatives.current == nil)
+        #expect(performer.performed == [.openProject(game, with: .editor(rustRover))])
+    }
+
     @Test("Recommencer la discussion ferme la fiche et retire les propositions")
     func resetClearsEverything() async {
         let (chat, _) = chat(replying: Self.createRust, performer: RecordingPerformer())

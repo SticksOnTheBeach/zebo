@@ -20,13 +20,16 @@ public struct ZeboPreferences: Equatable, Sendable {
     public var aiProvider: AIProvider?
     /// Le modèle choisi pour chaque IA (par son identifiant), s'il diffère du modèle par défaut.
     public var aiModels: [String: String]
+    /// Ce que Zebo peut faire de lui-même sans demander.
+    public var alwaysAllowed: Set<ZeboPermission>
 
     public static let standard = ZeboPreferences(name: "")
 
     public init(
         name: String, notchWidgets: [NotchWidget] = [.clock], widgetRotationInterval: TimeInterval = 10,
         sleepsWhenClosed: Bool = true, ides: [IDEChoice] = [], favoriteLanguage: Language? = nil,
-        projectsFolder: String? = nil, aiProvider: AIProvider? = .claude, aiModels: [String: String] = [:]
+        projectsFolder: String? = nil, aiProvider: AIProvider? = .claude, aiModels: [String: String] = [:],
+        alwaysAllowed: Set<ZeboPermission> = []
     ) {
         self.name = name
         self.notchWidgets = notchWidgets
@@ -37,6 +40,12 @@ public struct ZeboPreferences: Equatable, Sendable {
         self.projectsFolder = projectsFolder
         self.aiProvider = aiProvider
         self.aiModels = aiModels
+        self.alwaysAllowed = alwaysAllowed
+    }
+
+    /// Autorise (ou non) Zebo à faire ce genre d'initiative sans demander.
+    public mutating func setAlwaysAllowed(_ permission: ZeboPermission, _ isAllowed: Bool) {
+        if isAllowed { alwaysAllowed.insert(permission) } else { alwaysAllowed.remove(permission) }
     }
 
     /// Le modèle à utiliser avec cette IA.
@@ -73,7 +82,7 @@ public struct ZeboPreferences: Equatable, Sendable {
 extension ZeboPreferences: Codable {
     private enum CodingKeys: String, CodingKey {
         case name, notchWidgets, widgetRotationInterval, sleepsWhenClosed, ides, favoriteLanguage, projectsFolder
-        case aiProvider, aiModels
+        case aiProvider, aiModels, alwaysAllowed
         /// Anciennes versions : l'heure seule, un seul éditeur.
         case showsClock, ide
     }
@@ -108,6 +117,9 @@ extension ZeboPreferences: Codable {
             aiProvider = standard.aiProvider
         }
         aiModels = try container.decodeIfPresent([String: String].self, forKey: .aiModels) ?? [:]
+        // Une autorisation inconnue (retirée depuis) est simplement oubliée.
+        let allowed = try container.decodeIfPresent([String].self, forKey: .alwaysAllowed) ?? []
+        alwaysAllowed = Set(allowed.compactMap(ZeboPermission.init(rawValue:)))
     }
 
     public func encode(to encoder: any Encoder) throws {
@@ -122,5 +134,6 @@ extension ZeboPreferences: Codable {
         // Écrit même quand il n'y en a pas : « aucune IA » ne doit pas redevenir Claude à la relecture.
         try container.encode(aiProvider, forKey: .aiProvider)
         try container.encode(aiModels, forKey: .aiModels)
+        try container.encode(alwaysAllowed.map(\.rawValue).sorted(), forKey: .alwaysAllowed)
     }
 }
