@@ -24,8 +24,10 @@ The app's interface is in French.
 
   Zebo can also **act on your Mac** from the chat: "ouvre Cursor", "ouvre Mon jeu dans le Terminal", "crée-moi un projet en Rust". The AI answers with a sentence and one action from a closed list (open an editor, open a project with an editor, the Finder or the Terminal, create a project), choosing only among your editors (the ones picked during setup, then the ones installed on the Mac) and your projects; it never runs a command. When something is missing, like which kind of project, Zebo asks first. To create a project, a card springs up in the notch (which opens on the IA tab if needed): the name Zebo suggests, to keep or rewrite, and your editors to pick from, the one he suggests already selected; Return creates, Escape cancels. The project goes to the workspace of its kind, gets its starter files and a Git repository, and opens right away in the editor.
 
+  Zebo also **codes**: "code-moi un site en TypeScript avec Qwik et Tailwind". He works inside a project's folder, one step at a time: list and read its files, write whole files, run commands (npm, git, cargo…) with zsh. Each step's result, a file's content or a command's output and exit code, goes back to the AI, which keeps going until the task is done, then sums it up. While he works, the notch opens wide on a little terminal where his commands and their output scroll by live; **Stop** interrupts him. Writing files is asked once per task and each command every time (in the Y/N window), unless allowed in the settings. He never leaves the project folder, never uses `sudo`, never wipes your disk, and doesn't start endless dev servers: commands run without a keyboard (`CI=1`) and stop after five minutes.
+
   Zebo can also **take initiatives**: one extra action he proposes on his own, like opening the Terminal in the project he just created. It drops from under the notch in a small notch-wide window with **N Refuser** and **Y Accepter**: click, or hold the key, and an outline draws itself around the button until it is decided (a quick tap does nothing, so typing elsewhere can't accept by accident; Escape refuses). Accepted, he does it; refused, he remembers that too. What he does shows under his answer (running, done, failed), and he remembers it in the conversation.
-- **It asks before acting, unless you allow it.** The **Autorisations** settings let Zebo open your editors, open your projects or offer new ones without the Y/N window (a project still goes through its card, for its name). They also open the macOS privacy settings, to grant folder access once and for all instead of being asked again.
+- **It asks before acting, unless you allow it.** The **Autorisations** settings let Zebo open your editors, open your projects, offer new ones, write code or run commands without the Y/N window (a project still goes through its card, for its name). They also open the macOS privacy settings, to grant folder access once and for all instead of being asked again.
 - **It asks an AI where your projects belong.** With an API key, Zebo sends the AI you picked the names of the folders in your projects folder and their file counts per extension, never file contents, and gets back which folders are workspaces for the chosen kind, with a reason. Each provider is called over plain HTTPS with a JSON schema for the answer:
 
   | AI | API | Default model |
@@ -103,7 +105,8 @@ Sources/
 │   ├── Chat/        ZeboChat (a conversation with Zebo, answered by the chosen AI), ZeboAction (what he can
 │   │                do on the Mac), ActionQuestion (JSON answer, from the AI's request to a real action),
 │   │                ProjectDraft (the new project card), ZeboInitiatives (proposals, held Y or N),
-│   │                ZeboPermission (what Zebo may do without asking)
+│   │                ZeboPermission (what Zebo may do without asking), ZeboTerminal (live command output),
+│   │                CodingSafety (stay in the project, forbidden commands)
 │   ├── Behavior/    ZeboBehavior (reactions to clicks), PokeTracker (rules)
 │   ├── Code/        IDE (editor catalog), Language, CommitActivity (today's commits), ProjectsFolder
 │   ├── Notch/       NotchModel (notch geometry, tabs), ZeboPlacement, DetachedWindowFlow (notch → window → notch)
@@ -121,7 +124,7 @@ Sources/
 │   ├── Fall/        FallingZeboView
 │   ├── Initiatives/ InitiativeView (Zebo's proposal), HoldToConfirmButton (outline drawn while held)
 │   ├── Notch/       NotchView, NotchShape, NotchWidgetsView (rotating widgets), NotchClock, NotchTabBar,
-│   │                ProjectsTabView, AITabView (the chat), ProjectDraftCard
+│   │                ProjectsTabView, AITabView (the chat), ProjectDraftCard, NotchTerminalView, LaunchSplash
 │   ├── Projects/    NewProjectView (window), Steps/ (kind, name, workspace, editor)
 │   ├── Resources/   Languages/ (language and project kind logos, SVG)
 │   ├── Setup/       SetupView (window), SetupBackground (glass), Steps/ (one view per step), SetupTransitionView and
@@ -135,7 +138,8 @@ Sources/
 └── Zebo/
     ├── AI/          KeychainAPIKeyStore
     ├── App/         ZeboApp (entry point), AppDelegate, MainMenu, AppPresence (Dock icon), DevReset
-    ├── Chat/        MacActions (opens editors and projects, creates projects)
+    ├── Chat/        MacActions (opens editors and projects, creates projects), ProjectFiles (list, read,
+    │                write inside a project), CommandRunner (zsh, live output, timeout, stop)
     ├── Code/        WorkspaceApplicationLocator (finds editors), Git, GitCommitCounter (counts commits),
     │                FolderScanner (describes the projects folder), ProjectOpener, ProjectCreator
     ├── Extensions/  NSScreen+Notch
