@@ -74,7 +74,7 @@ struct ActionQuestionTests {
         let json =
             #"{"reply":"Voilà !","action":{"type":"none","editor":"","project":"","kind":"","name":""},"initiative":{"text":"Je t'ouvre le Terminal ?","action":{"type":"open_project","editor":"Terminal","project":"Mon jeu","kind":"","name":""}}}"#
         #expect(ActionQuestion.answer(fromJSON: json)?.initiative?.text == "Je t'ouvre le Terminal ?")
-        #expect(ActionQuestion.format.schema["required"] as? [String] == ["action", "initiative", "reply"])
+        #expect(ActionQuestion.format.schema["required"] as? [String] == ["action", "continue", "initiative", "reply"])
     }
 
     @Test("« none » : Zebo répond sans rien faire")
@@ -111,14 +111,14 @@ private final class RecordingPerformer: ZeboActionPerformer {
         self.failure = failure
     }
 
-    func perform(_ action: ZeboAction) async throws -> String {
+    func perform(_ action: ZeboAction, terminal: ZeboTerminal) async throws -> ZeboActionResult {
         performed.append(action)
         if let failure { throw failure }
         if case .createProject(let name, let kind, let editor) = action {
             projects.append(ZeboProject(name: name, kind: kind, path: "/Dev/\(name)", editor: editor))
-            return "« \(name) » est créé."
+            return ZeboActionResult("« \(name) » est créé.")
         }
-        return "RustRover est ouvert."
+        return ZeboActionResult("RustRover est ouvert.")
     }
 }
 

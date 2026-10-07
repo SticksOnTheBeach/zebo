@@ -4,13 +4,46 @@ import Foundation
 /// une initiative : une action en plus, qu'il propose et qu'on accepte ou refuse.
 /// Elle ne connaît que les éditeurs et les projets qu'on lui donne, et ne peut rien inventer d'autre.
 enum ActionQuestion {
-    /// L'action telle que l'IA la décrit ; les champs inutiles sont vides.
+    /// L'action telle que l'IA la décrit ; les champs inutiles sont vides (ou absents).
     struct Request: Decodable, Equatable {
         var type: String
-        var editor: String
-        var project: String
-        var kind: String
-        var name: String
+        var editor = ""
+        var project = ""
+        var kind = ""
+        var name = ""
+        var path = ""
+        var content = ""
+        var command = ""
+
+        init(
+            type: String, editor: String = "", project: String = "", kind: String = "", name: String = "",
+            path: String = "", content: String = "", command: String = ""
+        ) {
+            self.type = type
+            self.editor = editor
+            self.project = project
+            self.kind = kind
+            self.name = name
+            self.path = path
+            self.content = content
+            self.command = command
+        }
+
+        init(from decoder: any Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            func field(_ key: CodingKeys) throws -> String {
+                try container.decodeIfPresent(String.self, forKey: key) ?? ""
+            }
+            self.init(
+                type: try field(.type), editor: try field(.editor), project: try field(.project),
+                kind: try field(.kind),
+                name: try field(.name), path: try field(.path), content: try field(.content),
+                command: try field(.command))
+        }
+
+        private enum CodingKeys: String, CodingKey {
+            case type, editor, project, kind, name, path, content, command
+        }
     }
 
     /// Une action que Zebo propose de lui-même, avec la phrase qui la propose.
@@ -23,9 +56,35 @@ enum ActionQuestion {
         var reply: String
         var action: Request
         var initiative: Initiative?
+        /// D'autres étapes suivent : le résultat de l'action repart à l'IA, qui continue.
+        var keepsGoing = false
+
+        init(reply: String, action: Request, initiative: Initiative? = nil, keepsGoing: Bool = false) {
+            self.reply = reply
+            self.action = action
+            self.initiative = initiative
+            self.keepsGoing = keepsGoing
+        }
+
+        init(from decoder: any Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            self.init(
+                reply: try container.decode(String.self, forKey: .reply),
+                action: try container.decode(Request.self, forKey: .action),
+                initiative: try container.decodeIfPresent(Initiative.self, forKey: .initiative),
+                keepsGoing: try container.decodeIfPresent(Bool.self, forKey: .keepsGoing) ?? false)
+        }
+
+        private enum CodingKeys: String, CodingKey {
+            case reply, action, initiative
+            case keepsGoing = "continue"
+        }
     }
 
-    static let types = ["none", "open_editor", "open_project", "create_project"]
+    static let types = [
+        "none", "open_editor", "open_project", "create_project", "list_files", "read_file", "write_file",
+        "run_command",
+    ]
 
     static func instructions(editors: [IDEChoice], projects: [ZeboProject]) -> String {
         let editorList = editors.isEmpty ? "aucun" : editors.map(\.name).joined(separator: ", ")
@@ -55,7 +114,24 @@ enum ActionQuestion {
             le Terminal dans ce projet ? ») ; il pourra l'accepter ou la refuser. Une initiative se fait après \
             l'action : elle peut viser le projet que l'action crée. Sans initiative, son type est none. \
             N'en propose que si elle a du sens, pas à chaque message.
-            Réponds au format JSON demandé : reply (ta phrase), action et initiative.
+            Tu sais aussi coder, et tu le fais toi-même, dans le dossier d'un de ses projets (jamais ailleurs) :
+            - list_files : lister un dossier du projet (champs project et path ; path vide pour la racine).
+            - read_file : lire un fichier (champs project et path, relatif au projet).
+            - write_file : écrire un fichier entier (champs project, path et content : tout le contenu du \
+            fichier, pas un extrait). Les dossiers manquants sont créés.
+            - run_command : lancer une commande zsh dans le dossier du projet (champs project et command). Elle \
+            doit finir seule en moins de 5 minutes, sans rien demander : utilise les options non interactives \
+            (--yes, -y, des arguments plutôt que des questions), jamais sudo, et ne lance pas de serveur qui \
+            tourne sans fin (npm run dev…) : il le lancera lui-même. Il voit chaque commande en direct.
+            Ne dis jamais que tu ne peux pas coder : tu peux. Pour une tâche en plusieurs étapes (créer un \
+            site, ajouter une fonctionnalité, corriger une erreur…), fais UNE action par réponse avec continue \
+            à true : tu reçois alors son résultat (« Résultat : … ») et tu enchaînes. Regarde d'abord ce que \
+            contient le projet avant de le modifier. Pendant une tâche, reply dit en quelques mots ce que tu \
+            fais (« J'installe Tailwind »). Quand tout est fini (ou si tu es bloqué), réponds avec l'action \
+            none, continue à false, et résume ce que tu as fait en une ou deux phrases. Si le projet n'existe \
+            pas encore, crée-le d'abord avec create_project et continue à true. Si une action est refusée, \
+            adapte-toi ou arrête-toi, sans insister.
+            Réponds au format JSON demandé : reply (ta phrase), action, initiative et continue.
             """
     }
 
@@ -77,10 +153,11 @@ enum ActionQuestion {
         let string = ["type": type("string")]
         let request = object([
             "type": ["type": type("string"), "enum": types], "editor": string, "project": string,
-            "kind": string, "name": string,
+            "kind": string, "name": string, "path": string, "content": string, "command": string,
         ])
         return object([
             "reply": string, "action": request, "initiative": object(["text": string, "action": request]),
+            "continue": ["type": type("boolean")],
         ])
     }
 
@@ -99,9 +176,7 @@ enum ActionQuestion {
             return .openEditor(try editor(named: request.editor, among: editors))
 
         case "open_project":
-            guard let project = best(projects, matching: request.project, by: \.name) else {
-                throw ZeboActionError("Je ne trouve pas le projet « \(request.project) ».")
-            }
+            let project = try project(named: request.project, among: projects)
             return .openProject(project, with: try target(named: request.editor, for: project, among: editors))
 
         case "create_project":
@@ -113,9 +188,37 @@ enum ActionQuestion {
                 name: ProjectScaffolder.folderName(for: request.name), kind: kind,
                 editor: best(editors, matching: request.editor, by: \.name))
 
+        case "list_files":
+            return .listFiles(
+                try project(named: request.project, among: projects),
+                path: try CodingSafety.checkedPath(request.path, allowsRoot: true))
+
+        case "read_file":
+            return .readFile(
+                try project(named: request.project, among: projects), path: try CodingSafety.checkedPath(request.path))
+
+        case "write_file":
+            return .writeFile(
+                try project(named: request.project, among: projects), path: try CodingSafety.checkedPath(request.path),
+                content: request.content)
+
+        case "run_command":
+            return .runCommand(
+                try project(named: request.project, among: projects),
+                command: try CodingSafety.checkedCommand(request.command))
+
         default:
             return nil
         }
+    }
+
+    private static func project(named name: String, among projects: [ZeboProject]) throws(ZeboActionError)
+        -> ZeboProject
+    {
+        guard let project = best(projects, matching: name, by: \.name) else {
+            throw ZeboActionError("Je ne trouve pas le projet « \(name) ».")
+        }
+        return project
     }
 
     private static func editor(named name: String, among editors: [IDEChoice]) throws(ZeboActionError) -> IDEChoice {

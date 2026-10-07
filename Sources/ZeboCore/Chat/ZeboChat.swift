@@ -14,6 +14,8 @@ public final class ZeboChat {
         public internal(set) var action: ActionStatus?
         /// Ce qu'il a proposé de faire en plus, de lui-même, et ce qu'il en est advenu.
         public internal(set) var initiative: ActionStatus?
+        /// Le résultat d'une étape, renvoyé à l'IA : il ne s'affiche pas dans la discussion.
+        public internal(set) var isHidden = false
     }
 
     /// Où en est une action de Zebo, en une phrase.
@@ -34,6 +36,18 @@ public final class ZeboChat {
     public var draft = ""
     /// Une question est partie, la réponse n'est pas encore là.
     public private(set) var isWaiting = false
+    /// Zebo est occupé (il répond, ou enchaîne les étapes d'une tâche) : on attend avant d'écrire.
+    public private(set) var isBusy = false
+    /// Zebo code : il écrit des fichiers et lance des commandes (le terminal de la notch s'affiche).
+    public private(set) var isWorking = false {
+        didSet {
+            if isWorking != oldValue { onWorkingChange?(isWorking) }
+        }
+    }
+    /// Prévient l'app quand Zebo se met à coder ou s'arrête (pour garder la notch ouverte).
+    @ObservationIgnored public var onWorkingChange: ((Bool) -> Void)?
+    /// Les commandes que lance Zebo et leur sortie, en direct.
+    public let terminal = ZeboTerminal()
     /// Ce qui a empêché la dernière réponse, dit simplement.
     public private(set) var failure: String?
     /// Le prénom de l'utilisateur, pour que Zebo l'appelle par son nom.
@@ -60,10 +74,16 @@ public final class ZeboChat {
     @ObservationIgnored public var onProjectDraftChange: ((ProjectDraft?) -> Void)?
     @ObservationIgnored private var projectDraftAnswer: CheckedContinuation<ProjectDraft?, Never>?
 
-    /// Au-delà, les plus anciens messages ne sont plus envoyés : la discussion reste légère.
-    static let maxContext = 20
+    /// Au-delà, les plus anciens messages ne sont plus envoyés (une tâche compte deux messages par étape).
+    static let maxContext = 60
+    /// Une tâche s'arrête là, le temps qu'on lui dise de continuer.
+    static let maxSteps = 40
+    /// Le détail d'un résultat renvoyé à l'IA (sortie, fichier) est coupé au-delà.
+    static let maxObservation = 8000
 
     private var pending: Task<Void, Never>?
+    /// Ce qu'on a accepté pour la tâche en cours (écrire dans le projet).
+    @ObservationIgnored private var grantedForTask: Set<ZeboPermission> = []
 
     public init(initiatives: ZeboInitiatives) {
         self.initiatives = initiatives
@@ -77,7 +97,7 @@ public final class ZeboChat {
 
     private var question: String { draft.trimmingCharacters(in: .whitespacesAndNewlines) }
 
-    public var canSend: Bool { client != nil && !isWaiting && !question.isEmpty }
+    public var canSend: Bool { client != nil && !isBusy && !question.isEmpty }
 
     /// Envoie la question écrite ; la réponse s'ajoute à la discussion quand elle arrive.
     public func send() {
@@ -86,43 +106,63 @@ public final class ZeboChat {
         draft = ""
         failure = nil
         isWaiting = true
+        isBusy = true
+        grantedForTask = []
         let performer = actions
-        let prompt =
-            if let performer {
-                AIPrompt(
-                    instructions: instructions + "\n\n"
-                        + ActionQuestion.instructions(editors: performer.editors, projects: performer.projects),
-                    messages: conversation, format: ActionQuestion.format, maxTokens: 4096)
-            } else {
-                AIPrompt(instructions: instructions, messages: conversation)
-            }
-        pending = Task {
-            let result: Result<String, any Error>
+        pending = Task { await converse(with: client, performer: performer) }
+    }
+
+    /// Pose la question ; si Zebo enchaîne les étapes d'une tâche, chaque résultat repart à l'IA,
+    /// jusqu'à ce qu'il ait fini.
+    private func converse(with client: any AIClient, performer: (any ZeboActionPerformer)?) async {
+        var steps = 0
+        while true {
+            let reply: String
             do {
-                result = .success(try await client.answer(prompt))
+                reply = try await client.answer(prompt(for: performer))
             } catch {
-                result = .failure(error)
+                // Recommencée ou arrêtée entre-temps : cette réponse n'a plus sa place.
+                guard !Task.isCancelled else { return }
+                failure = Self.explain(error, provider: client.provider)
+                break
             }
-            // Recommencée entre-temps : cette réponse n'a plus sa place.
             guard !Task.isCancelled else { return }
-            switch result {
-            case .success(let reply):
-                if let performer, let answer = ActionQuestion.answer(fromJSON: reply) {
-                    await answerAndAct(answer, with: performer)
-                    return
-                }
+            guard let performer, let answer = ActionQuestion.answer(fromJSON: reply) else {
                 messages.append(
                     Message(isFromZebo: true, text: reply.trimmingCharacters(in: .whitespacesAndNewlines)))
-            case .failure(let error):
-                failure = Self.explain(error, provider: client.provider)
+                break
             }
-            isWaiting = false
+            let observation = await answerAndAct(answer, with: performer)
+            guard !Task.isCancelled else { return }
+            guard answer.keepsGoing, let observation else { break }
+            steps += 1
+            guard steps < Self.maxSteps else {
+                messages.append(
+                    Message(isFromZebo: true, text: "Ça fait beaucoup d'étapes : je souffle. Dis-moi « continue » !"))
+                break
+            }
+            messages.append(Message(isFromZebo: false, text: observation, isHidden: true))
+            isWaiting = true
         }
+        isWaiting = false
+        isWorking = false
+        isBusy = false
+    }
+
+    private func prompt(for performer: (any ZeboActionPerformer)?) -> AIPrompt {
+        guard let performer else { return AIPrompt(instructions: instructions, messages: conversation) }
+        // Les réponses peuvent contenir des fichiers entiers, et coder demande de réfléchir un peu.
+        return AIPrompt(
+            instructions: instructions + "\n\n"
+                + ActionQuestion.instructions(editors: performer.editors, projects: performer.projects),
+            messages: conversation, format: ActionQuestion.format, maxTokens: 16000, effort: .medium)
     }
 
     /// Affiche la phrase de Zebo, fait l'action qu'il a choisie en montrant où il en est,
-    /// puis propose son initiative, s'il en a une.
-    private func answerAndAct(_ answer: ActionQuestion.Answer, with performer: any ZeboActionPerformer) async {
+    /// puis propose son initiative, s'il en a une. Renvoie le résultat de l'action, pour l'IA.
+    private func answerAndAct(_ answer: ActionQuestion.Answer, with performer: any ZeboActionPerformer) async
+        -> String?
+    {
         let action: ZeboAction?
         var status: ActionStatus?
         do {
@@ -139,12 +179,16 @@ public final class ZeboChat {
         messages.append(message)
         isWaiting = false
 
+        var observation: String?
         if let action {
-            await run(action, for: message.id, in: \.action, with: performer)
+            observation = await run(action, for: message.id, in: \.action, with: performer, isApproved: false)
+        } else if case .failed(let reason) = status {
+            observation = "Échec : \(reason)"
         }
-        if let initiative = answer.initiative {
+        if let initiative = answer.initiative, !Task.isCancelled {
             await propose(initiative, for: message.id, with: performer)
         }
+        return observation
     }
 
     /// Propose l'initiative ; acceptée, elle est faite comme une action.
@@ -156,9 +200,9 @@ public final class ZeboChat {
             let action = try? ActionQuestion.resolve(
                 initiative.action, editors: performer.editors, projects: performer.projects)
         else { return }
-        // Autorisée une fois pour toutes : pas besoin de demander.
-        if alwaysAllowed.contains(action.permission) {
-            await run(action, for: id, in: \.initiative, with: performer)
+        // Autorisée une fois pour toutes (ou sans risque) : pas besoin de demander.
+        if action.permission.map(alwaysAllowed.contains) ?? true {
+            await run(action, for: id, in: \.initiative, with: performer, isApproved: true)
             return
         }
         let text = initiative.text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -167,40 +211,69 @@ public final class ZeboChat {
         let isAccepted = await initiatives.ask(proposal)
         guard contains(id) else { return }
         if isAccepted {
-            await run(action, for: id, in: \.initiative, with: performer)
+            await run(action, for: id, in: \.initiative, with: performer, isApproved: true)
         } else {
             update(id, \.initiative, to: .declined(proposal))
         }
     }
 
-    /// Fait une action ; une création de projet passe d'abord par la fiche (nom et éditeur).
+    /// Fait une action ; une création de projet passe d'abord par la fiche (nom et éditeur), écrire et
+    /// lancer une commande par ton accord. Renvoie son résultat, tel que l'IA le recevra.
+    @discardableResult
     private func run(
         _ action: ZeboAction, for id: Message.ID, in field: WritableKeyPath<Message, ActionStatus?>,
-        with performer: any ZeboActionPerformer
-    ) async {
+        with performer: any ZeboActionPerformer, isApproved: Bool
+    ) async -> String {
         var action = action
         if case .createProject(let name, let kind, let editor) = action {
             update(id, field, to: .waiting("Choisis son nom et son éditeur…"))
             let draft = await askForProject(
                 ProjectDraft(kind: kind, name: name, editor: editor, editors: performer.editors))
-            guard contains(id) else { return }
             guard let draft else {
                 update(id, field, to: .declined("Création annulée."))
-                return
+                return "Refusé : il a annulé la création du projet."
             }
             action = .createProject(
                 name: ProjectScaffolder.folderName(for: draft.name), kind: kind, editor: draft.editor)
         }
-        update(id, field, to: .running(action.progressText))
-        let outcome: ActionStatus
-        do {
-            outcome = .done(try await performer.perform(action))
-        } catch let error as ZeboActionError {
-            outcome = .failed(error.message)
-        } catch {
-            outcome = .failed(error.localizedDescription)
+        if !isApproved, let question = approvalQuestion(for: action) {
+            update(id, field, to: .proposed(question))
+            guard await initiatives.ask(question) else {
+                update(id, field, to: .declined(question))
+                return "Refusé : il n'a pas voulu (« \(question) »)."
+            }
+            if case .writeFile = action { grantedForTask.insert(.writeFiles) }
         }
-        update(id, field, to: outcome)
+        if action.isCodingStep { isWorking = true }
+        update(id, field, to: .running(action.progressText))
+        do {
+            let result = try await performer.perform(action, terminal: terminal)
+            update(id, field, to: .done(result.summary))
+            return "Résultat : \(result.summary)" + (result.details.map { "\n" + Self.clipped($0) } ?? "")
+        } catch {
+            let reason = (error as? ZeboActionError)?.message ?? error.localizedDescription
+            update(id, field, to: .failed(reason))
+            return "Échec : \(reason)"
+        }
+    }
+
+    /// Ce qu'il faut demander avant d'agir, s'il faut demander : écrire, une fois par tâche ;
+    /// lancer une commande, à chaque fois (sauf autorisation dans les paramètres).
+    private func approvalQuestion(for action: ZeboAction) -> String? {
+        guard let permission = action.permission, !alwaysAllowed.contains(permission),
+            !grantedForTask.contains(permission)
+        else { return nil }
+        switch action {
+        case .writeFile(let project, _, _):
+            return "Je peux modifier les fichiers de « \(project.name) » pour cette tâche ?"
+        case .runCommand(let project, let command): return "Je lance « \(command) » dans « \(project.name) » ?"
+        default: return nil
+        }
+    }
+
+    private static func clipped(_ text: String) -> String {
+        guard text.count > maxObservation else { return text }
+        return String(text.prefix(maxObservation)) + "\n… (coupé)"
     }
 
     /// Le message est toujours là (la discussion n'a pas été recommencée entre-temps).
@@ -244,6 +317,21 @@ public final class ZeboChat {
         answer.resume(returning: result)
     }
 
+    /// Arrête ce que Zebo est en train de faire : la commande en cours est interrompue, rien d'autre
+    /// n'est lancé.
+    public func stop() {
+        guard isBusy else { return }
+        pending?.cancel()
+        pending = nil
+        isWaiting = false
+        isWorking = false
+        isBusy = false
+        cancelProjectDraft()
+        initiatives.dismissAll()
+        if terminal.isRunning { terminal.fail("Arrêté") }
+        messages.append(Message(isFromZebo: true, text: "D'accord, j'arrête là."))
+    }
+
     /// Recommence une discussion vide.
     public func reset() {
         pending?.cancel()
@@ -251,8 +339,11 @@ public final class ZeboChat {
         messages = []
         failure = nil
         isWaiting = false
+        isWorking = false
+        isBusy = false
         cancelProjectDraft()
         initiatives.dismissAll()
+        terminal.clear()
     }
 
     var instructions: String {

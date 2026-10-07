@@ -94,6 +94,8 @@ struct PermissionsSettingsPage: View {
         case .openEditors: "chevron.left.forwardslash.chevron.right"
         case .openProjects: "folder.badge.gearshape"
         case .createProjects: "plus.square.on.square"
+        case .writeFiles: "doc.text.fill"
+        case .runCommands: "terminal.fill"
         }
     }
 
@@ -102,6 +104,8 @@ struct PermissionsSettingsPage: View {
         case .openEditors: .purple
         case .openProjects: .indigo
         case .createProjects: .pink
+        case .writeFiles: .orange
+        case .runCommands: .teal
         }
     }
 }
