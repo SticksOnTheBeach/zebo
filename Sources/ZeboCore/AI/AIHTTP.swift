@@ -23,7 +23,8 @@ enum AIHTTP {
     static func jsonRequest(url: URL, headers: [String: String], body: [String: Any]) throws -> URLRequest {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.timeoutInterval = 60
+        // Une réponse qui contient des fichiers entiers peut mettre plusieurs minutes à arriver.
+        request.timeoutInterval = 300
         request.setValue("application/json", forHTTPHeaderField: "content-type")
         for (field, value) in headers { request.setValue(value, forHTTPHeaderField: field) }
         request.httpBody = try JSONSerialization.data(withJSONObject: body)

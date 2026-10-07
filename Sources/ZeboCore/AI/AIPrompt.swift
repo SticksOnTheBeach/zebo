@@ -36,6 +36,15 @@ public struct AIPrompt: Sendable {
     var format: Format?
     /// La longueur maximale de la réponse (Claude l'exige).
     var maxTokens: Int
+    /// Combien réfléchir avant de répondre : peu pour discuter, davantage pour coder.
+    var effort: Effort = .low
+
+    /// L'effort de réflexion demandé (Claude le règle ; les autres IA l'ignorent).
+    public enum Effort: String, Sendable {
+        case low
+        case medium
+        case high
+    }
 
     public init(instructions: String, messages: [Message], maxTokens: Int = 4096) {
         self.instructions = instructions
@@ -43,10 +52,11 @@ public struct AIPrompt: Sendable {
         self.maxTokens = maxTokens
     }
 
-    init(instructions: String, messages: [Message], format: Format?, maxTokens: Int) {
+    init(instructions: String, messages: [Message], format: Format?, maxTokens: Int, effort: Effort = .low) {
         self.instructions = instructions
         self.messages = messages
         self.format = format
         self.maxTokens = maxTokens
+        self.effort = effort
     }
 }

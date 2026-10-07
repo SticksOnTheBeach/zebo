@@ -23,8 +23,8 @@ public struct ClaudeClient: AIClient {
     }
 
     func request(for prompt: AIPrompt) throws -> URLRequest {
-        // Zebo pose des questions simples et attend une réponse rapide : peu de réflexion.
-        var outputConfig: [String: Any] = ["effort": "low"]
+        // Peu de réflexion pour discuter, davantage quand Zebo code.
+        var outputConfig: [String: Any] = ["effort": prompt.effort.rawValue]
         if let format = prompt.format {
             outputConfig["format"] = ["type": "json_schema", "schema": format.schema]
         }
