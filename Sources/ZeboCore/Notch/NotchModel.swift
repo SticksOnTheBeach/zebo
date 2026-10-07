@@ -38,15 +38,22 @@ public final class NotchModel {
     public static let standardOpenSize = CGSize(width: 480, height: 180)
     /// Plus grande sur l'onglet IA, pour la discussion.
     public static let chatOpenSize = CGSize(width: 580, height: 240)
+    /// Encore plus grande quand Zebo code : la place pour son terminal.
+    public static let workOpenSize = CGSize(width: 660, height: 310)
+    /// Zebo code (il lance des commandes) : son terminal s'affiche dans l'onglet IA.
+    public var isWorking = false
+
     /// La plus grande taille ouverte : celle de la fenêtre de la notch.
     public static var largestOpenSize: CGSize {
-        CGSize(
-            width: max(standardOpenSize.width, chatOpenSize.width),
-            height: max(standardOpenSize.height, chatOpenSize.height))
+        let sizes = [standardOpenSize, chatOpenSize, workOpenSize]
+        return CGSize(width: sizes.map(\.width).max() ?? 0, height: sizes.map(\.height).max() ?? 0)
     }
 
-    /// Taille de la notch ouverte, selon l'onglet.
-    public var openSize: CGSize { selectedTab == .ai ? Self.chatOpenSize : Self.standardOpenSize }
+    /// Taille de la notch ouverte, selon l'onglet (et le travail en cours).
+    public var openSize: CGSize {
+        guard selectedTab == .ai else { return Self.standardOpenSize }
+        return isWorking ? Self.workOpenSize : Self.chatOpenSize
+    }
 
     /// Cadre de la fenêtre de la notch et position de la souris, en coordonnées écran.
     public var panelFrame: CGRect = .zero

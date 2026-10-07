@@ -87,4 +87,17 @@ struct NotchModelTests {
         model.isLaunching = false
         #expect(model.notchSize == closed)
     }
+
+    @Test("Quand Zebo code, l'onglet IA s'agrandit encore pour son terminal")
+    func workingIsBigger() {
+        let model = makeModel(isOpen: true)
+        model.selectedTab = .ai
+        let chat = model.notchSize
+        model.isWorking = true
+        #expect(model.notchSize.width > chat.width)
+        #expect(model.notchSize.height > chat.height)
+        #expect(model.notchSize == NotchModel.largestOpenSize)
+        model.selectedTab = .projects
+        #expect(model.notchSize == NotchModel.standardOpenSize)
+    }
 }
